@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,9 +24,29 @@ export default function Entries() {
   const { data: accounts = [] } = trpc.accounts.list.useQuery();
   const { data: entriesData } = trpc.entries.list.useQuery({ periodId: periodFilter ? parseInt(periodFilter) : undefined });
   const createMutation = trpc.entries.create.useMutation({ onSuccess: () => { utils.entries.list.invalidate(); setDialogOpen(false); toast.success('Lançamento criado'); } });
+  const exportMutation = trpc.entries.exportCSV.useMutation();
 
   const analyticAccounts = accounts.filter((a) => !accounts.some((c) => c.parentId === a.id) && a.active);
   const openPeriods = periods.filter((p) => p.status === 'open');
+
+  const handleExport = async () => {
+    try {
+      const result = await exportMutation.mutateAsync({ periodId: periodFilter ? parseInt(periodFilter) : undefined });
+      
+      // Download CSV
+      const blob = new Blob(['\ufeff' + result.csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lancamentos_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      toast.success(`${result.count} lançamentos exportados`);
+    } catch (error) {
+      toast.error('Erro ao exportar dados');
+    }
+  };
 
   const handleNew = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -59,10 +79,16 @@ export default function Entries() {
           <h1 className="text-3xl font-bold">Lançamentos</h1>
           <p className="text-muted-foreground">Registro de receitas e despesas</p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Lançamento
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport} disabled={exportMutation.isPending}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportar CSV
+          </Button>
+          <Button onClick={handleNew}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Lançamento
+          </Button>
+        </div>
       </div>
 
       <Card>

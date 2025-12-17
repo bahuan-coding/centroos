@@ -1,30 +1,19 @@
-import { parseBancoBrasilPDF } from './banco-brasil-pdf';
-import { parseCaixaPDF } from './caixa-pdf';
 import { parseCSV } from './csv-parser';
 import { parseOFX } from './ofx-parser';
+import { parseTXT } from './txt-parser';
 import type { ParseResult } from './types';
 
 export type { ParsedTransaction, ParseResult } from './types';
 
-export async function parseStatement(buffer: Buffer, bank: string, fileType: string): Promise<ParseResult> {
-  if (fileType === 'ofx') {
-    return parseOFX(buffer);
+export async function parseStatement(buffer: Buffer, fileType: string): Promise<ParseResult> {
+  switch (fileType.toLowerCase()) {
+    case 'ofx':
+      return parseOFX(buffer);
+    case 'csv':
+      return parseCSV(buffer);
+    case 'txt':
+      return parseTXT(buffer);
+    default:
+      throw new Error(`Formato não suportado: ${fileType}. Use CSV, OFX ou TXT.`);
   }
-
-  if (fileType === 'csv') {
-    return parseCSV(buffer);
-  }
-
-  if (fileType === 'pdf') {
-    if (bank === 'banco_brasil') {
-      return parseBancoBrasilPDF(buffer);
-    }
-    if (bank === 'caixa_economica') {
-      return parseCaixaPDF(buffer);
-    }
-    return parseBancoBrasilPDF(buffer);
-  }
-
-  throw new Error(`Formato não suportado: ${fileType}`);
 }
-

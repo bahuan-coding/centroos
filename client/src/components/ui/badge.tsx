@@ -14,6 +14,8 @@ const badgeVariants = cva(
         revenue: 'border-transparent bg-green-100 text-green-700',
         expense: 'border-transparent bg-red-100 text-red-700',
         nfc: 'border-transparent bg-purple-100 text-purple-700',
+        success: 'border-transparent bg-green-100 text-green-700',
+        warning: 'border-transparent bg-yellow-100 text-yellow-700',
       },
     },
     defaultVariants: { variant: 'default' },

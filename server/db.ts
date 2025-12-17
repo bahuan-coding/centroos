@@ -1,18 +1,17 @@
-import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
+import { neon } from '@netlify/neon';
+import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from '../drizzle/schema';
 
-let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+const databaseUrl = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error('NETLIFY_DATABASE_URL or DATABASE_URL must be set');
+}
+
+const sql = neon(databaseUrl);
+const db = drizzle(sql, { schema });
 
 export async function getDb() {
-  if (!db) {
-    const connection = await mysql.createConnection(
-      process.env.DATABASE_URL || 'mysql://root:password@localhost:3306/centroos'
-    );
-    db = drizzle(connection, { schema, mode: 'default' });
-  }
   return db;
 }
 
-export { schema };
-
+export { db, schema };

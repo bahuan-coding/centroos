@@ -5,19 +5,90 @@ import { Badge } from '@/components/ui/badge';
 import { trpc } from '@/lib/trpc';
 import { formatCurrency, formatPeriod, formatPercent, formatDate } from '@/lib/utils';
 import { Link } from 'wouter';
+import { Bar, Doughnut } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 export default function Dashboard() {
   const { data: currentPeriod } = trpc.periods.getCurrent.useQuery();
   const { data: org } = trpc.organization.get.useQuery();
   const { data: summary } = trpc.entries.getSummary.useQuery(currentPeriod?.id || 0, { enabled: !!currentPeriod?.id });
   const { data: recentEntries } = trpc.entries.list.useQuery({ limit: 5 });
-  const { data: allPeriods = [] } = trpc.periods.list.useQuery();
+  const { data: history = [] } = trpc.entries.getHistory.useQuery(6);
+  const { data: categories = [] } = trpc.entries.getByCategory.useQuery(currentPeriod?.id || 0, { enabled: !!currentPeriod?.id });
 
   const periodLabel = currentPeriod ? formatPeriod(currentPeriod.month, currentPeriod.year) : 'Nenhum período';
 
-  const yearlyData = allPeriods
-    .filter((p) => p.year === new Date().getFullYear())
-    .sort((a, b) => a.month - b.month);
+  const barChartData = {
+    labels: history.map(h => h.label),
+    datasets: [
+      {
+        label: 'Receitas',
+        data: history.map(h => h.revenues / 100),
+        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+        borderRadius: 4,
+      },
+      {
+        label: 'Despesas',
+        data: history.map(h => h.expenses / 100),
+        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  const barChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' as const },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => `${ctx.dataset.label}: R$ ${ctx.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: (value: any) => `R$ ${value.toLocaleString('pt-BR')}`,
+        },
+      },
+    },
+  };
+
+  const expenseCategories = categories.filter(c => c.type === 'expense' || c.type === 'fixed_asset').slice(0, 6);
+  
+  const donutChartData = {
+    labels: expenseCategories.map(c => c.name),
+    datasets: [{
+      data: expenseCategories.map(c => c.amount / 100),
+      backgroundColor: [
+        'rgba(239, 68, 68, 0.8)',
+        'rgba(249, 115, 22, 0.8)',
+        'rgba(234, 179, 8, 0.8)',
+        'rgba(34, 197, 94, 0.8)',
+        'rgba(59, 130, 246, 0.8)',
+        'rgba(168, 85, 247, 0.8)',
+      ],
+      borderWidth: 0,
+    }],
+  };
+
+  const donutChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right' as const, labels: { boxWidth: 12, font: { size: 11 } } },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => `${ctx.label}: R$ ${ctx.parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        },
+      },
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -104,44 +175,72 @@ export default function Dashboard() {
                 {!summary.nfc.compliant && <AlertTriangle className="h-5 w-5 text-yellow-600" />}
                 <span className="text-purple-700">Nota Fiscal Cidadã</span>
               </CardTitle>
-              <Badge variant={summary.nfc.compliant ? 'revenue' : 'destructive'}>
+              <Badge variant={summary.nfc.compliant ? 'success' : 'destructive'}>
                 {summary.nfc.compliant ? 'Conforme' : 'Atenção Necessária'}
               </Badge>
             </div>
             <CardDescription>Proporção de aplicação dos recursos NFC</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Projeto (Meta: 70%)</span>
-                    <span className="text-sm text-purple-600 font-semibold">{formatPercent(summary.nfc.project70Percent)}</span>
-                  </div>
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-purple-600 rounded-full transition-all" style={{ width: `${Math.min(summary.nfc.project70Percent, 100)}%` }} />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">{formatCurrency(summary.nfc.project70)}</p>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">Projeto (Meta: 70%)</span>
+                  <span className="text-sm text-purple-600 font-semibold">{formatPercent(summary.nfc.project70Percent)}</span>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Custeio (Meta: 30%)</span>
-                    <span className="text-sm text-yellow-600 font-semibold">{formatPercent(summary.nfc.operating30Percent)}</span>
-                  </div>
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-500 rounded-full transition-all" style={{ width: `${Math.min(summary.nfc.operating30Percent, 100)}%` }} />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">{formatCurrency(summary.nfc.operating30)}</p>
+                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-purple-600 rounded-full transition-all" style={{ width: `${Math.min(summary.nfc.project70Percent, 100)}%` }} />
                 </div>
+                <p className="text-sm text-muted-foreground mt-1">{formatCurrency(summary.nfc.project70)}</p>
               </div>
-              <div className="flex items-center justify-between pt-4 border-t">
-                <span className="text-sm font-medium">Total NFC</span>
-                <span className="text-lg font-bold text-purple-700">{formatCurrency(summary.nfc.total)}</span>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">Custeio (Meta: 30%)</span>
+                  <span className="text-sm text-yellow-600 font-semibold">{formatPercent(summary.nfc.operating30Percent)}</span>
+                </div>
+                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-yellow-500 rounded-full transition-all" style={{ width: `${Math.min(summary.nfc.operating30Percent, 100)}%` }} />
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">{formatCurrency(summary.nfc.operating30)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Charts */}
+        {history.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Evolução Financeira
+              </CardTitle>
+              <CardDescription>Receitas vs Despesas nos últimos meses</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64">
+                <Bar data={barChartData} options={barChartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {expenseCategories.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Despesas por Categoria</CardTitle>
+              <CardDescription>Distribuição das despesas do período</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64">
+                <Doughnut data={donutChartData} options={donutChartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -204,7 +303,7 @@ export default function Dashboard() {
                   <Upload className="mr-3 h-5 w-5 text-purple-600" />
                   <div className="text-left">
                     <p className="font-medium">Importar Extrato</p>
-                    <p className="text-xs text-muted-foreground">PDF, CSV ou OFX bancário</p>
+                    <p className="text-xs text-muted-foreground">CSV, OFX ou TXT bancário</p>
                   </div>
                 </Button>
               </Link>
@@ -213,7 +312,7 @@ export default function Dashboard() {
                   <BarChart3 className="mr-3 h-5 w-5 text-green-600" />
                   <div className="text-left">
                     <p className="font-medium">Gerar Relatório</p>
-                    <p className="text-xs text-muted-foreground">Financeiro, NFC ou Balancete</p>
+                    <p className="text-xs text-muted-foreground">Financeiro, NFC, DRE ou Balancete</p>
                   </div>
                 </Button>
               </Link>
@@ -221,37 +320,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {yearlyData.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Evolução {new Date().getFullYear()}</CardTitle>
-            <CardDescription>Saldo de fechamento por período</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-end justify-between h-48 gap-2">
-              {yearlyData.map((p) => {
-                const maxBalance = Math.max(...yearlyData.map((x) => Math.abs(x.closingBalance)), 1);
-                const height = (Math.abs(p.closingBalance) / maxBalance) * 100;
-                const isPositive = p.closingBalance >= 0;
-                return (
-                  <div key={p.id} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full flex flex-col items-center justify-end h-40">
-                      <div
-                        className={`w-full rounded-t transition-all ${isPositive ? 'bg-blue-500' : 'bg-red-400'}`}
-                        style={{ height: `${Math.max(height, 5)}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(p.year, p.month - 1).toLocaleDateString('pt-BR', { month: 'short' })}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

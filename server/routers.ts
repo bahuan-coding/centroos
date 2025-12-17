@@ -54,17 +54,17 @@ const accountsRouter = router({
         level = parent.level + 1;
       }
       
-      const [result] = await db.insert(schema.accounts).values({ ...input, level });
+      const [result] = await db.insert(schema.accounts).values({ ...input, level }).returning({ id: schema.accounts.id });
       
       await db.insert(schema.auditLog).values({
         userId: ctx.user.id,
         entityType: 'account',
-        entityId: result.insertId,
+        entityId: result.id,
         action: 'create',
         newValues: input,
       });
       
-      return { id: result.insertId };
+      return { id: result.id };
     }),
 
   update: accountantProcedure
@@ -165,17 +165,17 @@ const periodsRouter = router({
         .where(and(eq(schema.periods.month, input.month), eq(schema.periods.year, input.year)));
       if (existing) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Período já existe' });
       
-      const [result] = await db.insert(schema.periods).values(input);
+      const [result] = await db.insert(schema.periods).values(input).returning({ id: schema.periods.id });
       
       await db.insert(schema.auditLog).values({
         userId: ctx.user.id,
         entityType: 'period',
-        entityId: result.insertId,
+        entityId: result.id,
         action: 'create',
         newValues: input,
       });
       
-      return { id: result.insertId };
+      return { id: result.id };
     }),
 
   close: accountantProcedure
@@ -356,20 +356,20 @@ const entriesRouter = router({
       
       const [result] = await db.insert(schema.entries).values({
         ...input,
-        transactionDate: txDate,
+        transactionDate: txDate.toISOString().split('T')[0],
         isNfc: input.isNfc ? 1 : 0,
         createdBy: ctx.user.id,
-      });
+      }).returning({ id: schema.entries.id });
       
       await db.insert(schema.auditLog).values({
         userId: ctx.user.id,
         entityType: 'entry',
-        entityId: result.insertId,
+        entityId: result.id,
         action: 'create',
         newValues: input,
       });
       
-      return { id: result.insertId };
+      return { id: result.id };
     }),
 
   update: accountantProcedure
@@ -399,7 +399,7 @@ const entriesRouter = router({
       if (data.accountId) updateData.accountId = data.accountId;
       if (data.type) updateData.type = data.type;
       if (data.amountCents) updateData.amountCents = data.amountCents;
-      if (data.transactionDate) updateData.transactionDate = new Date(data.transactionDate);
+      if (data.transactionDate) updateData.transactionDate = new Date(data.transactionDate).toISOString().split('T')[0];
       if (data.description) updateData.description = data.description;
       if (data.isNfc !== undefined) updateData.isNfc = data.isNfc ? 1 : 0;
       if (data.nfcCategory !== undefined) updateData.nfcCategory = data.nfcCategory;
@@ -441,6 +441,111 @@ const entriesRouter = router({
     
     return { success: true };
   }),
+
+  getHistory: publicProcedure.input(z.number().optional()).query(async ({ input: months = 6 }) => {
+    const db = await getDb();
+    const periods = await db.select().from(schema.periods)
+      .orderBy(desc(schema.periods.year), desc(schema.periods.month))
+      .limit(months);
+    
+    const results = [];
+    
+    for (const period of periods.reverse()) {
+      const entries = await db.select({
+        entry: schema.entries,
+        account: schema.accounts,
+      })
+        .from(schema.entries)
+        .leftJoin(schema.accounts, eq(schema.entries.accountId, schema.accounts.id))
+        .where(eq(schema.entries.periodId, period.id));
+      
+      let revenues = 0;
+      let expenses = 0;
+      
+      for (const { entry, account } of entries) {
+        if (account?.type === 'revenue') revenues += entry.amountCents;
+        if (account?.type === 'expense' || account?.type === 'fixed_asset') expenses += entry.amountCents;
+      }
+      
+      results.push({
+        periodId: period.id,
+        month: period.month,
+        year: period.year,
+        label: `${period.month}/${period.year}`,
+        revenues,
+        expenses,
+        balance: revenues - expenses,
+      });
+    }
+    
+    return results;
+  }),
+
+  getByCategory: publicProcedure.input(z.number()).query(async ({ input: periodId }) => {
+    const db = await getDb();
+    
+    const entries = await db.select({
+      entry: schema.entries,
+      account: schema.accounts,
+    })
+      .from(schema.entries)
+      .leftJoin(schema.accounts, eq(schema.entries.accountId, schema.accounts.id))
+      .where(eq(schema.entries.periodId, periodId));
+    
+    const byCategory: Record<string, { name: string; type: string; amount: number }> = {};
+    
+    for (const { entry, account } of entries) {
+      if (!account) continue;
+      const key = account.id.toString();
+      if (!byCategory[key]) {
+        byCategory[key] = { name: account.name, type: account.type, amount: 0 };
+      }
+      byCategory[key].amount += entry.amountCents;
+    }
+    
+    return Object.values(byCategory).sort((a, b) => b.amount - a.amount);
+  }),
+
+  exportCSV: protectedProcedure
+    .input(z.object({ periodId: z.number().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      
+      const conditions = [];
+      if (input.periodId) conditions.push(eq(schema.entries.periodId, input.periodId));
+      
+      let query = db.select({
+        entry: schema.entries,
+        account: schema.accounts,
+        period: schema.periods,
+      })
+        .from(schema.entries)
+        .leftJoin(schema.accounts, eq(schema.entries.accountId, schema.accounts.id))
+        .leftJoin(schema.periods, eq(schema.entries.periodId, schema.periods.id));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+      }
+      
+      const entries = await query.orderBy(desc(schema.entries.transactionDate));
+      
+      // Build CSV
+      const headers = ['Data', 'Período', 'Conta', 'Tipo', 'Descrição', 'Valor', 'NFC', 'Categoria NFC'];
+      const rows = entries.map(({ entry, account, period }) => [
+        entry.transactionDate ? new Date(entry.transactionDate).toLocaleDateString('pt-BR') : '',
+        period ? `${period.month}/${period.year}` : '',
+        account ? `${account.code} - ${account.name}` : '',
+        entry.type === 'credit' ? 'Crédito' : 'Débito',
+        entry.description.replace(/"/g, '""'),
+        (entry.amountCents / 100).toFixed(2).replace('.', ','),
+        entry.isNfc ? 'Sim' : 'Não',
+        entry.nfcCategory === 'project_70' ? '70% Projeto' : entry.nfcCategory === 'operating_30' ? '30% Custeio' : '',
+      ]);
+      
+      const csv = [headers.join(';'), ...rows.map(r => r.map(c => `"${c}"`).join(';'))].join('\n');
+      
+      return { csv, count: entries.length };
+    }),
 
   getSummary: publicProcedure.input(z.number()).query(async ({ input: periodId }) => {
     const db = await getDb();
@@ -541,8 +646,8 @@ const rulesRouter = router({
       const [result] = await db.insert(schema.classificationRules).values({
         ...input,
         createdBy: ctx.user.id,
-      });
-      return { id: result.insertId };
+      }).returning({ id: schema.classificationRules.id });
+      return { id: result.id };
     }),
 
   delete: accountantProcedure.input(z.number()).mutation(async ({ input }) => {
@@ -552,8 +657,185 @@ const rulesRouter = router({
   }),
 });
 
+// ==================== BANK IMPORTS ROUTER ====================
+import { parseStatement, type ParsedTransaction } from './parsers';
+import { classifyTransaction, detectDuplicates } from './services/classification';
+
+// In-memory store for pending import transactions (in production, use Redis or DB)
+const pendingImports = new Map<number, { transactions: Array<ParsedTransaction & { suggestedAccountId: number | null; confidence: string; isDuplicate: boolean; selected: boolean }> }>();
+
+const bankImportsRouter = router({
+  list: protectedProcedure.query(async () => {
+    const db = await getDb();
+    return db.select().from(schema.bankImports).orderBy(desc(schema.bankImports.uploadedAt));
+  }),
+
+  upload: accountantProcedure
+    .input(z.object({
+      filename: z.string(),
+      fileType: z.enum(['csv', 'ofx', 'txt']),
+      fileContent: z.string(), // base64 encoded
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      
+      const [result] = await db.insert(schema.bankImports).values({
+        filename: input.filename,
+        bank: 'other',
+        fileType: input.fileType,
+        status: 'pending',
+        uploadedBy: ctx.user.id,
+      }).returning({ id: schema.bankImports.id });
+      
+      return { id: result.id, filename: input.filename };
+    }),
+
+  process: accountantProcedure
+    .input(z.object({
+      importId: z.number(),
+      fileContent: z.string(), // base64 encoded
+      fileType: z.enum(['csv', 'ofx', 'txt']),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      const buffer = Buffer.from(input.fileContent, 'base64');
+      
+      await db.update(schema.bankImports)
+        .set({ status: 'processing' })
+        .where(eq(schema.bankImports.id, input.importId));
+      
+      try {
+        const parsed = await parseStatement(buffer, input.fileType);
+        
+        // Get current period
+        const now = new Date();
+        const [period] = await db.select().from(schema.periods)
+          .where(and(eq(schema.periods.month, now.getMonth() + 1), eq(schema.periods.year, now.getFullYear())));
+        
+        const periodId = period?.id || 0;
+        const duplicateIndexes = periodId ? await detectDuplicates(parsed.transactions, periodId) : new Set<number>();
+        
+        // Classify each transaction
+        const classifiedTxs = await Promise.all(
+          parsed.transactions.map(async (tx, idx) => {
+            const classification = await classifyTransaction(tx);
+            return {
+              ...tx,
+              suggestedAccountId: classification.accountId,
+              confidence: classification.confidence,
+              isDuplicate: duplicateIndexes.has(idx),
+              selected: !duplicateIndexes.has(idx),
+            };
+          })
+        );
+        
+        // Store in memory for later confirmation
+        pendingImports.set(input.importId, { transactions: classifiedTxs });
+        
+        await db.update(schema.bankImports).set({
+          status: 'completed',
+          totalTransactions: classifiedTxs.length,
+          classifiedCount: classifiedTxs.filter(t => t.suggestedAccountId).length,
+          startDate: parsed.startDate?.toISOString().split('T')[0],
+          endDate: parsed.endDate?.toISOString().split('T')[0],
+        }).where(eq(schema.bankImports.id, input.importId));
+        
+        return {
+          transactions: classifiedTxs.map((tx, idx) => ({
+            index: idx,
+            date: tx.date.toISOString(),
+            description: tx.description,
+            amountCents: tx.amountCents,
+            type: tx.type,
+            suggestedAccountId: tx.suggestedAccountId,
+            confidence: tx.confidence,
+            isDuplicate: tx.isDuplicate,
+            selected: tx.selected,
+          })),
+          totalCount: classifiedTxs.length,
+          duplicateCount: duplicateIndexes.size,
+          classifiedCount: classifiedTxs.filter(t => t.suggestedAccountId).length,
+        };
+      } catch (error: any) {
+        await db.update(schema.bankImports).set({
+          status: 'failed',
+          errorMessage: error.message,
+        }).where(eq(schema.bankImports.id, input.importId));
+        
+        throw new TRPCError({ code: 'BAD_REQUEST', message: `Erro ao processar arquivo: ${error.message}` });
+      }
+    }),
+
+  confirm: accountantProcedure
+    .input(z.object({
+      importId: z.number(),
+      periodId: z.number(),
+      transactions: z.array(z.object({
+        index: z.number(),
+        accountId: z.number(),
+        isNfc: z.boolean().default(false),
+        nfcCategory: z.enum(['project_70', 'operating_30']).optional(),
+      })),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      const pending = pendingImports.get(input.importId);
+      
+      if (!pending) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Importação não encontrada ou expirada' });
+      }
+      
+      const [period] = await db.select().from(schema.periods).where(eq(schema.periods.id, input.periodId));
+      if (!period) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Período não encontrado' });
+      if (period.status === 'closed') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Período fechado' });
+      
+      let created = 0;
+      
+      for (const txInput of input.transactions) {
+        const tx = pending.transactions[txInput.index];
+        if (!tx) continue;
+        
+        await db.insert(schema.entries).values({
+          periodId: input.periodId,
+          accountId: txInput.accountId,
+          type: tx.type,
+          amountCents: tx.amountCents,
+          transactionDate: tx.date.toISOString().split('T')[0],
+          description: tx.description,
+          origin: 'bank_import',
+          bankImportId: input.importId,
+          isNfc: txInput.isNfc ? 1 : 0,
+          nfcCategory: txInput.nfcCategory,
+          createdBy: ctx.user.id,
+        });
+        
+        created++;
+      }
+      
+      // Clean up pending import
+      pendingImports.delete(input.importId);
+      
+      await db.insert(schema.auditLog).values({
+        userId: ctx.user.id,
+        entityType: 'import',
+        entityId: input.importId,
+        action: 'create',
+        newValues: { entriesCreated: created },
+      });
+      
+      return { success: true, entriesCreated: created };
+    }),
+
+  delete: adminProcedure.input(z.number()).mutation(async ({ input }) => {
+    const db = await getDb();
+    await db.delete(schema.bankImports).where(eq(schema.bankImports.id, input));
+    pendingImports.delete(input);
+    return { success: true };
+  }),
+});
+
 // ==================== REPORTS ROUTER ====================
-import { generateFinancialReportPDF, generateNfcReportPDF, generateBalancetePDF } from './services/reports';
+import { generateFinancialReportPDF, generateNfcReportPDF, generateBalancetePDF, generateDREPDF, generateBalancoPatrimonialPDF } from './services/reports';
 
 const reportsRouter = router({
   generateFinancial: protectedProcedure.input(z.number()).mutation(async ({ input }) => {
@@ -568,6 +850,16 @@ const reportsRouter = router({
 
   generateBalancete: protectedProcedure.input(z.number()).mutation(async ({ input }) => {
     const pdf = await generateBalancetePDF(input);
+    return { pdf: pdf.toString('base64') };
+  }),
+
+  generateDRE: protectedProcedure.input(z.number()).mutation(async ({ input }) => {
+    const pdf = await generateDREPDF(input);
+    return { pdf: pdf.toString('base64') };
+  }),
+
+  generateBalancoPatrimonial: protectedProcedure.input(z.number()).mutation(async ({ input }) => {
+    const pdf = await generateBalancoPatrimonialPDF(input);
     return { pdf: pdf.toString('base64') };
   }),
 });
@@ -617,6 +909,7 @@ export const appRouter = router({
   rules: rulesRouter,
   reports: reportsRouter,
   audit: auditRouter,
+  bankImports: bankImportsRouter,
 });
 
 export type AppRouter = typeof appRouter;

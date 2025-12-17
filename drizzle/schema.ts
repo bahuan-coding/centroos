@@ -1,8 +1,9 @@
 import {
-  int,
+  serial,
+  integer,
   bigint,
-  mysqlEnum,
-  mysqlTable,
+  pgEnum,
+  pgTable,
   text,
   timestamp,
   varchar,
@@ -10,47 +11,59 @@ import {
   json,
   index,
   uniqueIndex,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 
-export const users = mysqlTable('users', {
-  id: int('id').autoincrement().primaryKey(),
-  openId: varchar('openId', { length: 64 }).notNull().unique(),
+export const roleEnum = pgEnum('role', ['admin', 'accountant', 'manager', 'viewer']);
+export const accountTypeEnum = pgEnum('account_type', ['asset', 'liability', 'equity', 'revenue', 'expense', 'fixed_asset']);
+export const periodStatusEnum = pgEnum('period_status', ['open', 'under_review', 'closed']);
+export const entryTypeEnum = pgEnum('entry_type', ['debit', 'credit']);
+export const originEnum = pgEnum('origin', ['manual', 'bank_import', 'system']);
+export const nfcCategoryEnum = pgEnum('nfc_category', ['project_70', 'operating_30']);
+export const bankEnum = pgEnum('bank', ['banco_brasil', 'caixa_economica', 'other']);
+export const fileTypeEnum = pgEnum('file_type', ['csv', 'ofx', 'txt']);
+export const importStatusEnum = pgEnum('import_status', ['pending', 'processing', 'completed', 'failed']);
+export const entityTypeEnum = pgEnum('entity_type', ['entry', 'account', 'period', 'import', 'rule', 'setting']);
+export const actionEnum = pgEnum('action', ['create', 'update', 'delete', 'close', 'reopen']);
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  openId: varchar('open_id', { length: 64 }).notNull().unique(),
   name: text('name'),
   email: varchar('email', { length: 320 }),
-  loginMethod: varchar('loginMethod', { length: 64 }),
-  role: mysqlEnum('role', ['admin', 'accountant', 'manager', 'viewer']).default('viewer').notNull(),
-  createdAt: timestamp('createdAt').defaultNow().notNull(),
-  updatedAt: timestamp('updatedAt').defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp('lastSignedIn').defaultNow().notNull(),
+  loginMethod: varchar('login_method', { length: 64 }),
+  role: roleEnum('role').default('viewer').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  lastSignedIn: timestamp('last_signed_in').defaultNow().notNull(),
 });
 
-export const organizationSettings = mysqlTable('organization_settings', {
-  id: int('id').autoincrement().primaryKey(),
+export const organizationSettings = pgTable('organization_settings', {
+  id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   cnpj: varchar('cnpj', { length: 18 }),
   address: text('address'),
   city: varchar('city', { length: 100 }),
   state: varchar('state', { length: 2 }),
-  zipCode: varchar('zipCode', { length: 10 }),
+  zipCode: varchar('zip_code', { length: 10 }),
   phone: varchar('phone', { length: 20 }),
   email: varchar('email', { length: 320 }),
-  createdAt: timestamp('createdAt').defaultNow().notNull(),
-  updatedAt: timestamp('updatedAt').defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const accounts = mysqlTable(
+export const accounts = pgTable(
   'accounts',
   {
-    id: int('id').autoincrement().primaryKey(),
+    id: serial('id').primaryKey(),
     code: varchar('code', { length: 50 }).notNull().unique(),
     name: varchar('name', { length: 255 }).notNull(),
-    type: mysqlEnum('type', ['asset', 'liability', 'equity', 'revenue', 'expense', 'fixed_asset']).notNull(),
-    parentId: int('parentId'),
-    level: int('level').default(0).notNull(),
-    active: int('active').default(1).notNull(),
+    type: accountTypeEnum('type').notNull(),
+    parentId: integer('parent_id'),
+    level: integer('level').default(0).notNull(),
+    active: integer('active').default(1).notNull(),
     description: text('description'),
-    createdAt: timestamp('createdAt').defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt').defaultNow().onUpdateNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => ({
     codeIdx: uniqueIndex('code_idx').on(table.code),
@@ -59,20 +72,20 @@ export const accounts = mysqlTable(
   })
 );
 
-export const periods = mysqlTable(
+export const periods = pgTable(
   'periods',
   {
-    id: int('id').autoincrement().primaryKey(),
-    month: int('month').notNull(),
-    year: int('year').notNull(),
-    status: mysqlEnum('status', ['open', 'under_review', 'closed']).default('open').notNull(),
-    openingBalance: bigint('openingBalance', { mode: 'number' }).default(0).notNull(),
-    closingBalance: bigint('closingBalance', { mode: 'number' }).default(0).notNull(),
-    closedBy: int('closedBy'),
-    closedAt: timestamp('closedAt'),
+    id: serial('id').primaryKey(),
+    month: integer('month').notNull(),
+    year: integer('year').notNull(),
+    status: periodStatusEnum('status').default('open').notNull(),
+    openingBalance: bigint('opening_balance', { mode: 'number' }).default(0).notNull(),
+    closingBalance: bigint('closing_balance', { mode: 'number' }).default(0).notNull(),
+    closedBy: integer('closed_by'),
+    closedAt: timestamp('closed_at'),
     notes: text('notes'),
-    createdAt: timestamp('createdAt').defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt').defaultNow().onUpdateNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => ({
     periodIdx: uniqueIndex('period_idx').on(table.month, table.year),
@@ -80,25 +93,25 @@ export const periods = mysqlTable(
   })
 );
 
-export const entries = mysqlTable(
+export const entries = pgTable(
   'entries',
   {
-    id: int('id').autoincrement().primaryKey(),
-    periodId: int('periodId').notNull(),
-    accountId: int('accountId').notNull(),
-    type: mysqlEnum('type', ['debit', 'credit']).notNull(),
-    amountCents: bigint('amountCents', { mode: 'number' }).notNull(),
-    transactionDate: date('transactionDate').notNull(),
+    id: serial('id').primaryKey(),
+    periodId: integer('period_id').notNull(),
+    accountId: integer('account_id').notNull(),
+    type: entryTypeEnum('type').notNull(),
+    amountCents: bigint('amount_cents', { mode: 'number' }).notNull(),
+    transactionDate: date('transaction_date').notNull(),
     description: text('description').notNull(),
-    origin: mysqlEnum('origin', ['manual', 'bank_import', 'system']).default('manual').notNull(),
-    bankImportId: int('bankImportId'),
-    isNfc: int('isNfc').default(0).notNull(),
-    nfcCategory: mysqlEnum('nfcCategory', ['project_70', 'operating_30']),
-    documentNumber: varchar('documentNumber', { length: 100 }),
+    origin: originEnum('origin').default('manual').notNull(),
+    bankImportId: integer('bank_import_id'),
+    isNfc: integer('is_nfc').default(0).notNull(),
+    nfcCategory: nfcCategoryEnum('nfc_category'),
+    documentNumber: varchar('document_number', { length: 100 }),
     notes: text('notes'),
-    createdBy: int('createdBy').notNull(),
-    createdAt: timestamp('createdAt').defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt').defaultNow().onUpdateNow().notNull(),
+    createdBy: integer('created_by').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => ({
     periodIdx: index('entry_period_idx').on(table.periodId),
@@ -109,23 +122,23 @@ export const entries = mysqlTable(
   })
 );
 
-export const bankImports = mysqlTable(
+export const bankImports = pgTable(
   'bank_imports',
   {
-    id: int('id').autoincrement().primaryKey(),
+    id: serial('id').primaryKey(),
     filename: varchar('filename', { length: 255 }).notNull(),
-    bank: mysqlEnum('bank', ['banco_brasil', 'caixa_economica', 'other']).notNull(),
-    fileType: mysqlEnum('fileType', ['pdf', 'csv', 'ofx']).notNull(),
-    fileUrl: text('fileUrl'),
-    startDate: date('startDate'),
-    endDate: date('endDate'),
-    totalTransactions: int('totalTransactions').default(0).notNull(),
-    classifiedCount: int('classifiedCount').default(0).notNull(),
-    status: mysqlEnum('status', ['pending', 'processing', 'completed', 'failed']).default('pending').notNull(),
-    errorMessage: text('errorMessage'),
-    uploadedBy: int('uploadedBy').notNull(),
-    uploadedAt: timestamp('uploadedAt').defaultNow().notNull(),
-    processedAt: timestamp('processedAt'),
+    bank: bankEnum('bank').notNull(),
+    fileType: fileTypeEnum('file_type').notNull(),
+    fileUrl: text('file_url'),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    totalTransactions: integer('total_transactions').default(0).notNull(),
+    classifiedCount: integer('classified_count').default(0).notNull(),
+    status: importStatusEnum('status').default('pending').notNull(),
+    errorMessage: text('error_message'),
+    uploadedBy: integer('uploaded_by').notNull(),
+    uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
+    processedAt: timestamp('processed_at'),
   },
   (table) => ({
     statusIdx: index('import_status_idx').on(table.status),
@@ -134,18 +147,18 @@ export const bankImports = mysqlTable(
   })
 );
 
-export const classificationRules = mysqlTable(
+export const classificationRules = pgTable(
   'classification_rules',
   {
-    id: int('id').autoincrement().primaryKey(),
+    id: serial('id').primaryKey(),
     pattern: varchar('pattern', { length: 255 }).notNull(),
-    accountId: int('accountId').notNull(),
-    priority: int('priority').default(0).notNull(),
-    active: int('active').default(1).notNull(),
-    usageCount: int('usageCount').default(0).notNull(),
-    createdBy: int('createdBy').notNull(),
-    createdAt: timestamp('createdAt').defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt').defaultNow().onUpdateNow().notNull(),
+    accountId: integer('account_id').notNull(),
+    priority: integer('priority').default(0).notNull(),
+    active: integer('active').default(1).notNull(),
+    usageCount: integer('usage_count').default(0).notNull(),
+    createdBy: integer('created_by').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => ({
     accountIdx: index('rule_account_idx').on(table.accountId),
@@ -154,19 +167,19 @@ export const classificationRules = mysqlTable(
   })
 );
 
-export const auditLog = mysqlTable(
+export const auditLog = pgTable(
   'audit_log',
   {
-    id: int('id').autoincrement().primaryKey(),
-    userId: int('userId').notNull(),
-    entityType: mysqlEnum('entityType', ['entry', 'account', 'period', 'import', 'rule', 'setting']).notNull(),
-    entityId: int('entityId').notNull(),
-    action: mysqlEnum('action', ['create', 'update', 'delete', 'close', 'reopen']).notNull(),
-    oldValues: json('oldValues'),
-    newValues: json('newValues'),
-    ipAddress: varchar('ipAddress', { length: 45 }),
-    userAgent: text('userAgent'),
-    createdAt: timestamp('createdAt').defaultNow().notNull(),
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').notNull(),
+    entityType: entityTypeEnum('entity_type').notNull(),
+    entityId: integer('entity_id').notNull(),
+    action: actionEnum('action').notNull(),
+    oldValues: json('old_values'),
+    newValues: json('new_values'),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
     userIdx: index('audit_user_idx').on(table.userId),
@@ -192,4 +205,3 @@ export type ClassificationRule = typeof classificationRules.$inferSelect;
 export type InsertClassificationRule = typeof classificationRules.$inferInsert;
 export type AuditLog = typeof auditLog.$inferSelect;
 export type InsertAuditLog = typeof auditLog.$inferInsert;
-

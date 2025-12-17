@@ -302,3 +302,207 @@ export async function generateBalancetePDF(periodId: number): Promise<Buffer> {
   return Buffer.from(doc.output('arraybuffer'));
 }
 
+export async function generateDREPDF(periodId: number): Promise<Buffer> {
+  const db = await getDb();
+
+  const [period] = await db.select().from(schema.periods).where(eq(schema.periods.id, periodId));
+  if (!period) throw new Error('Período não encontrado');
+
+  const entries = await db.select({
+    entry: schema.entries,
+    account: schema.accounts,
+  })
+    .from(schema.entries)
+    .leftJoin(schema.accounts, eq(schema.entries.accountId, schema.accounts.id))
+    .where(eq(schema.entries.periodId, periodId));
+
+  const org = await getOrganization();
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text(org.name, 105, 20, { align: 'center' });
+  doc.setFontSize(12);
+  doc.text('Demonstração do Resultado do Exercício', 105, 28, { align: 'center' });
+  doc.text(formatPeriod(period.month, period.year), 105, 35, { align: 'center' });
+
+  const revenueByAccount: Record<string, number> = {};
+  const expenseByAccount: Record<string, number> = {};
+  let totalRevenues = 0;
+  let totalExpenses = 0;
+
+  for (const { entry, account } of entries) {
+    if (!account) continue;
+    const key = `${account.code} - ${account.name}`;
+    
+    if (account.type === 'revenue') {
+      revenueByAccount[key] = (revenueByAccount[key] || 0) + entry.amountCents;
+      totalRevenues += entry.amountCents;
+    }
+    if (account.type === 'expense' || account.type === 'fixed_asset') {
+      expenseByAccount[key] = (expenseByAccount[key] || 0) + entry.amountCents;
+      totalExpenses += entry.amountCents;
+    }
+  }
+
+  let y = 50;
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RECEITAS OPERACIONAIS', 14, y);
+  doc.setFont('helvetica', 'normal');
+
+  const revenueRows = Object.entries(revenueByAccount).map(([name, value]) => [name, formatCurrency(value)]);
+  
+  doc.autoTable({
+    startY: y + 5,
+    body: [...revenueRows, ['TOTAL RECEITAS', formatCurrency(totalRevenues)]],
+    theme: 'plain',
+    styles: { fontSize: 10 },
+    columnStyles: { 0: { cellWidth: 120 }, 1: { halign: 'right' } },
+    didParseCell: (data: any) => {
+      if (data.row.index === revenueRows.length) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [240, 253, 244];
+      }
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  y = doc.lastAutoTable.finalY + 10;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('DESPESAS OPERACIONAIS', 14, y);
+  doc.setFont('helvetica', 'normal');
+
+  const expenseRows = Object.entries(expenseByAccount).map(([name, value]) => [name, `(${formatCurrency(value)})`]);
+
+  doc.autoTable({
+    startY: y + 5,
+    body: [...expenseRows, ['TOTAL DESPESAS', `(${formatCurrency(totalExpenses)})`]],
+    theme: 'plain',
+    styles: { fontSize: 10 },
+    columnStyles: { 0: { cellWidth: 120 }, 1: { halign: 'right' } },
+    didParseCell: (data: any) => {
+      if (data.row.index === expenseRows.length) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [254, 242, 242];
+      }
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  y = doc.lastAutoTable.finalY + 15;
+
+  const result = totalRevenues - totalExpenses;
+  const isPositive = result >= 0;
+
+  doc.autoTable({
+    startY: y,
+    body: [[isPositive ? 'SUPERÁVIT DO PERÍODO' : 'DÉFICIT DO PERÍODO', formatCurrency(Math.abs(result))]],
+    theme: 'grid',
+    styles: { fontSize: 14, fontStyle: 'bold' },
+    columnStyles: { 0: { cellWidth: 120 }, 1: { halign: 'right' } },
+    didParseCell: (data: any) => {
+      data.cell.styles.fillColor = isPositive ? [22, 163, 74] : [220, 38, 38];
+      data.cell.styles.textColor = 255;
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  doc.setFontSize(8);
+  doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, 14, 285);
+
+  return Buffer.from(doc.output('arraybuffer'));
+}
+
+export async function generateBalancoPatrimonialPDF(periodId: number): Promise<Buffer> {
+  const db = await getDb();
+
+  const [period] = await db.select().from(schema.periods).where(eq(schema.periods.id, periodId));
+  if (!period) throw new Error('Período não encontrado');
+
+  const accounts = await db.select().from(schema.accounts).where(eq(schema.accounts.active, 1)).orderBy(schema.accounts.code);
+  const entries = await db.select().from(schema.entries).where(eq(schema.entries.periodId, periodId));
+
+  const balances: Record<number, number> = {};
+  for (const entry of entries) {
+    if (!balances[entry.accountId]) balances[entry.accountId] = 0;
+    if (entry.type === 'debit') balances[entry.accountId] += entry.amountCents;
+    else balances[entry.accountId] -= entry.amountCents;
+  }
+
+  const org = await getOrganization();
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text(org.name, 105, 20, { align: 'center' });
+  doc.setFontSize(12);
+  doc.text('Balanço Patrimonial', 105, 28, { align: 'center' });
+  doc.text(formatPeriod(period.month, period.year), 105, 35, { align: 'center' });
+
+  const assets = accounts.filter(a => a.type === 'asset' || a.type === 'fixed_asset').filter(a => balances[a.id]);
+  const liabilities = accounts.filter(a => a.type === 'liability').filter(a => balances[a.id]);
+  const equity = accounts.filter(a => a.type === 'equity').filter(a => balances[a.id]);
+
+  let totalAssets = 0;
+  let totalLiabilities = 0;
+  let totalEquity = 0;
+
+  for (const a of assets) totalAssets += Math.abs(balances[a.id] || 0);
+  for (const a of liabilities) totalLiabilities += Math.abs(balances[a.id] || 0);
+  for (const a of equity) totalEquity += Math.abs(balances[a.id] || 0);
+
+  let y = 50;
+
+  doc.setFontSize(14);
+  doc.setTextColor(59, 130, 246);
+  doc.text('ATIVO', 14, y);
+  doc.setTextColor(0, 0, 0);
+
+  const assetRows = assets.map(a => [a.code, a.name, formatCurrency(Math.abs(balances[a.id] || 0))]);
+
+  doc.autoTable({
+    startY: y + 5,
+    body: [...assetRows, ['', 'TOTAL ATIVO', formatCurrency(totalAssets)]],
+    theme: 'striped',
+    styles: { fontSize: 9 },
+    columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 80 }, 2: { halign: 'right' } },
+    didParseCell: (data: any) => {
+      if (data.row.index === assetRows.length) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [219, 234, 254];
+      }
+    },
+    margin: { left: 14, right: 100 },
+  });
+
+  doc.setFontSize(14);
+  doc.setTextColor(220, 38, 38);
+  doc.text('PASSIVO E PATRIMÔNIO', 110, 50);
+  doc.setTextColor(0, 0, 0);
+
+  const liabilityRows = liabilities.map(a => [a.code, a.name, formatCurrency(Math.abs(balances[a.id] || 0))]);
+  const equityRows = equity.map(a => [a.code, a.name, formatCurrency(Math.abs(balances[a.id] || 0))]);
+
+  doc.autoTable({
+    startY: 55,
+    body: [
+      ...liabilityRows,
+      ['', 'Total Passivo', formatCurrency(totalLiabilities)],
+      ['', 'PATRIMÔNIO SOCIAL', ''],
+      ...equityRows,
+      ['', 'Total Patrimônio', formatCurrency(totalEquity)],
+      ['', 'TOTAL P + PL', formatCurrency(totalLiabilities + totalEquity)],
+    ],
+    theme: 'striped',
+    styles: { fontSize: 9 },
+    columnStyles: { 0: { cellWidth: 20 }, 1: { cellWidth: 45 }, 2: { halign: 'right' } },
+    margin: { left: 110, right: 14 },
+  });
+
+  doc.setFontSize(8);
+  doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, 14, 285);
+
+  return Buffer.from(doc.output('arraybuffer'));
+}
+

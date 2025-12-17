@@ -41,7 +41,7 @@ export async function parseCSV(buffer: Buffer): Promise<ParseResult> {
   let text = buffer.toString('utf-8');
   if (text.includes('�')) {
     const iconv = await import('iconv-lite');
-    text = iconv.decode(buffer, 'ISO-8859-1');
+    text = iconv.default.decode(buffer, 'ISO-8859-1');
   }
 
   const delimiter = detectDelimiter(text);

@@ -1,4 +1,4 @@
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc as descOrder } from 'drizzle-orm';
 import type { ParsedTransaction } from '../parsers/types';
 import { getDb, schema } from '../db';
 
@@ -26,19 +26,19 @@ function similarity(a: string, b: string): number {
 
 export async function classifyTransaction(tx: ParsedTransaction): Promise<ClassificationResult> {
   const db = await getDb();
-  const desc = tx.description.toUpperCase();
+  const txDesc = tx.description.toUpperCase();
 
-  const isNfc = NFC_PATTERNS.some((p) => desc.includes(p));
+  const isNfc = NFC_PATTERNS.some((p) => txDesc.includes(p));
 
   const rules = await db
     .select()
     .from(schema.classificationRules)
     .where(eq(schema.classificationRules.active, 1))
-    .orderBy(desc, schema.classificationRules.priority, schema.classificationRules.usageCount);
+    .orderBy(descOrder(schema.classificationRules.priority), descOrder(schema.classificationRules.usageCount));
 
   for (const rule of rules) {
     const pattern = rule.pattern.toUpperCase();
-    if (desc.includes(pattern)) {
+    if (txDesc.includes(pattern)) {
       return { accountId: rule.accountId, confidence: 'high', ruleId: rule.id, isNfc };
     }
   }

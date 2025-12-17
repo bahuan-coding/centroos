@@ -1,6 +1,11 @@
 [build]
   command = "npm run build:client"
   publish = "dist/client"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["drizzle/**", "server/**"]
 
 [dev]
   command = "npm run dev"
@@ -9,13 +14,11 @@
   autoLaunch = false
 
 [[redirects]]
-  from = "/api/*"
-  to = "http://localhost:3000/api/:splat"
+  from = "/api/trpc/*"
+  to = "/.netlify/functions/trpc"
   status = 200
-  force = true
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-

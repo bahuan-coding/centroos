@@ -1,0 +1,43 @@
+id,codigo,nome,tipo,natureza,conta_pai,status,tags,termo_base,account_type
+1,1,ATIVO,SINTETICA,DEBITO,,ATIVA,grupo,,asset
+1.1,1.1,Ativo Circulante,SINTETICA,DEBITO,1,ATIVA,circulante,,asset
+1.1.1,1.1.1,Disponibilidades,SINTETICA,DEBITO,1.1,ATIVA,disponibilidade,DISPONIBILIDADE,asset
+1.1.1.001,1.1.1.001,Caixa,ANALITICA,DEBITO,1.1.1,ATIVA,"caixa,disponibilidade",CAIXA,asset
+1.1.1.002,1.1.1.002,Banco do Brasil - Conta Corrente,ANALITICA,DEBITO,1.1.1,ATIVA,"banco,disponibilidade",B.BRASIL,asset
+1.1.1.003,1.1.1.003,BB Renda Fácil,ANALITICA,DEBITO,1.1.1,ATIVA,"aplicacao,disponibilidade",BB R.Fácil,asset
+1.1.1.004,1.1.1.004,Caixa Econômica Federal,ANALITICA,DEBITO,1.1.1,ATIVA,"banco,disponibilidade",C.ECONÔMICA,asset
+2,2,PASSIVO,SINTETICA,CREDITO,,ATIVA,grupo,,liability
+2.1,2.1,Passivo Circulante,SINTETICA,CREDITO,2,ATIVA,circulante,,liability
+2.1.1,2.1.1,Obrigações a Pagar,ANALITICA,CREDITO,2.1,ATIVA,obrigacao,,liability
+3,3,PATRIMÔNIO SOCIAL,SINTETICA,CREDITO,,ATIVA,"grupo,patrimonio",,equity
+3.1,3.1,Patrimônio Social Acumulado,ANALITICA,CREDITO,3,ATIVA,patrimonio,,equity
+3.2,3.2,Superávit/Déficit do Exercício,ANALITICA,CREDITO,3,ATIVA,resultado,,equity
+6,6,RECEITAS,SINTETICA,CREDITO,,ATIVA,grupo,,revenue
+6.1,6.1,Receitas de Contribuições,SINTETICA,CREDITO,6,ATIVA,contribuicao,,revenue
+6.1.1,6.1.1,Contribuição de Associado,ANALITICA,CREDITO,6.1,ATIVA,"contribuicao,associado",Contribuição Associado,revenue
+6.1.2,6.1.2,Contribuição de Não Associado,ANALITICA,CREDITO,6.1,ATIVA,"contribuicao,nao-associado",Contribuição Não Associado,revenue
+6.2,6.2,Receitas Financeiras,SINTETICA,CREDITO,6,ATIVA,financeira,,revenue
+6.2.1,6.2.1,Rendimento de Aplicações,ANALITICA,CREDITO,6.2,ATIVA,"rendimento,aplicacao",BB Renda rendimento Aplicações,revenue
+6.3,6.3,Outras Receitas,SINTETICA,CREDITO,6,ATIVA,outras,,revenue
+6.3.1,6.3.1,Premiação,ANALITICA,CREDITO,6.3,ATIVA,premiacao,Premiação,revenue
+7,7,DESPESAS,SINTETICA,DEBITO,,ATIVA,grupo,,expense
+7.1,7.1,Despesas Administrativas,SINTETICA,DEBITO,7,ATIVA,administrativa,,expense
+7.1.1,7.1.1,Tarifas Bancárias,SINTETICA,DEBITO,7.1,ATIVA,"tarifa,banco",,expense
+7.1.1.001,7.1.1.001,Tarifa de Pix,ANALITICA,DEBITO,7.1.1,ATIVA,"tarifa,pix",Tarifa de Pix,expense
+7.1.1.002,7.1.1.002,Tarifa Pacote de Serviço,ANALITICA,DEBITO,7.1.1,ATIVA,"tarifa,pacote",Tarifa Pacote de Serviço,expense
+7.1.2,7.1.2,Mensalidades e Anuidades,SINTETICA,DEBITO,7.1,ATIVA,mensalidade,,expense
+7.1.2.001,7.1.2.001,Mensalidade Federação/Conselho,ANALITICA,DEBITO,7.1.2,ATIVA,"mensalidade,federacao",Pagamento Mensalidade,expense
+7.2,7.2,Despesas Tributárias,SINTETICA,DEBITO,7,ATIVA,tributo,,expense
+7.2.1,7.2.1,ISS - Imposto sobre Serviços,ANALITICA,DEBITO,7.2,ATIVA,"iss,imposto",Pagamento ISS,expense
+7.2.2,7.2.2,Imposto de Renda sobre Aplicações,ANALITICA,DEBITO,7.2,ATIVA,"ir,imposto,aplicacao",BB Renda Imposto de renda,expense
+7.3,7.3,Despesas com Utilidades,SINTETICA,DEBITO,7,ATIVA,utilidade,,expense
+7.3.1,7.3.1,Energia Elétrica,ANALITICA,DEBITO,7.3,ATIVA,"energia,utilidade",Pagamento de Energia,expense
+7.3.2,7.3.2,Água e Esgoto,ANALITICA,DEBITO,7.3,ATIVA,"agua,utilidade",Pagamento de Agua,expense
+7.3.3,7.3.3,Telefone e Internet,ANALITICA,DEBITO,7.3,ATIVA,"telefone,utilidade",Pagamento Telefone,expense
+7.4,7.4,Despesas com Serviços de Terceiros,SINTETICA,DEBITO,7,ATIVA,servico,,expense
+7.4.1,7.4.1,Serviços de Limpeza,ANALITICA,DEBITO,7.4,ATIVA,"limpeza,servico",Pagamento de Serviço de Limpeza,expense
+7.4.2,7.4.2,Serviços de Manutenção e Reparos,ANALITICA,DEBITO,7.4,ATIVA,"manutencao,servico",Pag. de Serv.de montagem da porta,expense
+7.5,7.5,Despesas com Materiais e Aquisições,SINTETICA,DEBITO,7,ATIVA,"material,aquisicao",,expense
+7.5.1,7.5.1,Material de Construção e Manutenção,ANALITICA,DEBITO,7.5,ATIVA,"material,construcao",Aquisição de Placa Piso Borracha e Cola,expense
+7.5.2,7.5.2,Material de Embalagens,ANALITICA,DEBITO,7.5,ATIVA,"material,embalagem",Aquisição de material de embalagens,expense
+

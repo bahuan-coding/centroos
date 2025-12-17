@@ -4,8 +4,21 @@ import { appRouter } from '../../server/routers';
 import type { Context } from '../../server/trpc';
 
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
-  // Build a Request object from the Netlify event
-  const url = new URL(event.rawUrl || `https://${event.headers.host}${event.path}`);
+  // Build the URL - handle both direct and redirected paths
+  const host = event.headers.host || 'localhost';
+  let path = event.path;
+  
+  // If coming from /api/trpc redirect, normalize the path
+  if (path.startsWith('/api/trpc')) {
+    path = '/.netlify/functions/trpc' + path.substring('/api/trpc'.length);
+  }
+  
+  const url = new URL(path, `https://${host}`);
+  if (event.queryStringParameters) {
+    for (const [key, value] of Object.entries(event.queryStringParameters)) {
+      if (value) url.searchParams.set(key, value);
+    }
+  }
   
   const request = new Request(url.toString(), {
     method: event.httpMethod,

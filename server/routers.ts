@@ -1043,7 +1043,7 @@ const pessoasRouter = router({
         AND t.tipo = 'receber'
       GROUP BY p.id, p.nome, p.tipo
       HAVING COUNT(t.id) > 1
-      ORDER BY COUNT(t.id) DESC, SUM(CAST(t.valor_liquido AS NUMERIC)) DESC
+      ORDER BY SUM(CAST(t.valor_liquido AS NUMERIC)) DESC, COUNT(t.id) DESC
       LIMIT ${limite}
     `);
     return topDoadores.rows.map((row: any) => ({

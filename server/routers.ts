@@ -900,6 +900,351 @@ const auditRouter = router({
     }),
 });
 
+// ==================== PESSOAS ROUTER ====================
+const pessoasRouter = router({
+  list: publicProcedure
+    .input(z.object({
+      tipo: z.enum(['fisica', 'juridica']).optional(),
+      apenasAssociados: z.boolean().optional(),
+      search: z.string().optional(),
+      page: z.number().default(1),
+      limit: z.number().min(1).max(100).default(50),
+    }).optional())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const page = input?.page || 1;
+      const limit = input?.limit || 50;
+      const offset = (page - 1) * limit;
+
+      // Build query with joins
+      const results = await db.select({
+        pessoa: schema.pessoa,
+        associado: schema.associado,
+      })
+        .from(schema.pessoa)
+        .leftJoin(schema.associado, eq(schema.associado.pessoaId, schema.pessoa.id))
+        .where(
+          and(
+            isNull(schema.pessoa.deletedAt),
+            input?.tipo ? eq(schema.pessoa.tipo, input.tipo) : undefined,
+            input?.apenasAssociados ? sql`${schema.associado.id} IS NOT NULL` : undefined,
+            input?.search ? like(schema.pessoa.nome, `%${input.search}%`) : undefined,
+          )
+        )
+        .orderBy(asc(schema.pessoa.nome))
+        .limit(limit)
+        .offset(offset);
+
+      const [countResult] = await db.select({ count: sql<number>`count(*)` })
+        .from(schema.pessoa)
+        .leftJoin(schema.associado, eq(schema.associado.pessoaId, schema.pessoa.id))
+        .where(
+          and(
+            isNull(schema.pessoa.deletedAt),
+            input?.tipo ? eq(schema.pessoa.tipo, input.tipo) : undefined,
+            input?.apenasAssociados ? sql`${schema.associado.id} IS NOT NULL` : undefined,
+            input?.search ? like(schema.pessoa.nome, `%${input.search}%`) : undefined,
+          )
+        );
+
+      return {
+        pessoas: results.map(r => ({
+          ...r.pessoa,
+          associado: r.associado,
+          isAssociado: !!r.associado,
+        })),
+        total: countResult.count,
+        page,
+        pages: Math.ceil(countResult.count / limit),
+      };
+    }),
+
+  getById: publicProcedure.input(z.string().uuid()).query(async ({ input }) => {
+    const db = await getDb();
+    const [result] = await db.select({
+      pessoa: schema.pessoa,
+      associado: schema.associado,
+    })
+      .from(schema.pessoa)
+      .leftJoin(schema.associado, eq(schema.associado.pessoaId, schema.pessoa.id))
+      .where(eq(schema.pessoa.id, input));
+
+    if (!result) throw new TRPCError({ code: 'NOT_FOUND', message: 'Pessoa não encontrada' });
+    return { ...result.pessoa, associado: result.associado, isAssociado: !!result.associado };
+  }),
+
+  stats: publicProcedure.query(async () => {
+    const db = await getDb();
+    const [total] = await db.select({ count: sql<number>`count(*)` }).from(schema.pessoa).where(isNull(schema.pessoa.deletedAt));
+    const [associados] = await db.select({ count: sql<number>`count(*)` }).from(schema.associado);
+    return {
+      total: total.count,
+      associados: associados.count,
+      naoAssociados: total.count - associados.count,
+    };
+  }),
+});
+
+// ==================== TÍTULOS ROUTER ====================
+const titulosRouter = router({
+  list: publicProcedure
+    .input(z.object({
+      tipo: z.enum(['pagar', 'receber']).optional(),
+      status: z.enum(['rascunho', 'pendente_aprovacao', 'aprovado', 'parcial', 'quitado', 'cancelado', 'vencido']).optional(),
+      mesAno: z.string().optional(), // formato: "2025-11"
+      search: z.string().optional(),
+      page: z.number().default(1),
+      limit: z.number().min(1).max(100).default(50),
+    }).optional())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const page = input?.page || 1;
+      const limit = input?.limit || 50;
+      const offset = (page - 1) * limit;
+
+      const conditions = [isNull(schema.titulo.deletedAt)];
+      if (input?.tipo) conditions.push(eq(schema.titulo.tipo, input.tipo));
+      if (input?.status) conditions.push(eq(schema.titulo.status, input.status));
+      if (input?.mesAno) {
+        const [ano, mes] = input.mesAno.split('-').map(Number);
+        const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
+        const fim = `${ano}-${String(mes).padStart(2, '0')}-31`;
+        conditions.push(between(schema.titulo.dataCompetencia, inicio, fim));
+      }
+
+      const results = await db.select({
+        titulo: schema.titulo,
+        pessoa: schema.pessoa,
+      })
+        .from(schema.titulo)
+        .leftJoin(schema.pessoa, eq(schema.titulo.pessoaId, schema.pessoa.id))
+        .where(and(...conditions))
+        .orderBy(desc(schema.titulo.dataEmissao))
+        .limit(limit)
+        .offset(offset);
+
+      const [countResult] = await db.select({ count: sql<number>`count(*)` })
+        .from(schema.titulo)
+        .where(and(...conditions));
+
+      // Somar totais
+      const [totais] = await db.select({
+        totalReceber: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+        totalPagar: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      })
+        .from(schema.titulo)
+        .where(and(...conditions));
+
+      return {
+        titulos: results.map(r => ({ ...r.titulo, pessoa: r.pessoa })),
+        total: countResult.count,
+        page,
+        pages: Math.ceil(countResult.count / limit),
+        totalReceber: Number(totais.totalReceber),
+        totalPagar: Number(totais.totalPagar),
+      };
+    }),
+
+  stats: publicProcedure.query(async () => {
+    const db = await getDb();
+    const [stats] = await db.select({
+      total: sql<number>`count(*)`,
+      totalReceber: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      totalPagar: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      quitados: sql<number>`count(*) FILTER (WHERE status = 'quitado')`,
+      pendentes: sql<number>`count(*) FILTER (WHERE status IN ('pendente_aprovacao', 'aprovado', 'parcial'))`,
+    })
+      .from(schema.titulo)
+      .where(isNull(schema.titulo.deletedAt));
+
+    return {
+      total: stats.total,
+      totalReceber: Number(stats.totalReceber),
+      totalPagar: Number(stats.totalPagar),
+      saldo: Number(stats.totalReceber) - Number(stats.totalPagar),
+      quitados: stats.quitados,
+      pendentes: stats.pendentes,
+    };
+  }),
+
+  byMonth: publicProcedure.input(z.number().optional()).query(async ({ input: meses = 12 }) => {
+    const db = await getDb();
+    const results = await db.select({
+      mes: sql<string>`TO_CHAR(data_competencia::date, 'YYYY-MM')`,
+      receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+    })
+      .from(schema.titulo)
+      .where(isNull(schema.titulo.deletedAt))
+      .groupBy(sql`TO_CHAR(data_competencia::date, 'YYYY-MM')`)
+      .orderBy(sql`TO_CHAR(data_competencia::date, 'YYYY-MM')`)
+      .limit(meses);
+
+    return results.map(r => ({
+      mes: r.mes,
+      receitas: Number(r.receitas),
+      despesas: Number(r.despesas),
+      saldo: Number(r.receitas) - Number(r.despesas),
+    }));
+  }),
+});
+
+// ==================== CONTAS FINANCEIRAS ROUTER ====================
+const contasFinanceirasRouter = router({
+  list: publicProcedure.query(async () => {
+    const db = await getDb();
+    const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true)).orderBy(asc(schema.contaFinanceira.nome));
+
+    // Calcular saldo de cada conta
+    const contasComSaldo = await Promise.all(contas.map(async (conta) => {
+      // Saldo das baixas
+      const [baixas] = await db.select({
+        entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN valor_pago::numeric ELSE 0 END), 0)`,
+        saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN valor_pago::numeric ELSE 0 END), 0)`,
+      })
+        .from(schema.tituloBaixa)
+        .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id))
+        .where(eq(schema.tituloBaixa.contaFinanceiraId, conta.id));
+
+      const saldoInicial = Number(conta.saldoInicial) || 0;
+      const entradas = Number(baixas.entradas) || 0;
+      const saidas = Number(baixas.saidas) || 0;
+      const saldoAtual = saldoInicial + entradas - saidas;
+
+      return { ...conta, saldoAtual, entradas, saidas };
+    }));
+
+    return contasComSaldo;
+  }),
+
+  stats: publicProcedure.query(async () => {
+    const db = await getDb();
+    const [count] = await db.select({ count: sql<number>`count(*)` }).from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
+
+    const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
+
+    let saldoTotal = 0;
+    for (const conta of contas) {
+      const [baixas] = await db.select({
+        entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN valor_pago::numeric ELSE 0 END), 0)`,
+        saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN valor_pago::numeric ELSE 0 END), 0)`,
+      })
+        .from(schema.tituloBaixa)
+        .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id))
+        .where(eq(schema.tituloBaixa.contaFinanceiraId, conta.id));
+
+      saldoTotal += Number(conta.saldoInicial) + Number(baixas.entradas) - Number(baixas.saidas);
+    }
+
+    return { total: count.count, saldoTotal };
+  }),
+});
+
+// ==================== PERÍODOS CONTÁBEIS ROUTER (NOVO SCHEMA) ====================
+const periodosContabeisRouter = router({
+  list: publicProcedure.query(async () => {
+    const db = await getDb();
+    return db.select().from(schema.periodoContabil).orderBy(desc(schema.periodoContabil.ano), desc(schema.periodoContabil.mes));
+  }),
+
+  stats: publicProcedure.query(async () => {
+    const db = await getDb();
+    const [count] = await db.select({ count: sql<number>`count(*)` }).from(schema.periodoContabil);
+    const [abertos] = await db.select({ count: sql<number>`count(*)` }).from(schema.periodoContabil).where(eq(schema.periodoContabil.status, 'aberto'));
+    return { total: count.count, abertos: abertos.count };
+  }),
+});
+
+// ==================== EXTRATOS ROUTER ====================
+const extratosRouter = router({
+  list: publicProcedure.query(async () => {
+    const db = await getDb();
+    return db.select({
+      extrato: schema.extratoBancario,
+      conta: schema.contaFinanceira,
+    })
+      .from(schema.extratoBancario)
+      .leftJoin(schema.contaFinanceira, eq(schema.extratoBancario.contaFinanceiraId, schema.contaFinanceira.id))
+      .orderBy(desc(schema.extratoBancario.importadoEm));
+  }),
+
+  linhas: publicProcedure
+    .input(z.object({ extratoId: z.string().uuid().optional(), status: z.enum(['pendente', 'conciliado', 'ignorado', 'duplicado']).optional() }).optional())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const conditions = [];
+      if (input?.extratoId) conditions.push(eq(schema.extratoLinha.extratoId, input.extratoId));
+      if (input?.status) conditions.push(eq(schema.extratoLinha.status, input.status));
+
+      const linhas = await db.select()
+        .from(schema.extratoLinha)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(schema.extratoLinha.dataMovimento));
+
+      return linhas;
+    }),
+
+  stats: publicProcedure.query(async () => {
+    const db = await getDb();
+    const [extratos] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoBancario);
+    const [linhas] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoLinha);
+    const [pendentes] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoLinha).where(eq(schema.extratoLinha.status, 'pendente'));
+    return { extratos: extratos.count, linhas: linhas.count, pendentes: pendentes.count };
+  }),
+});
+
+// ==================== DASHBOARD ROUTER ====================
+const dashboardRouter = router({
+  kpis: publicProcedure.query(async () => {
+    const db = await getDb();
+
+    // Pessoas
+    const [pessoas] = await db.select({ count: sql<number>`count(*)` }).from(schema.pessoa).where(isNull(schema.pessoa.deletedAt));
+    const [associados] = await db.select({ count: sql<number>`count(*)` }).from(schema.associado);
+
+    // Títulos
+    const [titulos] = await db.select({
+      total: sql<number>`count(*)`,
+      receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+    }).from(schema.titulo).where(isNull(schema.titulo.deletedAt));
+
+    // Contas financeiras e saldo
+    const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
+    let saldoTotal = 0;
+    for (const conta of contas) {
+      const [baixas] = await db.select({
+        entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN valor_pago::numeric ELSE 0 END), 0)`,
+        saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN valor_pago::numeric ELSE 0 END), 0)`,
+      })
+        .from(schema.tituloBaixa)
+        .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id))
+        .where(eq(schema.tituloBaixa.contaFinanceiraId, conta.id));
+      saldoTotal += Number(conta.saldoInicial) + Number(baixas.entradas) - Number(baixas.saidas);
+    }
+
+    // Períodos
+    const [periodos] = await db.select({ count: sql<number>`count(*)` }).from(schema.periodoContabil);
+
+    // Extratos pendentes
+    const [pendentes] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoLinha).where(eq(schema.extratoLinha.status, 'pendente'));
+
+    return {
+      pessoas: pessoas.count,
+      associados: associados.count,
+      naoAssociados: pessoas.count - associados.count,
+      contasFinanceiras: contas.length,
+      saldoTotal,
+      lancamentos: titulos.total,
+      receitas: Number(titulos.receitas),
+      despesas: Number(titulos.despesas),
+      resultado: Number(titulos.receitas) - Number(titulos.despesas),
+      periodos: periodos.count,
+      extratosPendentes: pendentes.count,
+    };
+  }),
+});
+
 // ==================== MAIN ROUTER ====================
 export const appRouter = router({
   accounts: accountsRouter,
@@ -910,6 +1255,13 @@ export const appRouter = router({
   reports: reportsRouter,
   audit: auditRouter,
   bankImports: bankImportsRouter,
+  // Novos routers
+  pessoas: pessoasRouter,
+  titulos: titulosRouter,
+  contasFinanceiras: contasFinanceirasRouter,
+  periodosContabeis: periodosContabeisRouter,
+  extratos: extratosRouter,
+  dashboard: dashboardRouter,
 });
 
 export type AppRouter = typeof appRouter;

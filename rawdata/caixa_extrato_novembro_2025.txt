@@ -1,0 +1,37 @@
+CAIXA — Extrato por período
+
+Cliente: CENTRO ESPIRITA CASA DO CAMINHO
+Conta: 2392 / 1292.000577535744-9
+Data (emissão): 16/12/2025 - 19:29
+Mês: Novembro
+Período dos lançamentos: 01/11/2025 até 30/11/2025
+Saldo anterior: R$ 9.422,25 C
+
+Lançamentos (colunas: Data/Hora | Nr. Doc | Histórico/Complemento | Favorecido | CPF/CNPJ | Valor | Saldo)
+28/11/2025 - 12:36:48 | 281236 | DEB PIX CHAVE | Plastipel Embalage | **091.781/0*** | 618,86 D | 13.419,41 C
+28/11/2025 - 12:36:48 | 281236 | TAR PIX |  |  | 5,50 D | 13.413,91 C
+28/11/2025 - 00:00:00 | 000000 | SALDO DIA |  |  | 0,00 C | 13.413,91 C
+25/11/2025 - 05:27:51 | 202510 | MENSALIDADE CESTA SERVICO |  |  | 75,00 D | 14.038,27 C
+25/11/2025 - 00:00:00 | 000000 | SALDO DIA |  |  | 0,00 C | 14.038,27 C
+17/11/2025 - 13:22:43 | 171322 | PAGAMENTO AGUA IBC | Brk Amb Regiao Met | **580.673/0*** | 433,32 D | 14.113,27 C
+17/11/2025 - 00:00:00 | 000000 | SALDO DIA |  |  | 0,00 C | 14.113,27 C
+11/11/2025 - 16:33:48 | 069467 | PREMIACAO | Sefaz Al | **200.192/0*** | 7.865,30 C | 14.546,59 C
+11/11/2025 - 00:00:00 | 000000 | SALDO DIA |  |  | 0,00 C | 14.546,59 C
+10/11/2025 - 18:43:20 | 101843 | DEB PIX CHAVE | Messias de Lima Sa | ***.898.414*** | 600,00 D | 6.686,63 C
+10/11/2025 - 18:43:20 | 101843 | TAR PIX |  |  | 5,34 D | 6.681,29 C
+10/11/2025 - 00:00:00 | 000000 | SALDO DIA |  |  | 0,00 C | 6.681,29 C
+07/11/2025 - 06:16:13 | 070616 | PAGAMENTO TELEFONE IBC | Claro Sa | **432.544/0*** | 150,64 D | 8.063,11 C
+07/11/2025 - 07:15:22 | 070715 | PAG BOLETO IBC | Equatorial Alagoas | **272.084/0*** | 171,14 D | 7.891,97 C
+07/11/2025 - 11:19:35 | 071119 | DEB PIX CHAVE | Maria Girlene Dos | ***.923.754*** | 600,00 D | 7.291,97 C
+07/11/2025 - 11:19:35 | 071119 | TAR PIX |  |  | 5,34 D | 7.286,63 C
+07/11/2025 - 00:00:00 | 000000 | SALDO DIA |  |  | 0,00 C | 7.286,63 C
+03/11/2025 - 12:07:03 | 031207 | DEB PIX CHAVE | Messias de Lima Sa | ***.898.414*** | 1.200,00 D | 8.222,25 C
+03/11/2025 - 12:07:03 | 031207 | TAR PIX |  |  | 8,50 D | 8.213,75 C
+03/11/2025 - 00:00:00 | 000000 | SALDO DIA |  |  | 0,00 C | 8.213,75 C
+
+Contatos:
+Alô CAIXA: 4004 0104 (Capitais e Regiões Metropolitanas)
+Alô CAIXA: 0800 104 0104 (Demais Regiões)
+Pessoas com deficiência: 0800 726 2492
+SAC CAIXA: 0800 726 0101
+Ouvidoria: 0800 725 7474

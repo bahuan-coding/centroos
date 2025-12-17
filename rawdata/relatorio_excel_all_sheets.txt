@@ -1,0 +1,1622 @@
+Arquivo origem: relatorio^L1202025 (version 1).xlsb.xlsx
+Extração: TSV por aba + este arquivo combinado
+
+
+
+===== ABA: CONTRIBUIÇÃO ASSOCIADOS =====
+																											
+								CONTRIBUIÇÃO DOS ASSOCIADOS ANO 2025																			
+NOME	nº  matri	 ANO ANTERIOR		JAN		FEV 		MAR		ABR		MAI		JUN		JUL		AGO		SET 		OUT 		NOV		DEZ	
+		Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor
+CELIA COSTA DOS SANTOS	3			2025-01-02 00:00:00	100	2025-02-03 00:00:00	100	2025-03-05 00:00:00	100	2025-04-01 00:00:00	100	2025-05-02 00:00:00	100	2025-06-02 00:00:00	100	2025-07-01 00:00:00	100	2025-08-04 00:00:00	100	2025-09-01 00:00:00	100	2025-10-01 00:00:00	100				
+CÉLIA MARIA BRAGA NETTO COSTA	4																										
+DIVA GALVÃO CAVALCANTE	5																										
+EDLEUZA MELO VASCONCELOS	7			2025-02-18 00:00:00	75	2025-02-18 00:00:00	75																				
+GLEICIANA SANTIAGO SOARES	8			2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15	2025-06-09 00:00:00	15
+JAILTON RODRIGUES DOS SANTOS	9			2025-01-28 00:00:00	15	2025-03-05 00:00:00	15	2025-03-24 00:00:00	25	2025-04-28 00:00:00	25	2025-05-26 00:00:00	25	2025-06-26 00:00:00	25	2025-07-28 00:00:00	25	2025-08-25 00:00:00	25	2025-09-24 00:00:00	25	2025-10-24 00:00:00	25				
+LÍDIA ROBERTA MELO VASCONCELOS	12			2025-02-18 00:00:00	75	2025-02-18 00:00:00	75																				
+MARIA JÚLIA TEIXEIRA LEMOS	14																										
+LUIZ CARLOS MARINHO SIMÕES	15					2025-07-28 00:00:00	20	2025-07-28 00:00:00	20	2025-07-28 00:00:00	20	2025-07-28 00:00:00	20	2025-07-28 00:00:00	20	2025-07-28 00:00:00	20	2025-07-28 00:00:00	20	2025-07-28 00:00:00	20	2025-07-28 00:00:00	20				
+MARIA CRISTINA ANTUNES DO C.PINHEIRO	18			2025-01-06 00:00:00	100			2025-03-05 00:00:00	100	2025-04-02 00:00:00	100	2025-05-02 00:00:00	100	2025-06-02 00:00:00	100	2025-07-01 00:00:00	100	2025-08-01 00:00:00	120	2025-09-01 00:00:00	120	2025-10-01 00:00:00	120				
+MARIA DE FÁTIMA OLIVEIRA DOS SANTOS	19			2025-01-28 00:00:00	10	2025-03-05 00:00:00	10	2025-03-24 00:00:00	25	2025-04-28 00:00:00	25	2025-05-26 00:00:00	25	2025-06-26 00:00:00	25	2025-07-28 00:00:00	25	2025-08-25 00:00:00	25	2025-09-24 00:00:00	25						
+MARIA DE LOURDES LOPES DOS SANTOS	20			2025-01-10 00:00:00	20	2025-02-14 00:00:00	20	2025-03-07 00:00:00	20	2025-04-22 00:00:00	20	2025-05-02 00:00:00	20	2025-06-06 00:00:00	20	2025-07-11 00:00:00	20	2025-08-15 00:00:00	20	2025-09-05 00:00:00	20	2025-10-24 00:00:00	25				
+ELISABETE FREIRE COSTA BARROS	26																										
+ROSILENE MARQUES AGUIAR BORGES	28			2025-03-28 00:00:00	25	2025-03-28 00:00:00	25	2025-03-28 00:00:00	50	2025-04-29 00:00:00	100	2025-05-27 00:00:00	100	2025-06-27 00:00:00	100	2025-07-28 00:00:00	100	2025-08-28 00:00:00	100	2025-09-26 00:00:00	100	2025-10-28 00:00:00	100				
+SAMIRA CAVALCANTE LIMA	29																										
+SEVERINA CORREIA SILVA	30			2025-01-06 00:00:00	20	2025-02-18 00:00:00	20	2025-03-05 00:00:00	20	2025-04-04 00:00:00	20	2025-05-05 00:00:00	20	2025-06-06 00:00:00	20	2025-07-02 00:00:00	20	2025-08-04 00:00:00	20	2025-09-01 00:00:00	20	2025-10-02 00:00:00	20				
+SIRLEIDE G. DE ALBUQUERQUE SANTOS	31	25-04.06.05-03.06-0107	470	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10	2025-05-30 00:00:00	10
+HELENA DE FÁTIMA OLIVEIRA DA SILVA	34			2025-01-10 00:00:00	25	2025-02-10 00:00:00	50	2025-03-10 00:00:00	25	2025-04-07 00:00:00	25	2025-05-08 00:00:00	25	2025-06-06 00:00:00	25	2025-07-07 00:00:00	25	2025-08-07 00:00:00	25	2025-09-05 00:00:00	25	2025-10-07 00:00:00	25				
+ELIANE FERREIRA DOS SANTOS	36																										
+IRACI SILVA MELO	37																										
+PATRÍCIA LOPES BRANDÃO	38	2025-01-07 00:00:00	25	2025-02-03 00:00:00	25	2025-02-28 00:00:00	25	2025-04-01 00:00:00	25	2025-04-30 00:00:00	25	2025-05-30 00:00:00	25	2025-07-07 00:00:00	25	2025-07-31 00:00:00	25	2025-09-01 00:00:00	25	2025-09-30 00:00:00	25						
+MAURÍCIO FERREIRA DA SILVA	39			2025-01-10 00:00:00	25	2025-02-10 00:00:00	50	2025-03-10 00:00:00	25	2025-04-07 00:00:00	25	2025-05-08 00:00:00	25	2025-06-06 00:00:00	25	2025-07-07 00:00:00	25	2025-08-07 00:00:00	25	2025-09-05 00:00:00	25	2025-10-07 00:00:00	25				
+CRISTINA RAQUEL LOPES DOS S. TONIAL	42																										
+ANA PAULA BORGES MENDONÇA	43																										
+GUSTAVO REIS SARMENTO	45			2025-01-03 00:00:00	50	2025-02-03 00:00:00	50	2025-03-07 00:00:00	50	2025-04-03 00:00:00	50	2025-05-06 00:00:00	50	2025-06-03 00:00:00	50	2025-07-07 00:00:00	50	2025-08-04 00:00:00	50	2025-09-09 00:00:00	50						
+MARIA ADRIANA DE MELO SARMENTO	46																										
+MARIA DENISE BUARQUE DE CARVALHO	47			2025-01-13 00:00:00	25	2025-02-13 00:00:00	25	2025-03-13 00:00:00	25	2025-04-14 00:00:00	25	2025-05-13 00:00:00	25	2025-06-13 00:00:00	25	2025-07-14 00:00:00	25	2025-08-13 00:00:00	25	2025-09-15 00:00:00	25	2025-10-13 00:00:00	25				
+ALZIRA MARIA PERDIGÃO	48			2025-01-03 00:00:00	25	2025-02-03 00:00:00	25	2025-03-07 00:00:00	25	2025-04-03 00:00:00	25	2025-05-06 00:00:00	25	2025-06-03 00:00:00	25	2025-07-07 00:00:00	25	2025-08-04 00:00:00	25	2025-09-09 00:00:00	25						
+MARCOS ANTÔNIO SANTIAGO SOARES	49			2025-01-20 00:00:00	30	2025-02-18 00:00:00	30	2025-03-18 00:00:00	30	2025-04-22 00:00:00	30	2025-05-19 00:00:00	30	2025-06-18 00:00:00	30	2025-07-18 00:00:00	30	2025-08-18 00:00:00	30	2025-09-18 00:00:00	30	2025-10-20 00:00:00	30				
+CRISTINA FEITOSA  SILVA	51																										
+ZEJANE CARDOSO DA SILVA CAMINHO	52																										
+PAULO GOMES  DE MELO JUNIOR	53			2025-01-28 00:00:00	20	2025-02-03 00:00:00	20	2025-03-17 00:00:00	20	2025-04-16 00:00:00	20			2025-06-30 00:00:00	20			2025-08-20 00:00:00	20	2025-09-23 00:00:00	20	2025-10-23 00:00:00	20				
+BIANCA RENATA DE ALMEIDA	54			2025-01-28 00:00:00	20	2025-02-03 00:00:00	20	2025-03-17 00:00:00	20	2025-04-16 00:00:00	20			2025-06-30 00:00:00	20	2025-08-20 00:00:00	20	2025-08-20 00:00:00	20	2025-09-23 00:00:00	20	2025-10-23 00:00:00	20				
+CLAUDIO F. PERRELLI	56																										
+LUIZ BEZERRA MENDONÇA	58																										
+EDUARDO HENRIQUE NUNES BUARQUE	59			2025-01-13 00:00:00	25	2025-02-13 00:00:00	25	2025-03-13 00:00:00	25	2025-04-14 00:00:00	25	2025-05-13 00:00:00	25	2025-06-13 00:00:00	25	2025-07-14 00:00:00	25	2025-08-13 00:00:00	25	2025-09-15 00:00:00	25	2025-10-13 00:00:00	25				
+PAULO OLIVEIRA DE MORAIS	60																										
+NAZIDIR MARIA DOS SANTOS	62			2025-01-10 00:00:00	30	2025-02-14 00:00:00	30	2025-03-07 00:00:00	30	2025-04-03 00:00:00	30	2025-05-02 00:00:00	30	2025-06-03 00:00:00	30	2025-07-31 00:00:00	30	2025-09-01 00:00:00	15	2025-10-01 00:00:00	50						
+EDNILTON LUCENA 	63																										
+SONIA MARIA ALVES DE LIMA	66																										
+ANGELA LÚCIA OLIVEIRA DA SILVA	67																										
+JOSE MARIA VIEIRA DA SILVA	68																										
+JEFERSON GABRIEL SOARES	69																										
+RENATA DE MELO FRANCO	80																					2025-10-23 00:00:00	10				
+LAÍS SANTIAGO SOARES	87																										
+KILARE TAWYNNE S. MONTEIRO	85			2025-01-10 00:00:00	10	2025-02-14 00:00:00	10	2025-03-07 00:00:00	10	2025-05-02 00:00:00	15	2025-05-02 00:00:00	10	2025-06-03 00:00:00	15	2025-07-31 00:00:00	15	2025-09-01 00:00:00	15	2025-10-01 00:00:00	25						
+JOSEDIR JUSSARA DOS SANTOS	104			2025-01-10 00:00:00	10	2025-02-14 00:00:00	10	2025-03-07 00:00:00	10	2025-05-02 00:00:00	15	2025-05-02 00:00:00	10	2025-06-03 00:00:00	15	2025-07-31 00:00:00	15	2025-09-01 00:00:00	15	2025-10-01 00:00:00	25						
+JORGE MEDEIROS	99																										
+LUCIANA DA SILVA CAVALCANTE				2025-03-26 00:00:00	15	2025-03-26 00:00:00	15	2025-03-31 00:00:00	15			2025-05-05 00:00:00	15	2025-06-02 00:00:00	15	2025-07-03 00:00:00	15	2025-08-04 00:00:00	15	2025-09-04 00:00:00	15	2025-10-06 00:00:00	15				
+ELILDIERLI SOARES FERREIRA																											
+LUCIANO GOMES DA SILVA						2025-02-03 00:00:00	100											2025-08-14 00:00:00	100								
+SANDRA GABRIELA LOPES DOS SANTOS				2025-01-10 00:00:00	10	2025-02-14 00:00:00	10	2025-03-07 00:00:00	10	2025-04-22 00:00:00	10	2025-05-02 00:00:00	10	2025-06-06 00:00:00	10	2025-07-11 00:00:00	10	2025-08-15 00:00:00	10	2025-09-05 00:00:00	10						
+ALCIONE SOARES FERREIRA																											
+JANE COSTA DA SILVA																											
+YAGO ALMEIDA																											
+ANDREIA SANTOS SANTANA										2025-04-21 00:00:00	50	2025-05-02 00:00:00	50	2025-06-09 00:00:00	50	2025-07-11 00:00:00	50	2025-08-15 00:00:00	50	2025-09-09 00:00:00	50	2025-10-03 00:00:00	50				
+DAYSE LIDIANE SILVA																				2025-09-08 00:00:00	25	2025-10-09 00:00:00	25				
+																											
+Totais					810		880		730		825		790		840		820		945						25		
+																											
+																											
+																											
+																											
+
+
+===== ABA: CONTRIBUIÇÃO NAO ASSOCIADOS  =====
+																											
+								CONTRIBUIÇÃO DOS NÃO ASSOCIADOS ANO 2025																			
+NOME	nº  matri	VALOR		JAN		FEV 		MAR		ABR		MAI		JUN		JUL		AGO		SET 		OUT 		NOV		DEZ	
+		Atual	Bco/Cx	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor	Data	valor
+LARISSA MOURA																											
+EDNA S TENORIO				2025-01-03 00:00:00	150	2025-02-03 00:00:00	150	2025-03-05 00:00:00	150	2025-04-02 00:00:00	150	2025-05-02 00:00:00	150	2025-06-03 00:00:00	150	2025-07-03 00:00:00	150			2025-09-03 00:00:00	150	2025-10-02 00:00:00	150				
+MARIA EDUARDO																											
+ENEIDE ROSSO														2025-06-03 00:00:00	100	2025-07-01 00:00:00	100	2025-08-05 00:00:00	100								
+THAYZE KEYLLA																											
+NAZIDIR MARIA DOS SANTOS				2025-01-07 00:00:00	100	2025-02-03 00:00:00	60	2025-03-05 00:00:00	60	2025-04-02 00:00:00	100	2025-05-05 00:00:00	100	2025-06-30 00:00:00	60	2025-07-07 00:00:00	50	2025-08-20 00:00:00	50			2025-10-02 00:00:00	100				
+NAZIDIR MARIA DOS SANTOS				2025-01-24 00:00:00	100	2025-02-04 00:00:00	100	2025-03-05 00:00:00	100	2025-04-03 00:00:00	60			2025-06-30 00:00:00	130	2025-07-23 00:00:00	300	2025-08-20 00:00:00	130	2025-09-23 00:00:00	130	2025-10-23 00:00:00	130				
+NAZIDIR MARIA DOS SANTOS				2025-01-28 00:00:00	130	2025-02-28 00:00:00	100	2025-03-17 00:00:00	130	2025-04-16 00:00:00	130																
+NAZIDIR MARIA DOS SANTOS																											
+JOSE OLINDINO										2025-04-08 00:00:00	300									2025-09-30 00:00:00	300						
+VICTOR FERREIRA																											
+MICHELINE BATISTA				2025-01-23 00:00:00	50	2025-02-24 00:00:00	50	2025-03-24 00:00:00	50	2025-04-23 00:00:00	50			2025-06-23 00:00:00	50	2025-07-23 00:00:00	50	2025-08-25 00:00:00	50	2025-09-23 00:00:00	50						
+TATIANE MOREIRA						2025-02-06 00:00:00	150	2025-03-26 00:00:00	150	2025-04-04 00:00:00	150	2025-05-02 00:00:00	150	2025-06-09 00:00:00	150	2025-07-07 00:00:00	150	2025-08-11 00:00:00	150	2025-09-04 00:00:00	150	2025-10-03 00:00:00	150				
+CLAUDINETE B. TENORIO  CAVALCANTE								2025-02-27 00:00:00	100	2025-04-15 00:00:00	100	2025-05-16 00:00:00	100	2025-06-03 00:00:00	100	2025-07-08 00:00:00	100	2025-08-05 00:00:00	100	2025-09-08 00:00:00	100	2025-10-08 00:00:00	50				
+MAURICIO FERREIRA DA SILVA								2025-03-31 00:00:00	105.5																		
+Rafael Santana														2025-06-02 00:00:00	25							2025-10-13 00:00:00	10				
+Maria Lopes Milhones														2025-06-02 00:00:00	200												
+Aline Rose														2025-06-13 00:00:00	20												
+Rosangela Maria Xaxier														2025-06-27 00:00:00	60	2025-07-28 00:00:00	40			2025-09-04 00:00:00	40	2025-10-02 00:00:00	20				
+Gabriela Santos																2025-07-28 00:00:00	25										
+Nadjeson																						2025-10-02 00:00:00	50				
+MARLENE A ALBUQUERQUE																						2025-10-13 00:00:00	1000				
+PAULO CESAR																						2025-10-13 00:00:00	30				
+CRISTIANE CASSIANO																						2025-10-13 00:00:00	10				
+SANRA VASCONCELOS																						2025-10-13 00:00:00	10				
+LISYANE PENHA																						2025-10-20 00:00:00	50				
+MICHELINE GOMES																						2025-10-23 00:00:00	50				
+PAULO CESAR																						2025-10-27 00:00:00	30				
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+																											
+Totais					530		610		845.5		1040		500		1045		965		580		920				0		
+																											
+																											
+																											
+																											
+
+
+===== ABA: Sefaz =====
+														
+														
+				SEFAZ  N. FISCAL CIDADÃ - 1ª Semestre 2024 (Gastos a Realizar de Abril  a Agosto de 2024)										
+														
+					01/04/2024 a 31/08/2024									
+	Data de Recebimento	Sorteio	Realizado	Banco	Descrição de Compras	Premiação	Sorteio	Rateio	Total	%	VALORES PARA COMPRAS			
+	2024-03-28 00:00:00	118	2024-03-15 00:00:00	CAIXA ECONOMICA		Dia do Consumidor 2024	7000	888.23	7888.23	0.3	4900	2100		
+	2024-05-27 00:00:00	120	2024-05-10 00:00:00	CAIXA ECONOMICA		Dia das mães 2024	7000	863.56	7863.5599999999995	0.3	4900	2100		
+				CAIXA ECONOMICA					0	0.3	0	0		
+							14000	1751.79	15751.789999999999		9800	4200		
+	 Próximo Sorteio:	Dia do Aniversário (julho)												
+	Data	Dcto.	CNPJ	Fornecedor	Descrição de Compras	 PREMIAÇÃO	VALOR COMPRAS		Despesas	Saldo	Observação			
+							Imobilizado 	Custeio						
+	2024-03-28 00:00:00	Debito		CAIXA ECONOMICA					69	69	Premiação			
+	2024-04-09 00:00:00	Nota Fiscal 029097631	12.272.084/0001-00	Equatorial Distribuidora de Energia S/A	Energia			450.81		519.81				
+	2024-04-09 00:00:00	Nota Fiscal 31	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza			750		1269.81				
+	2024-04-11 00:00:00	Nota Fiscal 272743	01.438.784/0055-90	Leroy Merlin Cia Brasileira de Bricolagem 	Refil do Purificador			229.8		1499.61				
+	2024-04-19 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	Brk Ambiental	Agua			309.54		1809.1499999999999				
+	2024-04-22 00:00:00	Nota Fiscal 41487	01.493.748/0001-36	Construções Ipanema Ltda	Aquis.Mat de construção		56.21			1865.36				
+	2024-04-25 00:00:00	Débito		Caixa Economica Federal	Tarifa Pacote de Serviços				69	1865.36				
+	2024-04-30 00:00:00	Nota Fiscal 029912530	12.272.084/0001-00	Equatorial Energia				142.05		2007.4099999999999				
+	2024-05-02 00:00:00	Nota Fiscal 031465932	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			161.95		2169.3599999999997				
+	2024-05-02 00:00:00	Nota Fiscal 032113084	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			398.38		2567.74				
+	2024-05-02 00:00:00	Nota Fiscal 07	539.629.314-49	Renilton Caetano dos Santos	Serviço de Pedreiro		200			2767.74				
+	2024-05-02 00:00:00	Débito		Caixa Economica Federal	Tarifa Pacote de Serviços				36.5	2767.74				
+	2024-05-03 00:00:00	Nota Fiscal 41711	01.493.748/0001-36	Construção Ipanema Ltda	Material de Construção		75			2842.74				
+	2024-05-08 00:00:00	Nota Fiscal 32	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza			600		3442.74				
+	2024-05-20 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	BRK Ambiental R. Metrop	Pag. Agua e Esgoto			368.36		3811.1				
+	2024-05-27 00:00:00	Débito		Caixa Economica Federal	Tarifa Pacote de Serviços				69	3811.1				
+	2024-06-03 00:00:00	Nota Fiscal 33677761	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			419.25		4230.35				
+	2024-06-03 00:00:00	Nota Fiscal 33019308	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			160.96		4391.31				
+	2024-06-07 00:00:00	Nota Fiscal	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza			600		4991.31				
+	2024-06-25 00:00:00	Débito		Caixa Economica Federal	Tarifa Pacote de Serviços				69	4991.31				
+	2024-07-01 00:00:00	Nota Fiscal 034700562	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			144.28		5135.59				
+	2024-07-04 00:00:00	Nota Fiscal 035364770	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			375.31		5510.900000000001				
+	2024-07-12 00:00:00	Nota Fiscal 42243	12.270.435/0007-20	L.Jardim & Cia. Ltda	Aquisição de Material de Pinturas		1550			7060.900000000001				
+	2024-07-18 00:00:00	Nota Fiscal 3802	00.629.989/0001-05	Total Giro Material de Construção	Aquisição de Telhas		1222.8			8283.7				
+	2024-07-19 00:00:00	Nota Fiscal 1	103.809.804-10	Jose Paulo da Silva	Pintor		2200			10483.7				
+	2024-07-19 00:00:00	Nota Fiscal 42358	12.270.435/0007-20	L.Jardim & Cia. Ltda	Aquisição de Material de Pinturas		56.7			10540.400000000001				
+	2024-04-24 00:00:00	Nota Fiscal 2	103.809.804-10	Jose Paulo da Silva	Pintor		2500			13040.400000000001				
+	2024-07-30 00:00:00	Nota Fiscal 3	103.809.804-10	Jose Paulo da Silva	Pintor		300			13340.400000000001	-2411.3899999999976			
+	2024-08-01 00:00:00	Nota Fiscal 36960121	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			416.77		13757.170000000002			1482.8899999999999	
+	2024-08-01 00:00:00	Nota Fiscal 36243217	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			145.44		13902.610000000002				
+	2024-08-22 00:00:00	Nota Fiscal 339	10.472.963/0001-41	NF Equipamento e Acessorios Eirelli-Me Fogões e Acessorios	Aqusisição de um fogão		1650			15552.610000000002			1486.89	
+				d		15751.789999999999	9810.71	5672.900000000001	312.5	-44.32000000000062	-44.32000000000062		-4.000000000000227	
+							9800							
+								5951.79						
+							10.709999999999127	-33.61000000000058			786.68			
+											69			
+								-44.31999999999971	5985.400000000001		416.77			
+								9.094947017729282e-13	15796.11		145.44	1417.8899999999999	-44.32000000000062	-1462.2100000000005
+									44.32000000000153					151.9
+							56		10.710000000000946		1348.8899999999999	1348.89		-1614.1100000000006
+							2200							
+				1536.68			1222.8				-1393.2100000000005			
+				69			1550		-44.32000000000153		1338.1800000000007			
+				1605.68	9208		2500							
+							300		1661.39					
+												1428.599999999999		
+							7828.8	0						
+														
+							-7818.090000000001	-33.61000000000058		416.77				
+										145.44				
+										142.05				
+	Patrícia Lopes Brandão			Maurício Ferreira da Silva				151.9			69			
+	Coordenadora Geral			Coordenador de Administração & Finanças							786.68			
+											750			
+											1605.6799999999998			
+											1650.0000000000014			
+
+
+===== ABA: Sefaz 25 =====
+														
+														
+				SEFAZ  N. FISCAL CIDADÃ - 1ª Semestre 2024 (Gastos a Realizar de Abril  a Agosto de 2024)										
+														
+					01/04/2024 a 31/08/2024									
+	Data de Recebimento	Sorteio	Realizado	Banco	Descrição de Compras	Premiação	Sorteio	Rateio	Total	%	VALORES PARA COMPRAS			
+	2024-08-15 00:00:00	122	2024-07-25 00:00:00	CAIXA ECONOMICA		DE ANIVERSARIOS 2024	7000	859.11	7859.11	0.3	4900	2100		
+	2024-09-09 00:00:00	124	2024-08-15 00:00:00	CAIXA ECONOMICA		DIA DOS PAIS 2024	10000	941.92	10941.92	0.3	7000	3000		
+	2024-11-18 00:00:00	127	2024-10-15 00:00:00	CAIXA ECONOMICA		DIA DO PROFESSOR 2024	7000	997.51	7997.51	0.3	4900	2100		
+	2024-12-27 00:00:00	128	2024-12-17 00:00:00	CAIXA ECONOMICA		PREMIAÇÃO DE NATAL 2024		767.46	767.46					
+														
+							24000	3566	27566		16800	7200		
+	 Próximo Sorteio:	Dia do Aniversário (julho)												
+	Data	Dcto.	CNPJ	Fornecedor	Descrição de Compras	 PREMIAÇÃO	VALOR COMPRAS		Despesas	Saldo	Observação			
+							Imobilizado 	Custeio						
+	2024-07-26 00:00:00	Débito		Caixa Economica Federal	Tarifa Pacote de Serviços				69	69				
+	2024-08-22 00:00:00	Nota Fiscal 340	10.472.963/0001-41	NF Equipamento e Acessorios Eirelli-Me Fogões e Acessorios	Aqusição de peças para fogão			190		259				
+	2024-08-23 00:00:00	Nota Fiscal 2063	08.099.802/0001-02	José Afonso dos anjos	Conserto da impressora			80		339				
+	2024-08-23 00:00:00	Nota Fiscal 342	10.472.963/0001-41	NF Equipamento e Acessorios Eirelli-Me Fogões e Acessorios	Aqusição de peças para fogão			209		548				
+	2024-08-26 00:00:00	Nota fiscal 98166	11.633.225/0001-29	imperador comercio Varejista e Atacadista Ltda	aquisição de Tecidos			413.6		961.6				
+	2024-08-26 00:00:00	Nota fiscal 1862	24.002.434/0001-99	DOIS BBB -Comercio de Gas e bebidas Ltda	Aquisição de Botijão de Gas			210		1171.6				
+	2024-08-26 00:00:00	Débito		Caixa Economica Federal	Tarifa Pacote de Serviços				69	1240.6				
+	2024-09-13 00:00:00	Nota Fiscal 038550644	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			502.75		1743.35				
+	2024-09-13 00:00:00	Nota Fiscal 36	059.923.754-65	Maria Girlene dos Santos	Pagamento de Serviço de Faxina			750		2493.35				
+	2024-09-13 00:00:00	Nota Fiscal 22	50.897.299/0001-05	Micleivson da Silva Lima Araujo	Asistencia técnica - Conserto de Fogao			250		2743.35				
+	2024-09-18 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	Brk Ambiental Região Metropolitana de Maceió S/A	Pagamento de Agua  Esgoto			358.76		3102.1099999999997				
+	2024-09-25 00:00:00	Debito		CAIXA ECONOMICA	Tarifa Pacote de Serviços				75	3177.1099999999997				
+	2024-09-30 00:00:00	Nota Fiscal 01	056.606.254-28	Carlos Alberto Nascimento dos Santos	Asistencia técnica - Conserto de Maquina de Costura			240		3417.1099999999997				
+	2024-09-30 00:00:00	Nota Fiscal 25	50.897.299/0001-05	Micleivson da Silva Lima Araujo	Asistencia técnica - Conserto de Fogao			100		3517.1099999999997				
+	2024-10-14 00:00:00	Nota Fiscal 039973878	12.272.084/0001-20	Equatorial alagoas Distribuidora de Energia S/A	Pagamento de Energia			526.67		4043.7799999999997				
+	2024-10-14 00:00:00	Nota Fiscal 35	059.923.754-65	Maria Girlene dos Santos	Pagamento serviço de Limpeza			600		4643.78				
+	2024-10-21 00:00:00	Nota Fiscal 1927	24.002.434/0001-99	Dois BBB - Comercio de Gás e Bebidas Ltda	Aquisição de Botijão			315		4958.78				
+	2024-10-25 00:00:00	Debito		Caixa Economica Federal	Tarifa de Serviço				75	5033.78				
+	2024-11-08 00:00:00	nota fiscal 41519639	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			550.12		5583.9				
+	2024-11-08 00:00:00	nota fiscal 41	059.923.754.65	Maria Girlene dos Santos	Serviço de Limpeza			600		6183.9				
+	2024-11-08 00:00:00	Debito		Caixa Economica Federal	Tarifa Pix				5.34	6189.24				
+	2024-11-25 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pacote serviços				75	6264.24				
+	2024-12-06 00:00:00	nf 38	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza			750		7014.24				
+	2024-12-06 00:00:00	Debito		Banco do Brasil S/A	Tarifa Pix				6.67	7020.91				
+	2024-12-19 00:00:00		39.580.673/0001-01	Brk Ambiental Região Metropolitana de Maceió S/A	Pagamento de Agua  Esgoto			424.12		7445.03				
+	2024-12-26 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote serviços				75	7520.03				
+	2025-01-06 00:00:00	Nota Fiscal 2057	24.002.434/0001-99	DOIS BBB -Comercio de Gas e bebidas Ltda	Aquisição de Botijão de Gas			315		7835.03				
+	2025-01-06 00:00:00	Nota Fiscal 44585900 	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			521.41		8356.44				
+	2025-01-06 00:00:00	Débito		Caixa Economica Federal	Tarifa Pacote de Serviços				2.8	8359.24				
+	2025-01-13 00:00:00		059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza			600		8959.24				
+	2025-01-13 00:00:00			Caixa Economica Federal	Tarifa Pacote de Serviços				5.34	8964.58				
+	2015-01-15 00:00:00	Nota Fiscal 043023789	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			569.62		9534.2				
+	2025-01-21 00:00:00									9534.2				
+	2025-01-21 00:00:00	Débito		Caixa Economica Federal	Tarifa Pix				8.5	9542.7				
+	2025-01-27 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote de Serviços				75	9617.7				
+	2025-02-03 00:00:00	Nota Fiscal 046049905	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			592.65		10210.35				
+	2025-02-12 00:00:00	Nota Fiscal 317780	01.438.784/0001-29	Leroy Merlin Cia Brasileira de BR	Aquisição Ceramica		123.78			10334.130000000001				
+	2025-02-21 00:00:00	Nota Fiscal 17189	10.835.536/0001-80	MAX ESQUADRIAS LTDA EPP	Aquisição de Uma porta para Armario		600			10934.130000000001				
+	2025-02-25 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote de Serviços				75	11009.130000000001				
+	2025-02-26 00:00:00	Nota Fiscal 234	25.003.808/0001-53	D Solare Energia e Inovação Ltda	Sistema Fotovoltaico		13300			24309.13				
+	2025-02-26 00:00:00	Nota Fiscal 319682	01.438.784/0001-29	Leroy Merlin Cia Brasileira de BR	Aquisição Ceramica		2808.9		5.34	27123.370000000003				
+	2025-02-26 00:00:00	Nota Fiscal 42	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza			450		27573.370000000003				
+	2025-02-28 00:00:00	Débito		Caixa Economica Federal	Tarifa Pix				8.5	27131.870000000003				
+										27131.870000000003				
+										27131.870000000003				
+										27131.870000000003				
+										27131.870000000003				
+										27131.870000000003				
+				d		27566	16832.68	10118.7	630.49	-15.870000000001028				
+							16800				-8587.400000000001	75	8662.400000000001	
+								10766						
+							32.68000000000029	16.809999999999263						
+											0			
+					5320	5352.68	8128.9							
+								-8144.77	18039.94	16800	1239.9399999999987	1223.1299999999994		
+						27566			18539.06					
+						16800			499.1200000000026			9026.94		
+						10766						1239.94		
+				1536.68										
+				69										
+				1605.68										
+														
+														
+														
+														
+														
+														
+														
+	Patrícia Lopes Brandão			Maurício Ferreira da Silva										
+	Coordenadora Geral			Coordenador de Administração & Finanças										
+
+
+===== ABA: Sefaz 25 A =====
+														
+														
+				SEFAZ  N. FISCAL CIDADÃ - 1ª Semestre 2025 (Gastos a Realizar de Abril  a Agosto de 2025)										
+														
+					01/04/2024 a 31/08/2024									
+	Data de Recebimento	Sorteio	Realizado	Banco	Descrição de Compras	Premiação	Sorteio	Rateio	Total	%	VALORES PARA COMPRAS			
+	2025-04-04 00:00:00	130	2025-03-14 00:00:00	CAIXA ECONOMICA		Dia do Consumidor 2025	10000	806.45	10806.45	0.3	7000	3000		
+	2025-06-03 00:00:00	132	2025-05-16 00:00:00	CAIXA ECONOMICA		Dia das Mães	7000	864.3	7864.3	0.3	4900	2100		
+														
+							17000	1670.75	18670.75		11900	5100		
+	 Próximo Sorteio:	Dia do Aniversário (julho)												
+	Data	Dcto.	CNPJ	Fornecedor	Descrição de Compras	 PREMIAÇÃO	VALOR COMPRAS		Despesas	Saldo	Observação			
+							Imobilizado 	Custeio						
+	2025-04-04 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal	Tarifa Pacote de Serviços				75	-75				
+	2025-04-04 00:00:00	Premiação		Caixa Economica Federal		10806.45				10731.45				
+	2025-04-07 00:00:00	Nota Fiscal 45	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza			750		9981.45				
+	2025-04-07 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal	Tarifa Pix de serviço				6.67	9974.78				
+	2025-04-10 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal	Tarifa Pix de serviço				1.78	9973				
+	2025-04-11 00:00:00	Nota Fiscal 2158	24.002.434/0001-99	Dois BBB - Com.de Gás e Bebidas Ltda	Aquisição GLP 			315		9658				
+	2025-04-11 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal	Tarifa Pix de serviço				2.8	9655.2				
+	2025-04-22 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal	Tarifa Pix de serviço				36.5	9618.7				
+	2025-04-25 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal	Tarifa Pacote de Serviços				75	9543.7				
+	2025-05-26 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal	Tarifa Pacote de Serviços				75	9468.7				
+	2025-06-03 00:00:00	Premiação		Caixa Economica Federal		7864.3				17333				
+	2025-06-25 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal	Tarifa Pacote de Serviços				75	17258				
+	2025-06-25 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	Brk Ambiental Região Metropolitana de Maceió S/A	Pagamento de Agua  Esgoto			485.58		16772.42				
+	2025-06-25 00:00:00	Nota Fiscal 038550644	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia			178.77		16593.649999999998				
+	2025-06-25 00:00:00	Nota Fiscal 43	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza			750		15843.649999999998				
+	2025-06-25 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal	Tarifa Pix de serviço				6.67	15836.979999999998				
+	2025-07-02 00:00:00	Nota Fiscal 	07,630.349/0001-56	Arainfo Com.e Serv.de Informática EIRELI				350		15486.979999999998				
+	2025-07-02 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal					3.11	15483.869999999997				
+	2025-07-02 00:00:00	Nota Fiscal 555	24.002.434/0001-99	Dois BBB - Com.de Gás e Bebidas Ltda	Aquisição GLP 			315		15168.869999999997				
+	2025-07-02 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal					2.8	15166.069999999998				
+	2025-07-02 00:00:00	Nota  Fiscal 47	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza			600		14566.069999999998				
+	2025-07-07 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal					5.34	14560.729999999998				
+	2025-07-09 00:00:00	Nota Fiscal 53717239	12.272.084/0001-00	Equatorial Energia				170.9		14389.829999999998				
+	2025-07-09 00:00:00	Nota Fiscal 2859	12.519.617/0001-05	Mister Construções Com. E Serv.Gerais Ltda-Me			745.58			13644.249999999998				
+	2025-07-09 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal					6.63	13637.619999999999				
+	2025-07-18 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	Brk Ambiental Região Metropolitana de Maceió S/A				392.16		13245.46				
+	2025-08-04 00:00:00	Nota Fiscal 01	032.717.784-50	Jose Erivaldo da Silva			3300			9945.46				
+	2025-08-04 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal					8.5	9936.96				
+	2025-08-06 00:00:00	Nota Fiscal 48	059.923.754-65	Maria Girlene dos Santos				600		9336.96				
+	2025-08-06 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal					5.34	9331.619999999999				
+	2025-08-11 00:00:00	Nota Fiscal 55191067	12.272.084/0001-00	Equatorial Energia				171.48		9160.14				
+	2025-08-12 00:00:00	Nota Fiscal 17006	00.360.305/2392-47	Friovix Comercio e representações			4199			4961.139999999999				
+	2025-08-14 00:00:00	Nota Fiscal 71099	06.698.222/0003-78	Center Frios Maquinas e Equipamentos Ltda				360		4601.139999999999				
+	2025-08-18 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	Brk Ambiental Região Metropolitana de Maceió S/A				485.58		4115.5599999999995				
+	2025-08-20 00:00:00	Nota Fiscal 93853	08.441.081/0001-77	Eletroluz Ltda			3325.56			789.9999999999995				
+	2025-08-20 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal					8.5	781.4999999999995				
+		Nota Fiscal 13657	36.091.781/0001-29	Plastifesta Ltda			579.9			201.59999999999957				
+	2025-08-28 00:00:00	Nota Fiscal 13657	36.091.781/0001-29	Plastifesta Ltda				249.78		-48.18000000000043				
+	2025-08-28 00:00:00	Debito	00.360.305/2392-47	Caixa Economica Federal					1.79	-49.97000000000043				
+										-49.97000000000043				
+				d		18670.75	12150.039999999999	6174.249999999999	396.43	-49.96999999999815				
+							11900							
+								6770.75						
+							250.03999999999905	200.0700000000009	49.96999999999815					
+											0			
+														
+														
+														
+														
+														
+				1536.68										
+				69										
+				1605.68										
+														
+														
+														
+														
+														
+														
+														
+	Patrícia Lopes Brandão			Maurício Ferreira da Silva										
+	Coordenadora Geral			Coordenador de Administração & Finanças										
+
+
+===== ABA: Sefaz 25 B =====
+														
+														
+				SEFAZ  N. FISCAL CIDADÃ - 1ª Semestre 2025 (Gastos a Realizar de Abril  a Agosto de 2025)										
+														
+					01/04/2024 a 31/08/2024									
+	Data de Recebimento	Sorteio	Realizado	Banco	Descrição de Compras	Premiação	Sorteio	Rateio	Total	%	VALORES PARA COMPRAS			
+	2025-08-12 00:00:00	134	2025-07-25 00:00:00	CAIXA ECONOMICA		Sorteio de  Aniversario	10000	813.67	10813.67	0.3	7000	3000		
+	2025-09-12 00:00:00	136	2025-08-21 00:00:00	CAIXA ECONOMICA		Dia dos Pães	7000	738.55	7738.55	0.3	4900	2100		
+														
+							17000	1552.2199999999998	18552.22		11900	5100		
+	 Próximo Sorteio:	Dia do Aniversário (julho)												
+	Data	Dcto.	CNPJ	Fornecedor	Descrição de Compras	 PREMIAÇÃO	VALOR COMPRAS		Despesas	Saldo	Observação			
+							Imobilizado 	Custeio						
+	2025-08-12 00:00:00	Crédito	00.360.305/2392-47	Caixa Economica Federal		10813.67				10813.67				
+	2025-09-08 00:00:00	Nota Fiscal 49	059.923.754-65	Maria Girlene dos Santos				750		10063.67				
+	2025-09-08 00:00:00	Débito	00.360.305/2392-47	Caixa Economica Federal	Caixa Economica Federal				6.67	10057				
+	2025-09-09 00:00:00	Nota Fiscal 056642600	12.272.084/0001-00	Equatorial Alagoas Distribuidora de Energia S/A	Equatorial Alagoas Distribuidora de Energia S/A			161.83		9895.17				
+	2025-09-12 00:00:00	Crédito	00.360.305/2392-47	Caixa Economica Federal		7738.55				17633.72				
+	2025-09-18 00:00:00	Nota Fiscal 141757	12.845.236/0001-08	Incomel Comercio de Materiais Eletricos Ltda			376.51			17257.210000000003				
+	2025-09-18 00:00:00	Débito	00.360.305/2392-47	Caixa Economica Federal					3.35	17253.860000000004				
+	2025-09-18 00:00:00	Nota Fiscal 39576	04.973.159/0001-43	Plug Eletricidade Ltda				55		17198.860000000004				
+	2025-09-18 00:00:00	Débito	00.360.305/2392-47	Caixa Economica Federal					0.48	17198.380000000005				
+	2025-09-19 00:00:00	Nota Fiscal 14	39.671.142/0001-16	Josafa Raimundo dos Santos Lins 02854535480			2100			15098.380000000005				
+	2025-09-19 00:00:00	Débito	00.360.305/2392-47	Caixa Economica Federal					8.5	15089.880000000005				
+	2025-09-19 00:00:00	Nota Fiscal 2418355	39.580.673/0001-01	Brk Ambiental Metropolitana de Maceió S/A				485.58		14604.300000000005				
+	2025-09-25 00:00:00	Débito	00.360.305/2392-47	Caixa Economica Federal					75	14529.300000000005				
+	2025-09-25 00:00:00	Nota Fiscal 17881	09.316.105/0001-29	Friovix Comercio de Refrigeração Ltda			1442.47			13086.830000000005				
+	2025-09-26 00:00:00	Nota Fiscal 967	21.364.206/0001-70	Comercial Maceió de Refrigeração Ltda			45			13041.830000000005				
+														
+														
+														
+														
+														
+														
+														
+														
+														
+														
+				d		18552.22	3963.9800000000005	1452.41	94	13041.830000000002				
+							11900							
+								6652.219999999999						
+							-7936.0199999999995	5105.8099999999995	-13041.829999999998					
+											0			
+														
+														
+														
+														
+														
+				1536.68										
+				69										
+				1605.68										
+														
+														
+														
+														
+														
+														
+														
+	Patrícia Lopes Brandão			Maurício Ferreira da Silva										
+	Coordenadora Geral			Coordenador de Administração & Finanças										
+
+
+===== ABA: janeiro =====
+			DISPONIBILIDADE								
+											
+			Período	01/01/2025 a 31/01/2025	Movimentações						
+Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+				Saldo Anterior em 31/12/2024	2.87		4593.82	20045.97			
+2025-01-02 00:00:00	Pix		Celia Costa	Contribuição Associado		100					
+2025-01-02 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-100	100				
+2025-01-03 00:00:00	Pix		Gustavon Reis (Alzira)	Contribuição Associado		75					
+2025-01-03 00:00:00	Pix		Edna S Tenório	Contribuição Não Associado		150					
+2025-01-03 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-225	225				
+2025-01-06 00:00:00	Pix		Maria C Cunha	Contribuição Associado		100					
+2025-01-06 00:00:00	Pix		Severina Correia	Contribuição Associado		20					
+2025-01-06 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-120	120				
+2025-01-06 00:00:00	Nota Fiscal 2057	24.002.434/0001-99	DOIS BBB -Comercio de Gas e bebidas Ltda	Aquisição de Botijão de Gas				-315			
+2025-01-06 00:00:00	Nota Fiscal 44585900 	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia				-521.41			
+2025-01-06 00:00:00	Débito		Caixa Economica Federal	Tarifa Pacote de Serviços				-2.8			
+2025-01-07 00:00:00	Pix		Patricia Lopes Brandão	Contribuição Associado		25					
+2025-01-07 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Não Associado		100					
+2025-01-07 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-125	125				
+2025-01-10 00:00:00	Pix		Mauricio Ferreira Da Silva	Contribuição Associado		50					
+2025-01-10 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		30					
+2025-01-10 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		50					
+2025-01-10 00:00:00	Nota Fiscal 63		Emanuelle Simoes da Silva	Aquisição de Paes		-160					
+2025-01-10 00:00:00	Recibo		Federação Espirito do Estado de Alagoas	Contribuição Mensal		-60					
+2025-01-10 00:00:00	Recibo		Conselho Regional Espirita	Contribuição Mensal		-30					
+2025-01-10 00:00:00	Débito		Banco do Brasil	Tarifa Pix		-3.58					
+2025-01-10 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		123.58	-123.58				
+2025-01-13 00:00:00	Pix		Eduardo Henrique	Contribuição Associado		50					
+2025-01-13 00:00:00	Nota Fiscal 	66.970.229/0146-21	Claro Next Telecomunicação S/A	Internet		-142.1					
+2025-01-13 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		92.1	-92.1				
+2025-01-13 00:00:00	Nota Fiscal 40	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza				-600			
+2025-01-13 00:00:00			Caixa Economica Federal	Tarifa Pacote de Serviços				-5.34			
+2015-01-15 00:00:00	Nota Fiscal 043023789	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia				-569.62			
+2025-01-20 00:00:00	Transferencia		Marcos Antonio Santiago	Contribuição Associado		30					
+2025-01-20 00:00:00	Nota Fiscal 7840		Valencia Ind	Aquisição de Material de Limpeza		-107.4					
+2025-01-20 00:00:00	Nota Fiscal  		Brk Ambiental Regional	Pagamento Agua e Esgoto		-475.28					
+2025-01-20 00:00:00	Nota Fiscal  127029		Supermercado Leste Oeste Ltda	Aquisição de Material de Limpeza		-112.36					
+2025-01-20 00:00:00	Débito		Banco do Brasil	Tarifa Pix		-2.17					
+2025-01-20 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		667.21	-667.21				
+2025-01-21 00:00:00	Nota Fiscal 234	25.003.808/0001-53	D Solare Energia e Inovação Ltda	Adiantamento para Aquisição Placa Voltaica				-7980			
+2025-01-21 00:00:00	Débito		Caixa Economica Federal	Tarifa Pix				-8.5			
+2025-01-23 00:00:00	Pix		Micheline G Ca	Contribuição Não Associado		50					
+2025-01-23 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-50	50				
+2025-01-24 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		100					
+2025-01-24 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-100	100				
+2025-01-27 00:00:00	Débito		Banco do Brasil	Tarifa Renovação de Cadastro		-64.8					
+2025-01-27 00:00:00	Débito		Banco do Brasil	Tarifa pacote e serviço		-122.3					
+2025-01-27 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		187.1	-187.1				
+2025-01-27 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote de Serviços				-75			
+2025-01-28 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		40					
+2025-01-28 00:00:00	Pix		Jailton Rodrigues	Contribuição Associado		25					
+2025-01-28 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		130					
+2025-01-28 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-195	195				
+2025-01-31 00:00:00	Credito		Banco do Brasil S/A	BB Renda  rendimento Aplicações			8.34				
+2025-01-31 00:00:00	Débito		Banco do Brasil S/A	BB Renda  Imposto de renda			-1.52				
+											
+											
+											
+											
+											
+				Saldo atual em 31/01/2024	2.87	0	4445.649999999999	9968.300000000003			
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+
+
+===== ABA: Fevereiro =====
+			DISPONIBILIDADE								
+											
+			Período	01/02/2023 a 28/02/2023	Movimentações						
+Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+				Saldo Anterior em 31/01/2023	2.87		4445.649999999999	9968.300000000003			
+2025-02-03 00:00:00	Pix		LUCIANO GOMES DA SILVA	Contribuição Associado		100					
+2025-02-03 00:00:00	Pix		Edna S Tenório	Contribuição Não Associado		150					
+2025-02-03 00:00:00	Pix		Gustavon Reis (Alzira)	Contribuição Associado		75					
+2025-02-03 00:00:00	Pix		Patricia Lopes Brandão	Contribuição Associado		25					
+2025-02-03 00:00:00	Pix		Maria Celia Costa	Contribuição Associado		100					
+2025-02-03 00:00:00	Pix		Nazidir Maria dosSntos	Contribuição Associado		40					
+2025-02-03 00:00:00	Pix		Nazidir Maria dosSntos	Contribuição Associado		60					
+2025-02-03 00:00:00	Nota Fiscal	66.970.229/0146-21	Claro Next Telecomunicação S/A	Internet		-153.08					
+2025-02-03 00:00:00	Debito		Banco Brasil S/A	BB Rende Fácil		-396.92	396.92				
+2025-02-03 00:00:00	Nota Fiscal 046049905	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia				-592.65			
+2025-02-04 00:00:00	Pix		Nazidir Maria dosSntos	Contribuição Associado		100					
+2025-02-04 00:00:00	Debito		Banco Brasil S/A	BB Rende Fácil		-100	100				
+2025-02-05 00:00:00	Debito		Prefeitura Municipal de Maceio	Pagamento ISS Gil		-30					
+2025-02-05 00:00:00	Debito		Prefeitura Municipal de Maceio	Pagamento ISS Gil		-30					
+2025-02-05 00:00:00	Debito		Prefeitura Municipal de Maceio	Pagamento ISS Gil		-30					
+2025-02-05 00:00:00	Nota Fiscal 446803	41.576.958/0001-02	Marcos Antonio Santiago Soares	Pagamento de Gasolina		-206.9					
+2025-02-05 00:00:00	Credito		Banco Brasil S/A	BB Rende Fácil		296.9	-296.9				
+2025-02-06 00:00:00	Pix		Tatiana Moreira	Contribuição Não Associado		150					
+2025-02-06 00:00:00	Debito		Banco Brasil S/A	BB Rende Fácil		-150	150				
+2025-02-07 00:00:00	Pix		Nazidir Maria dos Santos	Credito Indevido		260					
+2025-02-07 00:00:00	Pix		Kyllare Tawynne dos Santos	Devolução do Credito		-260					
+2025-02-07 00:00:00	Nota Fiscal 130489	34.746.298/0001-03	G Marques S Circuito das Carnes Eireli	Aquisição de Material de Limpeza		-36.8					
+2025-02-07 00:00:00	Debito		Banco Brasil S/A	Tarifa Pix		-2.57					
+2025-02-07 00:00:00	Credito		Banco Brasil S/A	BB Rende Fácil		39.37	-39.37				
+2025-02-10 00:00:00	Pix		Maurício Ferreira da Silva	Contribuição Associado		100					
+2025-02-10 00:00:00	Pix		Federação Espirito do Estado de Alagoas	Contribuição Mensal		-60					
+2025-02-10 00:00:00	Pix		Conselho Regional Espirita	Contribuição Mensal		-30					
+2025-02-10 00:00:00	Nota Fiscal		Maria Girlena dos Santos	Pagamento Serviços prestados		-600					
+2025-02-10 00:00:00	Nota Fiscal 173789	02.037.581/0001-61	Comercial de Laminados e Ferros Ltda	Aquisição de Cantoneira 		-101.7					
+2025-02-10 00:00:00	Debito		Banco Brasil S/A	Tarifa Pix		-3					
+2025-02-10 00:00:00	Credito		Banco Brasil S/A	BB Rende Fácil		694.7	-694.7				
+2025-02-11 00:00:00	Nota Fiscal 88512	01.285.165/0003-81	O Borrachão EireLi	Aquisição de Placa Piso de borracha		-120.15					
+2025-02-11 00:00:00	Debito		Banco Brasil S/A	Tarifa Pix		-1.18					
+2025-02-11 00:00:00	Credito		Banco Brasil S/A	BB Rende Fácil		121.33	-121.33				
+2025-02-12 00:00:00	Nota Fiscal 317780	01.438.784/0001-29	Leroy Merlin Cia Brasileira de BR	Aquisição Ceramica				-123.78			
+2025-02-13 00:00:00	Pix		Eduardo Henrique	Contribuição Associado		50					
+2025-02-13 00:00:00	Debito		Banco Brasil S/A	BB Rende Fácil		-50	50				
+2025-02-14 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		50					
+2025-02-14 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		30					
+2025-02-14 00:00:00	Nota Fiscal 737850	47.508.411/1452-00	Cia Brasileira de Distribuição	Aquisição de gasolina		-135.34					
+2025-02-14 00:00:00	Debito		Banco Brasil S/A	Tarifa Pix		-1.33					
+2025-02-14 00:00:00	Credito		Banco Brasil S/A	BB Rende Fácil		56.67	-56.67				
+2025-02-17 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	BRK Ambiental R. Metrop	Pag. Agua e Esgoto		-628.74					
+2025-02-17 00:00:00	Credito		Banco Brasil S/A	BB Rende Fácil		628.74	-628.74				
+2025-02-18 00:00:00	Pix		Severina Correia	Contribuição Associado		30					
+2025-02-18 00:00:00	Pix		Edleusa Melo	Contribuição Associado		300					
+2025-02-18 00:00:00	Pix		Marcos Antonio Santiago Soares	Contribuição Associado		30					
+2025-02-18 00:00:00	Pix		Nazidi Maria dos Santos	Devolução do Credito de 14/02/2025		-10					
+2025-02-18 00:00:00	Debito		Banco Brasil S/A	Tarifa Pix		-1					
+2025-02-18 00:00:00	Debito		Banco Brasil S/A	BB Rende Fácil		-349	349				
+2025-02-21 00:00:00	Nota Fiscal 17189	10.835.536/0001-80	MAX ESQUADRIAS LTDA EPP	Aquisição de Uma porta para Armario				-600			
+2025-02-21 00:00:00	Débito		Caixa Economica Federal	Tarifa Pix				-5.34			
+2025-02-24 00:00:00	Pix		Micheline Gomes	Contribuição Não Associado		50					
+2025-02-24 00:00:00	Debito		Banco Brasil S/A	BB Rende Fácil		-50	50				
+2025-02-25 00:00:00	Debito		Banco Brasil S/A	Tarifa Pacote de Serviços		-128.9					
+2025-02-25 00:00:00	Credito		Banco Brasil S/A	BB Rende Fácil		128.9	-128.9				
+2025-02-25 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote de Serviços				-75			
+2025-02-25 00:00:00	Nota Fiscal 319682	01.438.784/0001-29	Leroy Merlin Cia Brasileira de BR	Aquisição de 1 Arcondicionado				-2808.9			
+2025-02-26 00:00:00	Debito		Prefeitura Municipal de Maceio	ISS S/pgto. Maria Girlene		-22.5					
+2025-02-26 00:00:00	Credito		Banco Brasil S/A	BB Rende Fácil		22.5	-22.5				
+2025-02-28 00:00:00	Pix		Patricia Lopes Brandão	Contribuição Associado		25					
+2025-02-28 00:00:00	Pix		Nazidi Maria dos Santos	Contribuição Associado		100					
+2025-02-28 00:00:00	Nota Fiscal 10	12.335.030/0001-38	Prime Contabilidade Ltda	Serviços Contabeis		-250					
+2025-02-28 00:00:00	Debito		Banco Brasil S/A	Tarifa Pix		-2.47					
+2025-02-28 00:00:00	Credito		Banco Brasil S/A	BB Rende Fácil		127.47	-127.47				
+2025-02-28 00:00:00	Credito		Banco do Brasil S/A	BB Renda  rendimento Aplicações			9.35				
+2025-02-28 00:00:00	Debito		Banco do Brasil S/A	BB Renda  Imposto de renda			-2.51				
+2025-02-28 00:00:00	Nota Fiscal 234	25.003.808/0001-53	D Solare Energia e Inovação Ltda	Sistema Fotovoltaico				-5320			
+2025-02-28 00:00:00	Debito		Banco Brasil S/A	Tarifa Pix				-8.5			
+2025-02-28 00:00:00	Nota Fiscal 42	059.923.754-65	Maria Girlene dos Santos	Serviço de Limpeza				-434.13			
+											
+				Saldo atual em 28/02/2024	2.87	-1.1368683772161603e-13	3431.8299999999995	2.8421709430404007e-12			
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+
+
+===== ABA: Março =====
+			DISPONIBILIDADE									
+												
+			Período	01/03/2025 a 31/03/2025		Movimentações						
+Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	B.B POUPANÇA	C.ECONÔMICA			
+				Saldo Anterior em 28/02/2025	2.87		3431.83		0			
+2025-03-05 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		60						
+2025-03-05 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		100						
+2025-03-05 00:00:00	Pix		Jailton Rodrigues dos Santos	Contribuição Associado		25						
+2025-03-05 00:00:00	Pix		Maria Cristina Cunha	Contribuição Associado		100						
+2025-03-05 00:00:00	Pix		Celia Costa	Contribuição Associado		100						
+2025-03-05 00:00:00	Pix		Severina Correia	Contribuição Associado		20						
+2025-03-05 00:00:00	Pix		Edna S Tenorio	Contribuição Não Associado		150						
+2025-03-05 00:00:00	Nota Fiscal 43	059.923.754-65	Maria Girlene dos Santos	Pagamento de Serviço de Faxina		-165.87						
+2025-03-05 00:00:00	Nota Fiscal 047555453	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia		-601.44						
+2025-03-05 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		212.31	-212.31					
+2025-03-07 00:00:00	Pix		Gustavo Reis (Alzira)	Contribuição Associado		75						
+2025-03-07 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		30						
+2025-03-07 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		50						
+2025-03-07 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-155	155					
+2025-03-10 00:00:00	Pix		Mauricio Ferreira da Silva	Contribuição Associado		50						
+2025-03-10 00:00:00	Nota Fiscal 	66.970.229/0146-21	Claro Next Telecomunicação S/A	Pagamento conta Telefone		-150.64						
+2025-03-10 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		100.64	-100.64					
+2025-03-13 00:00:00	Pix		Eduardo Henrique	Contribuição Associado		50						
+2025-03-13 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-50	50					
+2025-03-14 00:00:00	Recibo		Federação Espírita do Estado de Alagoas	Mensalidade do mês		-60						
+2025-03-14 00:00:00	Recibo		Conselho Regional Espírita	Mensalidade do mês		-30						
+2025-03-14 00:00:00	Débito		Banco do Brasil	Tarifa Pix		-2						
+2025-03-14 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		92	-92					
+2025-03-17 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		40						
+2025-03-17 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		130						
+2025-03-17 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-170	170					
+2025-03-18 00:00:00	Pix		Marcos Antonio Santiago	Contribuição Associado		30						
+2025-03-18 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-30	30					
+2025-03-20 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	BRK Ambiental R. Metrop	Pag. Agua e Esgoto		-475.28						
+2025-03-20 00:00:00	Nota Fiscal 191594	12.845.236/0004-50	Incomel Com. De Materiais Eletricos Ltda	Aquisiçãode Sensores		-41.86						
+2025-03-20 00:00:00	Débito		Banco do Brasil	Tarifa Pix		-1						
+2025-03-20 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		518.14	-518.14					
+2025-03-24 00:00:00	Pix		Micheline Gomes	Contribuição Não Associado		50						
+2025-03-24 00:00:00	Pix		Jailton Rodrigues dos Santos	Contribuição Associado		50						
+2025-03-24 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-100	100					
+2025-03-25 00:00:00	Débito		Banco do Brasil	Tarifa pacote de Serviço		-128.9						
+2025-03-25 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		128.9	-128.9					
+2025-03-26 00:00:00	Pix		Tatiana Moreira	Contribuição Não Associado		150						
+2025-03-26 00:00:00	Pix		Luciana Silva	Contribuição Associado		30						
+2025-03-26 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-180	180					
+2025-02-27 00:00:00	Pix		Claudinete B. Tenório Cavalcante	Contribuição Associado		100						
+2025-02-27 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-100	100					
+2025-03-28 00:00:00	Pix		Roseline Marques Aguiar Borges	Contribuição Associado		100						
+2025-03-28 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-100	100					
+2025-03-31 00:00:00	Pix		Luciana Silva	Contribuição Associado		15						
+2025-03-31 00:00:00	Pix		Mauricio Ferreira da Silva	Contribuição Não Associado		105.5						
+2025-03-31 00:00:00	Nota Fiscal 833	50.584.263/0001-63	PackPlast Embalagens Ltda	Aquisição Kit Pote 1000ml		-236						
+2025-03-31 00:00:00	Nota Fiscal 417	33.182.711/0001-83	Joao Guimaraes Bueno Junior	Aquisição Certificado Digital		-255						
+2025-03-31 00:00:00	Débito		Banco do Brasil	Tarifa Pix		-2.33						
+2025-03-31 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		372.83	-372.83					
+2025-03-31 00:00:00	Credito		Banco do Brasil S/A	BB Renda  rendimento Aplicações			6.22					
+2025-03-31 00:00:00	Débito		Banco do Brasil S/A	BB Renda  Imposto de renda			-1.8					
+												
+												
+												
+												
+												
+												
+												
+												
+												
+				Saldo atual em 31/03/2025	2.87	0	2896.43	0	0			
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+
+
+===== ABA: Abril =====
+			DISPONIBILIDADE								
+											
+			Período	01/04/2025 a 30/04/2025	Movimentações						
+Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+				Saldo Anterior em 31/03/2025	2.87		2896.43				
+2025-04-01 00:00:00	Pix		Celia Costa	Contribuição Associado		100					
+2025-04-01 00:00:00	Pix		Patricia Lopes Brandão	Contribuição Associado		25					
+2025-04-01 00:00:00	Nota Fiscal 049075007	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia		-525.32					
+2025-04-01 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		400.32	-400.32				
+2025-04-02 00:00:00	Pix		Maria C Cunha	Contribuição Associado		100					
+2025-04-02 00:00:00	Pix		Nazidir Maria	Contribuição Associado		100					
+2025-04-02 00:00:00	Pix		Edna S Tenorio	Contribuição Não Associado		150					
+2025-04-02 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-350	350				
+2025-04-03 00:00:00	Pix		Gustavo Reis	Contribuição Associado		75					
+2025-04-03 00:00:00	Pix		Nazidir Maria	Contribuição Associado		60					
+2025-04-03 00:00:00	Nota Fiscal 011810	36.091.781/0001-14	Plastifestas	Aquisição de copos, Saco plastico e Toalha de Papel		-230					
+2025-04-03 00:00:00	Debito		Banco do Brasil	Tarifa Pix de serviço		-2.27					
+2025-04-03 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		97.27	-97.27				
+2025-04-04 00:00:00	Pix		Tatiara Moreira	Contribuição Não Associado		150					
+2025-04-04 00:00:00	Pix		Severina Correia	Contribuição Associado		20					
+2025-04-04 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-170	170				
+2025-04-04 00:00:00	Credito		Caixa Economica Federal	Premiação Nota Fiscal Cidadã				10806.45			
+2025-04-04 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote de Serviços				-75			
+2025-04-07 00:00:00	Pix		Maurício Ferreira da Silva	Contribuição Associado		50					
+2025-04-07 00:00:00	Nota Fiscal 242813	01.888.148/0001-88	Com. De Emb Descartaveis	AquisiçãodePotes 		-18.5					
+2025-04-07 00:00:00			Maria Vitoria do Nascimento Miranda	Pag. Agua e Esgoto - Alto da B. Vista		-200					
+2025-04-07 00:00:00	Recibo		Conselho Regional do Estado de Alagoas	Contribuição mensal		-30					
+2025-04-07 00:00:00	Recibo		FederaçãoEspirita do Estado de Alagoas	Contribuição mensal		-60					
+2025-04-07 00:00:00			Sendas Distribuidora S/A	Aquisição material Limpeza		-54.37					
+2025-04-07 00:00:00	Debito		Banco do Brasil	Tarifa Pix de serviço		-5.16					
+2025-04-07 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		318.03	-318.03				
+2025-04-07 00:00:00	Nota Fiscal 45		Maria Girlene dos Santos	Serviço de Limpeza				-750			
+2025-04-07 00:00:00	Debito		Caixa Economica Federal	Tarifa Pix de serviço				-6.67			
+2025-04-08 00:00:00	Transferencia		Jose Olindino Matos Filho	Contribuição Não Associados		300					
+2025-04-08 00:00:00	Nota Fiscal 2183918	66.970.229/0146-21	Claro Next Telecomunicação S/A	Pagamento conta Telefone		-150.64					
+2025-04-08 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-149.36	149.36				
+2025-04-10 00:00:00	Nota Fiscal 32	50.166.613/0001-71	Jose Talvanes Ferreira da Rocha	Serviço de prestados conserto de Ar-condicionado				-200			
+2025-04-10 00:00:00	Debito		Caixa Economica Federal	Tarifa Pix de serviço				-1.78			
+2025-04-11 00:00:00	Nota Fiscal 2158	24.002.434/0001-99	Dois BBB - Com.de Gás e Bebidas Ltda	Aquisição GLP 				-315			
+2025-04-11 00:00:00	Debito		Caixa Economica Federal	Tarifa Pix de serviço				-2.8			
+2025-04-14 00:00:00	Pix		Eduardo Henrique	Contribuição Associado		50					
+2025-04-14 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-50	50				
+2025-04-15 00:00:00	pix		Claudinete B. Tenório Cavalcante	Contribuição Não Associado		100					
+2025-04-15 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-100	100				
+2025-04-16 00:00:00	Pix		Nazidir Maria	Contribuição Associado		40					
+2025-04-16 00:00:00	Pix		Nazidir Maria	Contribuição Associado		130					
+2025-04-16 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-170	170				
+2025-04-22 00:00:00	Pix		Nazidir Maria	Contribuição Associado		30					
+2025-04-22 00:00:00	Pix		Nazidir Maria	Contribuição Associado		50					
+2025-04-22 00:00:00	Transferencia		Marcos Antonio Santiago	Contribuição Associado		30					
+2025-04-22 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	BRK Ambiental R. Metrop	Pag. Agua e Esgoto		-328.78					
+2025-04-22 00:00:00	Credito		Banco do Brasil	BB Rende Fácil		218.78	-218.78				
+2025-04-22 00:00:00	Debito		Caixa Economica Federal	Tarifa Pix de serviço				-36.5			
+2025-04-23 00:00:00	Pix		Micheline Gomes	Contribuição Associado		50					
+2025-04-23 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-50	50				
+2025-04-25 00:00:00	Nota Fiscal 11		Luiz Bezerra de Mendoza	Pagamento Serviço Contábil		-500					
+2025-04-25 00:00:00	Disponibilidade		Patricia Lopes Brandão	Disponibilidade de Caixa	53.34	-53.34					
+2025-04-25 00:00:00	Debito		Banco do Brasil	Tarifa Pacote de Serviços		-128.9					
+2025-04-25 00:00:00	Debito		Banco do Brasil	Tarifa Pix de serviço		-5.95					
+2025-04-25 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		688.19	-688.19				
+2025-04-25 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote de Serviços				-75			
+2025-04-28 00:00:00	Pix		Jailton Rodrigues	Contribuição Associado		50					
+2025-04-28 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-50	50				
+2025-04-29 00:00:00	Pix		Roseline Marques Aguiar Borges	Contribuição Associado		100					
+2025-04-29 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-100	100				
+2025-04-30 00:00:00	Pix		Patricia Lopes Brandão	Contribuição Associado		25					
+2025-04-30 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-25	25				
+2025-04-30 00:00:00	Credito		Banco do Brasil S/A	BB Renda  rendimento Aplicações			5.79				
+2025-04-30 00:00:00	Débito		Banco do Brasil S/A	BB Renda  Imposto de renda			-2.02				
+											
+											
+											
+											
+											
+											
+											
+				Saldo atual em 30/04/2025	56.21	-1.1368683772161603e-13	2391.9699999999993	9343.7			
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+
+
+===== ABA: Maio =====
+				DISPONIBILIDADE								
+												
+				Período	01/05/2024 a 31/05/2024	Movimentações						
+	Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+						56.21		2391.9699999999993	9343.7			
+	2025-05-02 00:00:00	Pix		Maria Cristina Cunha	Contribuição Associado		100	0	0			
+	2025-05-02 00:00:00	Pix		Nazidir Maria	Contribuição Associado		60					
+	2025-05-02 00:00:00	Pix		Celia Costa	Contribuição Associado		100					
+	2025-05-02 00:00:00	Pix		Edna S Tenorio	Contribuição Não Associado		150					
+	2025-05-02 00:00:00	Pix		Tatiara Moreira	Contribuição Não Associado		150					
+	2025-05-02 00:00:00	Pix		Nazidir Maria	Contribuição Associado		30					
+	2025-05-02 00:00:00	Pix		Nazidir Maria	Contribuição Associado		50					
+	2025-05-02 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-640	640				
+	2025-05-05 00:00:00	Pix		Nazidir Maria	Contribuição Associado		100					
+	2025-05-05 00:00:00	Pix		Severina Correia	Contribuição Associado		20					
+	2025-05-05 00:00:00	Pix		Luciana Silva	Contribuição Associado		15					
+	2025-05-05 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-135	135				
+	2025-05-06 00:00:00	Pix		Gustavo Reis	Contribuição Associado		75					
+	2025-05-06 00:00:00	Débito		Banco do Brasil	BB Rende Fácil		-75	75				
+	2025-05-08 00:00:00	Pix		Maurício Ferreira da Silva	Contribuição Associado		50					
+	2025-05-08 00:00:00	Nota Fiscal		Maria Girlene dos Santos	Pagamento Serviço de Limpeza		-600					
+	2025-05-08 00:00:00	Nota Fiscal 	66.970.229/0146-21	Claro Next Telecomunicação S/A	Pagamento conta Telefone		-150.64					
+	2025-05-08 00:00:00	Crédito		Banco do Brasil	BB Rende Fácil		700.64	-700.64				
+	2025-05-09 00:00:00	Recibo		Conselho Regional do Estado de Alagoas	Contribuição mensal		-30					
+	2025-05-09 00:00:00	Recibo		FederaçãoEspirita do Estado de Alagoas	Contribuição mensal		-60					
+	2025-05-09 00:00:00	Debito		Banco do Brasil	Tarifa Pix de serviço		-2					
+	2025-05-09 00:00:00	Crédito		Banco do Brasil	BB Rende Fácil		92	-92				
+	2025-05-13 00:00:00	Pix		Eduardo Henrique	Contribuição Associado		50					
+	2025-05-13 00:00:00	Nota Fiscal 	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia		-191.45					
+	2025-05-13 00:00:00	Crédito		Banco do Brasil	BB Rende Fácil		141.45	-141.45				
+	2025-05-16 00:00:00	Pix		Claudinete B. Tenório Cavalcante	Contribuição não Associado		100					
+	2025-05-16 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-100	100				
+	2025-05-19 00:00:00	Tranferencia 		Marcos Antonio Santiago	Contribuição Associado		30					
+	2025-05-19 00:00:00	Nota Fiscal 	39.580.673/0001-01	BRK Ambiental R. Metrop	Pag. Agua e Esgoto		-381.04					
+	2025-05-19 00:00:00	Crédito		Banco do Brasil	BB Rende Fácil		351.04	-351.04				
+	2025-05-23 00:00:00	Pix		Micheline Gomes	Contribuição Associado		50					
+	2025-05-23 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-50	50				
+	2025-05-26 00:00:00	Pix		Jailton Rodrigues	Contribuição Associado		50					
+	2025-05-26 00:00:00	Nota Fiscal 126	16.683.527/0001-06	Luiz Farias da Costa Neto	Pagamento de Serviço Eletrico		-310					
+	2025-05-26 00:00:00	Débito		Banco do Brasil	Tarifa Pix de serviço		-3.06					
+	2025-05-26 00:00:00	Débito		Banco do Brasil	Tarifa Pacote de Serviços		-128.9					
+	2025-05-26 00:00:00	Crédito		Banco do Brasil	BB Rende Fácil		391.96	-391.96				
+	2025-05-26 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote de Serviços				-75			
+	2025-05-27 00:00:00	Pix		Roseline Marques Aguiar Borges	Contribuição Associado		100					
+	2025-05-27 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-100	100				
+	2025-05-30 00:00:00	Pix		Sirleide Gomes	Contribuição Associado		120					
+	2025-05-30 00:00:00	Pix		Patricia Lopes Brandão	Contribuição Associado		25					
+	2025-05-30 00:00:00	Debito		Banco do Brasil	BB Rende Fácil		-145	145				
+	2025-05-30 00:00:00	Credito		Banco do Brasil S/A	BB Renda  rendimento Aplicações			2.98				
+	2025-05-30 00:00:00	Débito		Banco do Brasil S/A	BB Renda  Imposto de renda			-0.88				
+												
+												
+												
+												
+												
+												
+					Saldo atual em 31/05/2025	56.21	0	1961.9799999999996	9268.7			
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+
+
+===== ABA: junho =====
+			DISPONIBILIDADE								
+											
+			Período	01/06/2024 a 30/06/2024	Movimentações						
+Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+				Saldo Anterior em 31/05/2023	56.21	-1.1368683772161603e-13	1961.9799999999996	9268.7			
+2025-06-02 00:00:00	Pix		Luciana Silva	Contribuição Associados		15					
+2025-06-02 00:00:00	Pix		Celia Costa dos Santos	Contribuição Associados		100					
+2025-06-02 00:00:00	Pix		Rafael Santana	Contribuição Não Associados		25					
+2025-06-02 00:00:00	Pix		Maria Lopes Milhones	Contribuição Não Associados		200					
+2025-06-02 00:00:00	Pix		Maria Cristina Cunha	Contribuição Associados		100					
+2025-06-02 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-440	440				
+2025-06-03 00:00:00	Credito		Caixa Economica Federal	Premiação SEFAZ				7864.3			
+2025-06-03 00:00:00	Pix		Nazidi Maria dos Santos	Contribuição Associados		60					
+2025-06-03 00:00:00	Pix		Edna S. Tenorio	Contribuição Não Associados		150					
+2025-06-03 00:00:00	Pix		Gustavo Reis	Contribuição Associados		75					
+2025-06-03 00:00:00	Pix		Nazidi Maria dos Santos	Contribuição Não Associados		100					
+2025-06-03 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-385	385				
+2025-06-06 00:00:00	pix		Mauricio Ferreira da Silva	Contribuição Associados		50					
+2025-06-06 00:00:00	Pix		Nazidi Maria dos Santos	Contribuição Não Associados		100					
+2025-06-06 00:00:00	Pix		Maria de Lourdes dos Santos	Contribuição Associados		30					
+2025-06-06 00:00:00	Pix		Severina Correia	Contribuição Associados		20					
+2025-06-06 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-200	200				
+2025-06-09 00:00:00	Pix		Gliciana Santiago Soares	Contribuição Associados		150					
+2025-06-09 00:00:00	Pix		Gliciana Santiago Soares	Contribuição Associados		30					
+2025-06-09 00:00:00	Pix		Andrea dos Santos Santana	Contribuição Associados		50					
+2025-06-09 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-230	230				
+2025-06-10 00:00:00	Pix		Tatiara Moreira	Contribuição Não Associados		150					
+2025-06-10 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-150	150				
+2025-06-13 00:00:00	Pix		Eduardo Henrique	Contribuição Associados		50					
+2025-06-13 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-50	50				
+2025-06-16 00:00:00	Pix		Aline Rose	Contribuição Não Associados		20					
+2025-06-16 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-0.19					
+2025-06-16 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-19.81	19.81				
+2025-06-18 00:00:00	Pix		Marcos Antonio Santiago Soares	Contribuição Associados		30					
+2025-06-18 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-30	30				
+2025-06-23 00:00:00	Pix		Micheline Gomes	Contribuição Não Associados		50					
+2025-06-23 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-50	50				
+2025-06-25 00:00:00	Débito		Banco Brasil S/A	Tarifa de Serviço		-128.9					
+2025-06-25 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		128.9	-128.9				
+2025-06-25 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote de Serviços				-75			
+2025-06-25 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	Brk Ambiental Região Metropolitana de Maceió S/A	Pagamento de Agua  Esgoto				-485.58			
+2025-06-25 00:00:00	Nota Fiscal 052254110	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia				-178.77			
+2025-06-25 00:00:00	Nota Fiscal 43		Maria Girlene dos Santos	Serviço de Limpeza				-750			
+2025-06-25 00:00:00	Debito		Caixa Economica Federal	Tarifa Pix de serviço				-6.67			
+2025-06-26 00:00:00	Pix		Jailton Rodrigues	Contribuição Associados		50					
+2025-06-26 00:00:00	Pix		Patricia Lopes Brandão	Aporte de Caixa	504.45	-504.45					
+2025-06-26 00:00:00	Nota Fiscal		Claro S/A	Pgto Conta Telefone		-150.64					
+2025-06-26 00:00:00	Recibo		Ednaldo Otávio do Nascimento	Serviço de Encardenação do Diario e Razão		-80					
+2025-06-26 00:00:00	Recibo		Federação Espírita de Alagoas	Contribuição Mensal		-60					
+2025-06-26 00:00:00	Recibo		Conselho Regional Espírita	Contribuição Mensal		-30					
+2025-06-26 00:00:00	Guia		Prefeitura Municipal de Maceio	ISS S/Pagto. Girlene		-7.5					
+2025-06-26 00:00:00	Guia		Prefeitura Municipal de Maceio	ISS S/Pagto. Girlene		-30					
+2025-06-26 00:00:00	Guia		Prefeitura Municipal de Maceio	ISS S/Pagto. Girlene		-37.5					
+2025-06-26 00:00:00	Guia		Prefeitura Municipal de Maceio	ISS S/Pagto. Girlene		-37.5					
+2025-06-26 00:00:00	Pix		Patricia Lopes Brandão	Aporte de Caixa	188.8	-188.8					
+2025-06-26 00:00:00	Débito		Banco Brasil S/A	Tarifa de Serviço		-9.85					
+2025-06-26 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		1086.24	-1086.24				
+2025-06-27 00:00:00	Pix		Rosilene Marques	Contribuição Associados		100					
+2025-06-27 00:00:00	Pix		Rosangela Maria	Contribuição Não Associados		60					
+2025-06-27 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-160	160				
+2025-06-30 00:00:00	Pix		Nazidi Maria dos Santos	Contribuição Não Associados		40					
+2025-06-30 00:00:00	Pix		Nazidi Maria dos Santos	Contribuição Não Associados		130					
+2025-06-30 00:00:00	Pix		Nazidi Maria dos Santos	Contribuição Não Associados		60					
+2025-06-30 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-230	230				
+2025-06-30 00:00:00	Débito		Banco do Brasil	BB Rende Fácil rendimento			4.6899999999999995				
+2025-06-30 00:00:00	Credito		Banco do Brasil	BB Rende Fácil - IR			-0.89				
+											
+											
+											
+											
+				Saldo atual em 30/06/2023	749.46	0	2695.45	15636.979999999998			
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+
+
+===== ABA: julho =====
+			DISPONIBILIDADE								
+											
+			Período	01/07/2025 a 31/07/2025	Movimentações						
+Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+				Saldo Anterior em 30/06/2025	749.46	-1.1368683772161603e-13	2695.45	15636.979999999998			
+2025-07-01 00:00:00	Nota Fiscal 39861	34.746.298/0001-03	G Marques S circuito das Carnes Eireli	Aquisição deTemperos	-45						
+2025-07-01 00:00:00	Nota Fiscal 141467	34.746.298/0001-03	G Marques S circuito das Carnes Eireli	Aquisição de Colorifos	-9.1						
+2025-07-01 00:00:00	Nota Fiscal 8227	18.775.200/0002-62	Valenci Industria e Comercio	Aquisição de Material de Limpeza	-95.15						
+2025-07-01 00:00:00	Nota Fiscal 180361	08.540.603/0001-98	Supermercado Leste Oeste	Aquisição de Material de Limpeza	-78.3						
+2025-07-01 00:00:00	Nota Fiscal 12	46.620.360/0001-97	Prime Contabilidade Ltda	Serviços Prestados na elaboração do Balanço	-250						
+2025-07-01 00:00:00	Nota Fiscal 777052	47.508.411/1452-00	Cia Brasileira de Distribuição	Pago de Gasolina	-103						
+2025-07-01 00:00:00	Recibo		Maria Vitoria do Nascimento Miranda	Pago de Agua Alto da Boa vista	-100						
+2025-07-01 00:00:00	Nota Fiscal291628	13437616/0001-76	Posto CombustiveisL & C Ltda	Pago de Gasolina	-35						
+2025-07-01 00:00:00	Recibo		Cartório Maceió 4 notas 	Reconhecimento de Firma	-22						
+2025-07-01 00:00:00	Pix		Maria Cristina  Cunha	Contribuição Associados		100					
+2025-07-01 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Não Associados		100					
+2025-07-01 00:00:00	Pix		Maria Cristina  Cunha	Contribuição Associados		100					
+2025-07-01 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-300	300				
+2025-07-02 00:00:00	Transferência		Olindino Matos Filho	Contribuição Não Associados		300					
+2025-07-02 00:00:00	Pix		Ana Karine	Contribuição Associados		20					
+2025-07-02 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-320	320				
+2025-07-02 00:00:00	Nota Fiscal 	07,630.349/0001-56	Arainfo Com.e Serv.de Informática EIRELI	Manutenção da Impressora				-350			
+2025-07-02 00:00:00	Débito		Caixa Economica Federal	Tarifa Pix				-3.11			
+2025-07-02 00:00:00	Nota Fiscal 	24.002.434/0001-99	Dois BBB - Com.de Gás e Bebidas Ltda	Aquisição GLP 				-315			
+2025-07-02 00:00:00	Débito		Caixa Economica Federal	Tarifa Pix				-2.8			
+2025-07-03 00:00:00	Pix		Luciana Silva	Contribuição Associados		15					
+2025-07-03 00:00:00	Pix		Edna S Tenorio	Contribuição Não Associados		150					
+2025-07-03 00:00:00	Pix		Deposito na Conta Caixa Econômica	Deposito		-200		200			
+2025-07-03 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-1.98					
+2025-07-03 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		36.98	-36.98				
+2025-07-07 00:00:00	Nota Fiscal 		Maria Girlene dos Santos	Serviço de Limpeza				-600			
+2025-07-07 00:00:00	Débito		Caixa Economica Federal	Tarifa Pix				-5.34			
+2025-07-07 00:00:00	Pix		Tatiara Moreira	Contribuição Não Associados		150					
+2025-07-07 00:00:00	Pix		Gustavo Reis (Alzira)	Contribuição Associado		75					
+2025-07-07 00:00:00	Pix		Mauricio Ferreira da Silva	Contribuição Associados		50					
+2025-07-07 00:00:00	Pix		Patricia lopes Brandão	Contribuição associados		25					
+2025-07-07 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associados		50					
+2025-07-07 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-350	350				
+2025-07-07 00:00:00	Recibo		Cartório Maceió 4 notas 	Reconhecimento de Firma	-9.6						
+2025-07-08 00:00:00	Pix		Claudinete	Contribuição Não Associados		100					
+2025-07-08 00:00:00		66.970.229/0146-21	Claro Next Telecomunicação S/A	Pagamento conta Telefone		-150.64					
+2025-07-08 00:00:00	Nota Fiscal 68		Luciano Gomes da Silva	Aquisição de Paes		-550					
+2025-07-08 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-5.44					
+2025-07-08 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		606.08	-606.08				
+2025-07-09 00:00:00	Nota Fiscal 53717239	12.272.084/0001-00	Equatorial Energia	Pagamento de Energia				-170.9			
+2025-07-09 00:00:00	ota Fiscal 2859	12.519.617/0001-05	Mister Construções Com. E Serv.Gerais Ltda-Me	Aquisição de materiais de construção				-745.58			
+2025-07-09 00:00:00	Débito		Caixa Economica Federal	Tarifa Pix				-6.63			
+2025-07-10 00:00:00	Pix		Conselho Regional Espírita	Contribuição mensal		-30					
+2025-07-10 00:00:00	Pix		Federação Espírita do E. de Alagoas	Contribuição mensal		-60					
+2025-07-10 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-2					
+2025-07-10 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		92	-92				
+2025-07-11 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associados		30					
+2025-07-11 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associados		50					
+2025-07-11 00:00:00	Nota Fiscal 118079	10.347.424/0003-42	Quintela Distribuidora Embalagens Ltda	Aquisição de Potes Plasticos                               487,68		-125.1					
+2025-07-11 00:00:00	Nota Fiscal 128214	09.358.347/0002-66	Albuquerque e Freire Ltda	Aquisição de Potes Plasticos		-222.09					
+2025-07-11 00:00:00	Nota Fiscal 157618	06.057.223/0520-50	Sendas Distribuidora S/A	Aquisição de Leite em Pó		-140.49					
+2025-07-11 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-4.82					
+2025-07-11 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		412.5	-412.5				
+2025-07-14 00:00:00	Pix		Eduardo Henrique	Contribuição Associados		50					
+2025-07-14 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-50	50				
+2025-07-15 00:00:00	Nota Fiscal 45	50.897.299/0001-05	Micleivson da Silva Lima Araujo	Pag Serviços prestados no conserto do fogao		-105					
+2025-07-15 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-1.03					
+2025-07-15 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		106.03	-106.03				
+2025-07-16 00:00:00	Recibo		Cartório Maceió 4 notas 	Registro do Livro Diario 21 		-72.82					
+2025-07-16 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-1					
+2025-07-16 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		73.82	-73.82				
+2025-07-18 00:00:00	Pix		Marcos Antonio S.Soares	Contribuição Associados		30					
+2025-07-18 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-30	30				
+2025-07-18 00:00:00	Nota Fiscal 241835-5	39.580.673/0001-01	Brk Ambiental Região Metropolitana de Maceió S/A	Pagamento de Agua  Esgoto				-392.16			
+2025-07-21 00:00:00	Nota Fiscal 78075	06.057.223/0520-50	Sendas Distribuidora S/A	Aquisição de Material de Limpeza                              271,82		-152.52					
+2025-07-21 00:00:00	Nota Fiscal 77644	01.418.784/00055-90	Leroy Merlin Cia Brasileira de BR	Aquisição  de Manta e Prime		-118.8					
+2025-07-21 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-2.68					
+2025-07-21 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		274	-274				
+2025-07-23 00:00:00	Pix		Micheline Gomes	Contribuição Não Associados		50					
+2025-07-23 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Não Associados		300					
+2025-07-23 00:00:00	Nota Fiscal 151256	03.656.004/0024-28	Carajás Material de Construção Ltda	Aquisiçãode 1 lampada azul		-41.9					
+2025-07-23 00:00:00	Nota Fiscal 16182	26.158.052/0001-84	Adilson das Neves - ME	Aquisição de  Cloro, Pedra pastilhas  e Papel Toalha		-161					
+2025-07-23 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-2					
+2025-07-23 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		-145.1	145.1				
+2025-07-25 00:00:00	Débito		Banco Brasil S/A	Tarifa renovação		-66.2					
+2025-07-25 00:00:00	Débito		Banco Brasil S/A	Tarifa de Serviço		-128.9					
+2025-07-25 00:00:00	Credito		Banco Brasil S/A	Renda Fácil		195.1	-195.1				
+2025-07-25 00:00:00	Débito		Caixa Economica Federal	Tarifa de Serviço				-75			
+2025-07-28 00:00:00	Pix		Rosangela Maria	Contribuição Não Associados		40					
+2025-07-28 00:00:00	Pix		Luiz Carlos Marinho	Contribuição Associados		220					
+2025-07-28 00:00:00	Pix		Rosilene Marques	Contribuição Associados		100					
+2025-07-28 00:00:00	Pix		Jailton Rodrigues	Contribuição Associados		50					
+2025-07-28 00:00:00	Pix		Gabriela Santos	Contribuição Não Associados		25					
+2025-07-28 00:00:00	Debito		Prefeitura de Maceió	Pag. ISS S/pag. Maria Girlene		-30					
+2025-07-28 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-0.24					
+2025-07-28 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-404.76	404.76				
+2025-07-31 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Não Associados		60					
+2025-07-31 00:00:00	Pix		Patricia lopes Brandão	Contribuição Associados		25					
+2025-07-31 00:00:00	Nota Fiscal 83324	03.656.004/0024-28	Carajás Material de Construção Ltda	Aquisiçãode Dispenser Papel Toalha                             71,90		-49.9					
+2025-07-31 00:00:00	Nota Fiscal 77768	01.438.784/0055-90	Leroy Merlin Cia Brasileira de BR	Aquisição  de Manta e Prime		-21.9					
+2025-07-31 00:00:00	Débito		Banco Brasil S/A	Tarifa Pix		-1					
+2025-07-31 00:00:00	Débito		Banco Brasil S/A	Renda Fácil		-12.2	12.2				
+2025-07-31 00:00:00	Débito		Banco do Brasil S/A	BB Renda  rendimento Aplicações			4.2				
+			Banco do Brasil S/A	BB Renda  Imposto de renda			-0.82				
+											
+											
+				Saldo atual em 31/07/2023	2.310000000000082	-1.1013412404281553e-13	2514.3799999999987	13170.46			
+											
+											
+							0				
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+
+
+===== ABA: agosto =====
+				DISPONIBILIDADE								
+												
+				Período	01/08/2025 a 31/08/2025	Movimentações						
+Data	Dcto.	CNPJ	DESPESAS	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+					Saldo Anterior em 31/07/2025	2.310000000000082		2514.38	13170.46			
+2025-08-01 00:00:00	Pix			Maria Cristina Cunha	Contribuição Associados		120					
+2025-08-01 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-120	120				
+2025-08-04 00:00:00	Pix			Luciana Silva	Contribuição Associados		15					
+2025-08-04 00:00:00	Pix			Severina Correia	Contribuição Associados		20					
+2025-08-04 00:00:00	Pix			Celia Costa dos Santos	Contribuição Associados		100					
+2025-08-04 00:00:00	Pix			Gustavo Reis	Contribuição Associados		75					
+2025-08-04 00:00:00	Nota Fiscal 78088			LeroyMerlin Cia Brasileira de BR	Aquisição de Material Hidraulico                    Pix. 351,33		-31.91					
+2025-08-04 00:00:00	Nota Fiscal 26142			Construções  Ipanema Ltda	Aquisição de  Rejunte Votomassa		-9.55					
+2025-08-04 00:00:00	Nota Fiscal 49232			Construções  Ipanema Ltda	Aquisição  de Argamassa		-14.07					
+2025-08-04 00:00:00	Nota Fiscal 49232			Construções  Ipanema Ltda	Aquisição de Material Hidraulico                    Pix. 351,33		-123.56					
+2025-08-04 00:00:00	Nota Fiscal 78068			LeroyMerlin Cia Brasileira de BR	Aquisição  de Argamassa		-84.7					
+2025-08-04 00:00:00	Nota Fiscal 37250			Albuquerque e Freire Ltda	Aquisição de Potes para Sopa		-87.54					
+2025-08-04 00:00:00	Nota Fiscal 3354499			Claro S/A	Pagamento Conta Telefonica		-154.27					
+2025-08-04 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-3.47					
+2025-08-04 00:00:00	Credito			Banco Brasil S/A	Renda Fácil		299.07	-299.07				
+2025-08-04 00:00:00	Nota Fiscal 01			Jose Erivaldo da Silva	Pagamento Serviço de Pedreiro				-3300			
+2025-08-04 00:00:00	Débito			Caixa Econômica Federal	Tarifa do Pix				-8.5			
+2025-08-05 00:00:00	Pix			CLAUDINETE B. TENORIO  CAVALCANTE	Contribuição Não Associados		100					
+2025-08-05 00:00:00	Pix			Eneide Rosso	Contribuição não Associados		100					
+2025-08-05 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-200	200				
+2025-08-06 00:00:00	Débito			Prefeitura Municipal Maceió	Pagamento ISS Pedreiro		-165					
+2025-08-06 00:00:00	Credito			Banco Brasil S/A	Renda Fácil		165	-165				
+2025-08-06 00:00:00	Nota Fiscal 48			Maria Girlene dos Santos	Pagamento Serviço de Limpeza				-600			
+2025-08-06 00:00:00	Débito			Caixa Econômica Federal	Tarifa do Pix				-5.34			
+2025-08-07 00:00:00	Pix			Maurício Ferreira da Silva	Contribuição Associados		50					
+2025-08-07 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-50	50				
+2025-08-08 00:00:00	Nota Fiscal 70			Luciano  Gomes da Silva	Aquisição de Paes		-770					
+2025-08-08 00:00:00	Nota Fiscal  2339			Jose Afonso dos Anjos	Conserto da Impressora Epson		-200					
+2025-08-08 00:00:00	Débito			Prefeitura Municipal Maceió	Pagamento ISS Gil		-30					
+2025-08-08 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-9.6					
+2025-08-08 00:00:00	Credito			Banco Brasil S/A	Renda Fácil		1009.6	-1009.6				
+2025-08-08 00:00:00	Nota Fiscal 55191067			Equatorial Distribuidora de Energia de Alagoas S/A	Pagamento de Energia				-171.48			
+2025-08-11 00:00:00	Pix			Tatiara Moreira	Contribuição Não Associados		150					
+2025-08-11 00:00:00	Débito			Conselho Regional Espírita de Alagoas	Mensalidade do mês		-30					
+2025-08-11 00:00:00	Débito			Federação Espírita de Alagoas	Mensalidade do mês		-60					
+2025-08-11 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-2					
+2025-08-11 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-58	58				
+2025-08-12 00:00:00	Nota Fiscal 17006			Friovix Comércio de Refrigeração Ltda	Aquisição de 1 ar_condicionado 30000BTU				-4199			
+2025-08-12 00:00:00	Credito			Caixa Econômica Federal	Premiação				10813.67			
+2025-08-13 00:00:00	Pix			Eduardo Henrique	Contribuição Associados		50					
+2025-08-13 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-50	50				
+2025-08-14 00:00:00	Pix			Luciano  Gomes da Silva	Contribuição Não Associados		100					
+2025-08-14 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-100	100				
+2025-08-14 00:00:00	Nota Fiscal 71099			Center Frios Maquinas e Equipamentos Ltda	Aquisição de cortador de legumes				-360			
+2025-08-15 00:00:00	Pix			Andrea dos Santos Santana	Contribuição Associados		50					
+2025-08-15 00:00:00	Pix			Maria de Lourdes	Contribuição Associados		30					
+2025-08-15 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-80	80				
+2025-08-18 00:00:00	Transferência			Marcos Antonio Santiago Soares	Contribuição Associados		30					
+2025-08-18 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-30	30				
+2025-08-18 00:00:00	Débito			Brk Ambiental - Região Metropolitano de Maceió  S/A 	Pagamento de Água				-485.58			
+2025-08-20 00:00:00	Pix			Paulo Gomes	Contribuição Associados		40					
+2025-08-20 00:00:00	Pix			Nazidir Maria dos Santos	Contribuição Não Associados		130					
+2025-08-20 00:00:00	Pix			Nazidir Maria dos Santos	Contribuição Não Associados		50					
+2025-08-20 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-220	220				
+2025-08-20 00:00:00	Nota Fiscal 993853			Eletrolez Ltda	Aquisição de Material Eletrico				-3325.56			
+2025-08-20 00:00:00	Débito			Caixa Econômica Federal	Tarifa do Pix				-8.5			
+2025-08-21 00:00:00	Nota Fiscal 9452			K & P Comércio  de Combustiveis Ltda	Pagamento Gasolina		-116.98					
+2025-08-21 00:00:00	Nota Fiscal 42223			Maria Rosineide de França	Aquisição de Reparo de Torneira		-40					
+2025-08-21 00:00:00	Débito			Disponibilidade de caixa	Disponibilidade de caixa	9	-9					
+2025-08-21 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-1.64					
+2025-08-21 00:00:00	Credito			Banco Brasil S/A	Renda Fácil		167.62	-167.62				
+2025-08-21 00:00:00	Nota Fiscal344451			Leroy Merlin Cia Brasileira de BR	Aquisição de  2 portas para cozinha				-579.7			
+2025-08-25 00:00:00	Pix			Micheline Gomes	Contribuição Não Associados		50					
+2025-08-25 00:00:00	Pix			Jailton Rodrigues dos Santos	Contribuição Associados		50					
+2025-08-25 00:00:00	Débito			Banco Brasil S/A	Tarifa de Pacotes de Serviços		-128.9					
+2025-08-25 00:00:00	Credito			Banco Brasil S/A	Renda Fácil		28.9	-28.9				
+2025-08-25 00:00:00	Débito			Caixa Econômica Federal	Tarifa de Pacotes de Serviços				-75			
+2025-08-28 00:00:00	Pix			Rosilene Marques	Contribuição Associados		100					
+2025-08-28 00:00:00	Nota Fiscal13657			Plastifesta Ltda	Aquisição Poti e Leite em pó		-47.98					
+2025-08-28 00:00:00	Nota Fiscal13657			Plastifesta Ltda	Aquisição Poti e Leite em pó				-201.8			
+2025-08-28 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-1					
+2025-08-28 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-51.02	51.02				
+2025-08-28 00:00:00	Débito			Caixa Econômica Federal	Tarifa do Pix				-1.79			
+2025-08-29 00:00:00	Nota Fiscal 42364			Maria Rosineide de França	Aquisição de Reparo de Torneira		-40					
+2025-08-29 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-1					
+2025-08-29 00:00:00	Credito			Banco Brasil S/A	Renda Fácil		41	-41				
+2025-08-29 00:00:00	Credito			Banco do Brasil S/A	BB Renda  rendimento Aplicações			2.13				
+2025-08-29 00:00:00				Banco do Brasil S/A	BB Renda  Imposto de renda			-0.6				
+												
+												
+					Saldo atual em 31/08/2025	11.310000000000082	0	1763.7400000000002	10661.88			
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+
+
+===== ABA: setembro =====
+				DISPONIBILIDADE								
+												
+				Período	01/09/2024 a 30/09/2024	Movimentações						
+Data	Dcto.	CNPJ	DESPESAS	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+					Saldo Anterior em 31/08/2024	11.310000000000082		1763.7400000000002	10661.88			
+2025-09-01 00:00:00	Pix			Maria Cristina Cunha	Contribuição Associados		120					
+2025-09-01 00:00:00	Pix			Celia Costa	Contribuição Associados		100					
+2025-09-01 00:00:00	Pix			Patricia Lopes Brandão	Contribuição Associados		25					
+2025-09-01 00:00:00	Pix			Nazidir Maria dos Santos	Contribuição Associados		20					
+2025-09-01 00:00:00	Pix			Nazidir Maria dos Santos	Contribuição Associados		60					
+2025-09-01 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-325	325				
+2025-09-02 00:00:00	Pix			Nazidir Maria dos Santos	Contribuição Associados		100					
+2025-09-02 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-100	100				
+2025-09-03 00:00:00	Pix			Edna S Tenorio	Contribuição Não Associados		150					
+2025-09-03 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-150	150				
+2025-09-04 00:00:00	Pix			Rosangela Maria	Contribuição Não Associados		40					
+2025-09-04 00:00:00	Pix			Tatiana Moreira	Contribuição Não Associados		150					
+2025-09-04 00:00:00	Pix			Luciana Silva	Contribuição Associados		15					
+2025-09-04 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-205	205				
+2025-09-05 00:00:00	Pix			Mauricio Ferreira da Silva	Contribuição Associados		50					
+2025-09-05 00:00:00	Pix			Nazidir Maria dos Santos	Contribuição Associados		30					
+2025-09-05 00:00:00	Pix			Mauricio Ferreira da Silva	Retorno de Caixa	-9	9					
+2025-09-05 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-89	89				
+2025-09-08 00:00:00	Pix			Daise Lidia	Contribuição  Associados		25					
+2025-09-08 00:00:00	Pix			CLAUDINETE B. TENORIO  CAVALCANTE	Contribuição Não Associados		100					
+2025-09-08 00:00:00	Nota Fiscal 82379			Sendas Distribuidora S/A	Aquisição de Material de Limpeza		-177.25					
+2025-09-08 00:00:00	Nota Fiscal 3431256			Claro S/A	Pagamento de Internet		-150.64					
+2025-09-08 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-1.75					
+2025-09-08 00:00:00	Crédito			Banco Brasil S/A	Renda Fácil		204.64	-204.64				
+2025-09-08 00:00:00	Nota Fiscal 49	059923754-65		Maria Girlene dos  Santos	Pagamento  Serviços de Limpeza				-750			
+2025-09-08 00:00:00	Débito			Caixa Economica Federal	Tarifa do Pix				-6.67			
+2025-09-09 00:00:00	Nota Fiscal 056642600	12.272.084/0001-00		Equatorial Alagoas Distribuidora de Energia S/A	Pagmento de Energia				-161.83			
+2025-09-09 00:00:00	Pix			Nazidir Maria dos Santos	Contribuição Associados		50					
+2025-09-09 00:00:00	Pix			Gustavo Reis	Contribuição Associados		75					
+2025-09-09 00:00:00	Débito			Prefeitura Municipal Maceio	ISS do pagamento da M.Girlene		-37.5					
+2025-09-09 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-87.5	87.5				
+2025-09-10 00:00:00	Débito			Federação Espírita do Estado de Alagoas	Mensalidade		-60					
+2025-09-10 00:00:00	Débito			Rodney Santana Ferreira	Mensalidade		-30					
+2025-09-10 00:00:00	Crédito			Banco Brasil S/A	Renda Fácil		90	-90				
+2025-09-11 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-2					
+2025-09-11 00:00:00	Crédito			Banco Brasil S/A	Renda Fácil		2	-2				
+2025-09-12 00:00:00	Crédito			Caixa Economica Federal	Premiação				7738.55			
+2025-09-15 00:00:00	Pix			Eduardo Henrique	Contribuição Associados		50					
+2025-09-15 00:00:00	Nota Fiscal 72			Luciano Gomes da Silva Padaria	Aquisição de Pães		-550					
+2025-09-15 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-5.44					
+2025-09-15 00:00:00	Crédito			Banco Brasil S/A	Renda Fácil		505.44	-505.44				
+2025-09-17 00:00:00	Nota Fiscal 42564			Maria Rosineide de França - ME	Aquisição de um conjunto Completo para Descarga		-110					
+2025-09-17 00:00:00	Nota Fiscal 16867			K & P Comércio  de Combustiveis Ltda	Pagamento Gasolina		-159.43					
+2025-09-17 00:00:00	Débito			Banco Brasil S/A	Tarifa do Pix		-2.66					
+2025-09-17 00:00:00	Crédito			Banco Brasil S/A	Renda Fácil		272.09	-272.09				
+2025-09-18 00:00:00	Pix			Marcos Antonio Santiago Soares	Contribuição Associados		30					
+2025-09-18 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-30	30				
+2025-09-18 00:00:00	Nota Fiscal 141757	12.845.236/0001-08		Incomel Comercio de Materiais Eletricos Ltda	Aquisição de Material Eletrico				-376.51			
+2025-09-18 00:00:00	Débito			Caixa Economica Federal	Tarifa do Pix				-3.35			
+2025-09-18 00:00:00	Nota Fiscal 39576	04.973.159/0001-43		Plug Eletricidade Ltda	Aquisição de Material Eletrico				-55			
+2025-09-18 00:00:00	Débito			Caixa Economica Federal	Tarifa do Pix				-0.48			
+2025-09-19 00:00:00	Nota Fiscal 14	39.671.142/0001-16		Josafa Raimundo dos Santos Lins 02854535480	Serviços prestados de  Eletricista				-2100			
+2025-09-19 00:00:00	Débito			Caixa Economica Federal	Tarifa do Pix				-8.5			
+2025-09-19 00:00:00	Nota Fiscal 2418355	39.580.673/0001-01		Brk Ambiental Metropolitana de Maceió S/A	Pagamento de Agua				-485.58			
+2025-09-23 00:00:00	Pix			Micheline Gomes	Contribuição Não Associados		50					
+2025-09-23 00:00:00	Pix			Nazidir Maria dos Santos	Contribuição Não Associados		130					
+2025-09-23 00:00:00	Pix			Nazidir Maria dos Santos	Contribuição Associados		40					
+2025-09-23 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-220	220				
+2025-09-24 00:00:00	Pix			Jailtn Rodrigues dos Santos	Contribuição Associados		50					
+2025-09-24 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-50	50				
+2025-09-25 00:00:00	Débito			Banco Brasil S/A	Tarifa Cesta		-139.2					
+2025-09-25 00:00:00	Crédito			Banco Brasil S/A	Renda Fácil		139.2	-139.2				
+2025-09-25 00:00:00	Débito			Caixa Economica Federal	Tarifa Cesta				-75			
+2025-09-25 00:00:00	Nota Fiscal 17881	09.316.105/0001-29		Friovix Comercio de Refrigeração Ltda	Aquisição de Material para instalação do Arcondicionado				-1442.47			
+2025-09-26 00:00:00	Pix			Rosilene Marques A Borges	Contribuição Associados		100					
+2025-09-26 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-100	100				
+2025-09-26 00:00:00	Nota Fiscal 967	21.364.206/0001-70		Comercial Maceió de Refrigeração Ltda	Aquisição de Material para instalação do Arcondicionado				-45			
+2025-09-30 00:00:00	Transferencia			Jose Olindino Matos Filho	Contribuição Não Associados		300					
+2025-09-30 00:00:00	Pix			Patricia Lopes Brandão	Contribuição Associados		25					
+2025-09-30 00:00:00	Débito			Banco Brasil S/A	Renda Fácil		-325	325				
+2025-09-30 00:00:00	Credito			Banco do Brasil S/A	BB Renda  rendimento Aplicações			2.85				
+2025-09-30 00:00:00	Débito			Banco do Brasil S/A	BB Renda  Imposto de renda			-0.57				
+												
+												
+												
+												
+					Saldo atual em 30/09/2024	2.310000000000082	0	2234.15	12890.040000000005			
+												
+					Recursos disponível com:							
+												
+												
+												
+		5799.17										
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+												
+
+
+===== ABA: outubro =====
+			DISPONIBILIDADE								
+											
+			Período	01/10/2025 a 31/10/2025	Movimentações						
+Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+				Saldo Anterior em 30/09/2025	2.310000000000082		2234.15	12890.040000000005			
+2025-10-01 00:00:00	Pix		Nazidi M.dos santos	Contribuição Associado		100					
+2025-10-01 00:00:00	Pix		Celia Costa	Contribuição Associado		100					
+2025-10-01 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-200	200				
+2025-10-02 00:00:00	Pix		Rosangela Maria	Contribuição Não Associados		20					
+2025-10-02 00:00:00	Pix		Maria Cristina Cunha	Contribuição Associado		120					
+2025-10-02 00:00:00	Pix		Edna S Tenorio	Contribuição Não Associados		150					
+2025-10-02 00:00:00	Pix		Severina Correia	Contribuição Associado		20					
+2025-10-02 00:00:00	Pix		Nazidi M.dos santos	Contribuição Associado		100					
+2025-10-02 00:00:00	Pix		Nazidi M.dos santos	Contribuição Associado		50					
+2025-10-02 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-460	460				
+2025-10-03 00:00:00	Pix		Tatiana Moreira	Contribuição Não Associados		150					
+2025-10-03 00:00:00	Pix		Nazidi M.dos santos	Contribuição Não Associados		50					
+2025-10-03 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-200	200				
+2025-10-03 00:00:00	Nota Fiscal 103793	12.845.236/0001-08	Incomel Comercio de Materiais Eletricos Ltda	Aquisição Material Eletrico				-261			
+2025-10-03 00:00:00	Nota Fiscal 20656	09.177.795/0001-82	Loja das Variadades Comercio  de Ferramentas e Ferragens L	Aquisição Material Hidraulico				-122.5			
+2025-10-03 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pix				-2.32			
+2025-10-03 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pix				-1.09			
+2025-10-06 00:00:00	Pix		Luciana Silva	Contribuição Associado		15					
+2025-10-06 00:00:00	Pix		Nazidi M.dos santos	Contribuição Não Associados		50					
+2025-10-06 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-65	65				
+2025-10-06 00:00:00	Nota Fiscal  50	059923754-65	Maria Girlene dos  Santos	Pagamento  Serviços de Limpeza				-600			
+2025-10-06 00:00:00	Nota Fiscal 16817	26.158.052/0001-29	Adilson das Neves - Me	Aquisição de Material de Limpeza				-92.15			
+2025-10-06 00:00:00	Nota Fiscal 687	24.002.434/0001-99	Dois BBB - Com.de Gás e Bebidas Ltda	Aquisição de 3 botijões de gás				-330			
+2025-10-06 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pix				-0.82			
+2025-10-06 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pix				-2.93			
+2025-10-06 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pix				-5.34			
+2025-10-07 00:00:00	Pix		Mauricio Ferreira da Silva	Contribuição Associado		50					
+2025-10-07 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-50	50				
+2025-10-07 00:00:00	Pix		CLAUDINETE B. TENORIO  CAVALCANTE	Contribuição Não Associados		50					
+2024-10-07 00:00:00	Debito		Prefeitura Municipal Maceio	ISS do pagamento da M.Girlene		-30					
+2024-10-07 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-20	20				
+2025-10-08 00:00:00	Nota Fiscal 3507647		Claro S/A	Pagamento de Internet				-150.64			
+2025-10-08 00:00:00	Nota Fiscal 41	50.166.613/0001-71	Evanio Ferreira da Rocha	Pag. Serviços de instalação de 2 arcondicionados				-1200			
+2025-10-08 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pix				-8.5			
+2025-10-09 00:00:00	Pix		Daise Lidia	Contribuição  Associados		25					
+2025-10-09 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-25	25				
+2025-10-10 00:00:00	Pix		Rodney Santana Ferreira	Mensalidade		-30					
+2025-10-10 00:00:00	Debito		Federação Espírita do Estado de Alagoas	Mensalidade		-60					
+2025-10-10 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pix		-2					
+2025-10-10 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		92	-92				
+2025-10-13 00:00:00	Pix		Marlene Albuquerque Ferreira	Contribuição Não associado		1000					
+2025-10-13 00:00:00	Pix		Eduardo Henrique	Contribuição Associado		50					
+2025-10-13 00:00:00	Pix		Rafael Santos	Contribuição Não associado		10					
+2025-10-13 00:00:00	Pix		Paulo Cesar	Contribuição Não associado		30					
+2025-10-13 00:00:00	Pix		Cristiane Cassia	Contribuição Não associado		10					
+2025-10-13 00:00:00	Pix		Sandra Vasconcelos	Contribuição Não associado		10					
+2025-10-13 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pix		-0.47					
+2025-10-13 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-1109.53	1109.53				
+2025-10-17 00:00:00	NotaFiscal 2418355	39.580.673/0001-01	Brk Ambiental Metropolitana de Maceió S/A	Pagamento de Agua				-443.23			
+2025-10-17 00:00:00	Nota Fiscal 058321308	12.272.084/0001-00	Equatorial Alagoas Distribuidora de Energia S/A	Pagmento de Energia				-172.27			
+2025-10-20 00:00:00	Pix		Lisyane Penha	Contribuição Não associado		50					
+2025-10-20 00:00:00	Transferencia		Marcos Antonio Santiago	Contribuição Associado		30					
+2025-10-20 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pix		-0.49					
+2025-10-20 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-79.51	79.51				
+2025-10-22 00:00:00	Pix		Luciano Gomes da Silva	Aquisição de Paes		-220					
+2025-10-22 00:00:00	Nota Fiscal 86731		Sendas Distribuidoras S/A	Aquisição de materiais de Limpeza e Leite em pó		-276.53					
+2025-10-22 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pix		-4.9					
+2025-10-22 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		501.43	-501.43				
+2025-10-23 00:00:00	Pix		Micheline Gomes	Contribuinte Não Associado		50					
+2025-10-23 00:00:00	Pix		Renato Melo	Contribuição Associado		10					
+2025-10-23 00:00:00	Pix		Nazidi M.dos santos	Contribuinte Não Associado		40					
+2025-10-23 00:00:00	Pix		Nazidi M.dos santos	Contribuinte Não Associado		130					
+2025-10-23 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pix		-0.09					
+2025-10-23 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-229.91	229.91				
+2025-10-24 00:00:00	Pix		Jailton Rodrigues	Contribuição Associado		50					
+2025-10-24 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-50	50				
+2025-10-27 00:00:00	Pix		Paulo Cesar	Contribuição não Associados		30					
+2025-10-27 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pacote de Serviço		-139.2					
+2025-10-27 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pix		-0.29					
+2025-10-27 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		109.49	-109.49				
+2025-10-27 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pacote de Serviço				-75			
+2025-10-28 00:00:00	Pix		Rosilene Maria	Contribuição Associado		100					
+2025-10-28 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		-100	100				
+2025-10-31 00:00:00	Credito		Banco do Brasil S/A	BB Renda  rendimento Aplicações			5.63				
+2025-10-31 00:00:00	Débito		Banco do Brasil S/A	BB Renda  Imposto de renda			-0.56				
+											
+											
+											
+											
+											
+				Saldo atual em 31/10/2025	2.310000000000082	0	4125.25	9422.250000000005			
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+
+
+===== ABA: Novembro =====
+			DISPONIBILIDADE								
+											
+			Período	01/11/2025 a 30/11/2025	Movimentações						
+Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+				Saldo Anterior em 31/10/2025	2.310000000000082		4125.25	9422.250000000005			
+2025-11-03 00:00:00	Pix		Edna S Tenório	Contribuição Não Associado		150					
+2025-11-03 00:00:00	Pix		Celia Costa	Contribuição Associado		100					
+2025-11-03 00:00:00	Pix		Tatiaria Moreira	Contribuição Não Associado		150					
+2025-11-03 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		100					
+2025-11-03 00:00:00	Pix		Eneide Rosso	Contribuição Não Associado		100					
+2025-11-03 00:00:00	Pix		Maria Cristina Cunha	Contribuição Associado		120					
+2025-11-03 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-720	720				
+2025-11-03 00:00:00	Nota Fiscal 11	757.898.414-49	Messias de Lima Santos	Pag. de Serv.de montagem da porta da cozinha e ajuste das portas				-1200			
+2025-11-03 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pix				-8.5			
+2025-11-05 00:00:00	Pix		Gustavo Reis	Contribuição Associado		75					
+2025-11-05 00:00:00	Pix		Maria de lourdes L.Santos	Contribuição Associado		30					
+2025-11-05 00:00:00	Pix		Andreia dos Santos Santana	Contribuição Associado		50					
+2025-11-05 00:00:00	Pix		Patricia Lopes Brandão	Contribuição Associado		25					
+2025-11-05 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-180	180				
+2025-11-06 00:00:00	Pix		Claudinete Bol	Contribuição Não Associado		50					
+2025-11-06 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-50	50				
+2025-11-07 00:00:00	Pix		Mauricio Ferreira da Silva	Contribuição Associado		50					
+2025-11-07 00:00:00	Nota Fiscal 98449		O Borração Ltda	Aquisição de Placa Piso Borracha e Cola		-211.85					
+2025-11-07 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pix		-2.09					
+2025-11-07 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		163.94	-163.94				
+2025-11-07 00:00:00	Nota Fiscal 		Claro S/A	Pagamento Telefone				-150.64			
+2025-11-07 00:00:00		12.272.084/0001-00	Equatorial Alagoas Distribuidora de Energia S/A	Pagmento de Energia				-171.14			
+2025-11-07 00:00:00	Nota Fiscal 52		Maria Girlens dos santos	Pagmento de Serviçod de Limpeza				-600			
+2025-11-07 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pix				-5.34			
+2025-10-10 00:00:00	Nota Fiscal 11	757.898.414-49	Messias de Lima Santos	Pag. de Serv.de montagem da porta da cozinha e ajuste das portas				-600			
+	Debito		Caixa Economica Federal	Tarifa de Pix				-5.34			
+2025-11-10 00:00:00	Credito		Caixa Economica Federal	Premiação				7865.3			
+2025-11-10 00:00:00	Pix		Severina Correia	Contribuição Associado		20					
+2025-11-10 00:00:00	Pix		Dayse Lidia Lucena	Contribuição Associado		25					
+2025-11-10 00:00:00	Pix		Paulo Cesar Rodrigues	Contribuição Não Associado		30					
+2025-11-10 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Não Associado		50					
+2025-11-10 00:00:00	Recibo		Conselho Regional Espirito	Pagamento Mensalidade		-30					
+2025-11-10 00:00:00	Recibo		Federação Espirita do Estado de Alagoas	Pagamento Mensalidade		-60					
+2025-11-10 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pix		-2					
+2025-11-10 00:00:00	Debito		Banco do Brasil S/A	Tarifa de Pix		-0.29					
+2025-11-10 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-32.71	32.71				
+2025-11-11 00:00:00	Pix		Rosangela Maria	Contribuição Não Associado		30					
+2025-11-11 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-30	30				
+2025-11-13 00:00:00	Pix		Eduardo Henrique	Contribuição Associado		50					
+2025-11-13 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-50	50				
+2025-11-17 00:00:00	Nota Fiscal BRK		BRK	Pagamento de Agua				-433.32			
+2025-11-18 00:00:00	Transferencia		Marco Antonio Santiago Soares	Contribuição Associado		30					
+2025-11-18 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-30	30				
+2025-11-21 00:00:00	Debito		Prefeitura de Municipal de Maceió	Pagamento ISS Gil		-30					
+2025-11-21 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		30	-30				
+2025-11-24 00:00:00	Pix		Micheline Gomes	Contribuição Não Associado		50					
+2025-11-24 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-50	50				
+2025-11-25 00:00:00	Debito		Banco do Brasil S/A	Tarifa Pacote de Serviço		-139.2					
+2025-11-25 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		139.2	-139.2				
+2025-11-25 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote de Serviço				-75			
+2025-11-26 00:00:00	Pix		Jailton Rodrigues	Contribuição Associado		50					
+2025-11-26 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-50	50				
+2025-11-27 00:00:00	Pix		Luciana Silva	Contribuição Associado		15					
+2025-11-27 00:00:00	Pix		Paulo Gomes/Bianca Almeida	Contribuição Associado		40					
+2025-11-27 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Não Associado		130					
+2025-11-27 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-185	185				
+2025-11-28 00:00:00	Pix		Rosilene Marques	Contribuição Associado		100					
+2025-11-28 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-100	100				
+2025-11-28 00:00:00	Nota Fiscal 15062	36.091.781/0001-14	Plastifestas Ltda	Aquisição de material de embalagens				-618.86			
+2025-11-28 00:00:00	Debito		Caixa Economica Federal	Tarifa de Pix				-5.5			
+2025-11-30 00:00:00	Credito		Banco do Brasil S/A	BB Renda  rendimento Aplicações			8.739999999999998				
+2025-11-30 00:00:00	Débito		Banco do Brasil S/A	BB Renda  Imposto de renda			-0.41				
+											
+											
+											
+				Saldo atual em 30/11/2025	2.310000000000082	0	5278.150000000001	13413.910000000003			
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+
+
+===== ABA: Dezembro =====
+			DISPONIBILIDADE								
+											
+			Período	01/12/2024 a 31/12/2024	Movimentações						
+Data	Dcto.	CNPJ	Fornecedor/Contribuição	Descrição	CAIXA	B.BRASIL	BB R.Fácil	C.ECONÔMICA			
+				Saldo Anterior em 30/11/2024	2.310000000000082		2879.37	13413.910000000003			
+2024-12-02 00:00:00	Pix		Maria Cristina Cunha	Contribuição Associado		100					
+2024-12-02 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		50					
+2024-12-02 00:00:00	Pix		Edna S Tenorio	Contribuição não Associado		150					
+2024-12-02 00:00:00	Pix		Luciana Silva	Contribuição Associado		15					
+2024-12-02 00:00:00	Pix		Severina Correia	Contribuição Associado		50					
+2024-12-02 00:00:00	Pix		Celia Costa	Contribuição Associado		100					
+2024-12-02 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-465	465				
+2024-12-05 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		100					
+2024-12-05 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-100	100				
+2024-12-06 00:00:00	Pix		Patricia Lopes Brandão	Contribuição Associado		20					
+2024-12-06 00:00:00	Pix		Mauricio Ferreira da Silva	Contribuição Associado		50					
+2024-12-06 00:00:00	Debito		Prefeitura de Maceio	Taxa de Lixo		-104.94					
+2024-12-06 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		34.94	-34.94				
+2024-12-06 00:00:00		059.923.754.65	Maria Girlene dos Santos	Serviço de Limpeza				-750			
+2024-12-06 00:00:00	Debito		Banco do Brasil S/A	Tarifa Pix				-6.67			
+2024-12-09 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		50					
+2024-12-09 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		30					
+2024-12-09 00:00:00	Nota Fiscal	66.970.229/0146-21	Claro Next Telecomunicação S/A	Pagamento Internet		-142.1					
+2024-12-09 00:00:00	Debito		Banco do Brasil S/A	Tarifa Pix		-1.03					
+2024-12-09 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		63.13	-63.13				
+2024-12-11 00:00:00	Pix		Jailton Rodrigues	Contribuição Associado		25					
+2024-12-11 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-25	25				
+2024-12-13 00:00:00	Pix		Eduardo Henrique	Contribuição Associado		50					
+2024-12-13 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-50	50				
+2024-12-17 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		100					
+2024-12-17 00:00:00	Nota Fiscal 7731		Valenci Ind. E Com de ESS Prod	Aquisição de Material de Limpeza		-112.48					
+2024-12-17 00:00:00	Recibo		Conselho Regional Espirita	Contribuição Mensal		-30					
+2024-12-17 00:00:00	Pix		Maria Vitoria do Nascimento Miranda	Pagamento Agua do Alto do Boi		-50					
+2024-12-17 00:00:00	Nota Fiscal 121912		Supernercado Leste Oeste	Aquisição de Material de Limpeza		-81.85					
+2024-12-17 00:00:00	Recibo		FederaçãoEspirita de Alagoas	Contribuição Mensal		-60					
+2024-12-17 00:00:00	Debito		Banco do Brasil S/A	Tarifa Pix		-4.41					
+2024-12-17 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		238.74	-238.74				
+2024-12-18 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		40					
+2024-12-18 00:00:00	Transferencia		Marcos Antonio Santiago	Contribuição Associado		30					
+2024-12-18 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		130					
+2024-12-18 00:00:00	Pix		Tatiara Moreira	Contribuição Não Associado		100					
+2024-12-18 00:00:00	Dedito		Prefeitura de Maceio	Pagamento ISS		-37.5					
+2024-12-18 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-262.5	262.5				
+2024-12-19 00:00:00		39.580.673/0001-01	Brk Ambiental Região Metropolitana de Maceió S/A	Pagamento de Agua  Esgoto				-424.12			
+2024-12-19 00:00:00	Pix		Jose Olindino M Filho	Contribuição Não Associado		1000					
+2024-12-19 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-1000	1000				
+2024-12-20 00:00:00	Pix		Renata de Melo	Contribuição Associado		100					
+2024-12-20 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-100	100				
+2024-12-23 00:00:00	Pix		Nazidir Maria dos Santos	Contribuição Associado		140					
+2024-12-23 00:00:00	Debito		Banco do Brasil S/A	BB Renda Fácil		-140	140				
+2024-12-26 00:00:00	Pix		Jailton Rodrigues	Contribuição Associado		25					
+2024-12-26 00:00:00	Debito		Banco do Brasil S/A	Tarifa Pacote serviços		-122.3					
+2024-12-26 00:00:00	Credito		Banco do Brasil S/A	BB Renda Fácil		97.3	-97.3				
+2024-12-26 00:00:00	Debito		Caixa Economica Federal	Tarifa Pacote serviços				-75			
+2024-12-27 00:00:00	Credito		Caixa Economica Federal	Disponibilidade				767.46			
+2023-12-29 00:00:00	Crédito		Banco do Brasil S/A	BB Renda  rendimento Aplicações			6.6				
+2023-12-29 00:00:00	Débito		Banco do Brasil S/A	BB Renda  Imposto de renda			-0.54				
+				Saldo atual em 31/12/2024	2.310000000000082	0	4593.82	12925.580000000002			
+											
+											
+											
+											
+											
+											
+											

@@ -1,0 +1,110 @@
+[
+  {
+    "sheet": "CONTRIBUIÇÃO ASSOCIADOS",
+    "tsv": "relatorio_excel_sheets_tsv/CONTRIBUIÇÃO_ASSOCIADOS.tsv",
+    "rows": 67,
+    "cols": 28
+  },
+  {
+    "sheet": "CONTRIBUIÇÃO NAO ASSOCIADOS ",
+    "tsv": "relatorio_excel_sheets_tsv/CONTRIBUIÇÃO_NAO_ASSOCIADOS.tsv",
+    "rows": 71,
+    "cols": 28
+  },
+  {
+    "sheet": "Sefaz",
+    "tsv": "relatorio_excel_sheets_tsv/Sefaz.tsv",
+    "rows": 69,
+    "cols": 15
+  },
+  {
+    "sheet": "Sefaz 25",
+    "tsv": "relatorio_excel_sheets_tsv/Sefaz_25.tsv",
+    "rows": 85,
+    "cols": 15
+  },
+  {
+    "sheet": "Sefaz 25 A",
+    "tsv": "relatorio_excel_sheets_tsv/Sefaz_25_A.tsv",
+    "rows": 75,
+    "cols": 15
+  },
+  {
+    "sheet": "Sefaz 25 B",
+    "tsv": "relatorio_excel_sheets_tsv/Sefaz_25_B.tsv",
+    "rows": 60,
+    "cols": 15
+  },
+  {
+    "sheet": "janeiro",
+    "tsv": "relatorio_excel_sheets_tsv/janeiro.tsv",
+    "rows": 93,
+    "cols": 12
+  },
+  {
+    "sheet": "Fevereiro",
+    "tsv": "relatorio_excel_sheets_tsv/Fevereiro.tsv",
+    "rows": 93,
+    "cols": 12
+  },
+  {
+    "sheet": "Março",
+    "tsv": "relatorio_excel_sheets_tsv/Março.tsv",
+    "rows": 83,
+    "cols": 13
+  },
+  {
+    "sheet": "Abril",
+    "tsv": "relatorio_excel_sheets_tsv/Abril.tsv",
+    "rows": 93,
+    "cols": 12
+  },
+  {
+    "sheet": "Maio",
+    "tsv": "relatorio_excel_sheets_tsv/Maio.tsv",
+    "rows": 73,
+    "cols": 13
+  },
+  {
+    "sheet": "junho",
+    "tsv": "relatorio_excel_sheets_tsv/junho.tsv",
+    "rows": 87,
+    "cols": 12
+  },
+  {
+    "sheet": "julho",
+    "tsv": "relatorio_excel_sheets_tsv/julho.tsv",
+    "rows": 119,
+    "cols": 12
+  },
+  {
+    "sheet": "agosto",
+    "tsv": "relatorio_excel_sheets_tsv/agosto.tsv",
+    "rows": 112,
+    "cols": 13
+  },
+  {
+    "sheet": "setembro",
+    "tsv": "relatorio_excel_sheets_tsv/setembro.tsv",
+    "rows": 114,
+    "cols": 13
+  },
+  {
+    "sheet": "outubro",
+    "tsv": "relatorio_excel_sheets_tsv/outubro.tsv",
+    "rows": 109,
+    "cols": 12
+  },
+  {
+    "sheet": "Novembro",
+    "tsv": "relatorio_excel_sheets_tsv/Novembro.tsv",
+    "rows": 97,
+    "cols": 12
+  },
+  {
+    "sheet": "Dezembro",
+    "tsv": "relatorio_excel_sheets_tsv/Dezembro.tsv",
+    "rows": 65,
+    "cols": 12
+  }
+]

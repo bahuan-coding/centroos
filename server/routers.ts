@@ -1068,6 +1068,45 @@ const pessoasRouter = router({
     }));
   }),
 
+  historico: publicProcedure.input(z.string().uuid()).query(async ({ input: pessoaId }) => {
+    const db = await getDb();
+    
+    const statsResult = await db.execute(sql`
+      SELECT COUNT(*) as total, COALESCE(SUM(CAST(valor_liquido AS NUMERIC)), 0) as valor_total
+      FROM titulo WHERE pessoa_id = ${pessoaId} AND deleted_at IS NULL AND tipo = 'receber'
+    `);
+    
+    const porMes = await db.execute(sql`
+      SELECT TO_CHAR(data_competencia, 'MM/YYYY') as mes, 
+             SUM(CAST(valor_liquido AS NUMERIC)) as total
+      FROM titulo 
+      WHERE pessoa_id = ${pessoaId} AND deleted_at IS NULL AND tipo = 'receber'
+      GROUP BY TO_CHAR(data_competencia, 'MM/YYYY'), DATE_TRUNC('month', data_competencia)
+      ORDER BY DATE_TRUNC('month', data_competencia) DESC
+      LIMIT 12
+    `);
+    
+    const doacoes = await db.execute(sql`
+      SELECT id, valor_liquido, data_competencia, descricao, natureza
+      FROM titulo 
+      WHERE pessoa_id = ${pessoaId} AND deleted_at IS NULL AND tipo = 'receber'
+      ORDER BY data_competencia DESC
+      LIMIT 20
+    `);
+    
+    const total = Number(statsResult.rows[0]?.total) || 0;
+    const valorTotal = parseFloat(statsResult.rows[0]?.valor_total as string) || 0;
+    
+    return {
+      stats: { totalDoacoes: total, valorTotal, mediaDoacao: total > 0 ? valorTotal / total : 0 },
+      porMes: porMes.rows.reverse().map((r: any) => ({ mes: r.mes, total: parseFloat(r.total) })),
+      doacoes: doacoes.rows.map((r: any) => ({
+        id: r.id, valor: parseFloat(r.valor_liquido), dataCompetencia: r.data_competencia,
+        descricao: r.descricao, natureza: r.natureza
+      })),
+    };
+  }),
+
   // Busca pessoa existente por nome normalizado ou CPF, retorna null se não encontrar
   findByNameOrCpf: publicProcedure
     .input(z.object({ nome: z.string(), cpf: z.string().optional() }))

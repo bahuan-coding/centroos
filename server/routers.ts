@@ -999,12 +999,25 @@ const pessoasRouter = router({
 
   stats: publicProcedure.query(async () => {
     const db = await getDb();
-    const [total] = await db.select({ count: sql<number>`count(*)` }).from(schema.pessoa).where(isNull(schema.pessoa.deletedAt));
-    const [associados] = await db.select({ count: sql<number>`count(*)` }).from(schema.associado);
+    
+    // Total de pessoas ativas (não deletadas)
+    const [totalResult] = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.pessoa)
+      .where(isNull(schema.pessoa.deletedAt));
+    
+    // Total de associados (pessoas que têm registro na tabela associado)
+    const [assocResult] = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.associado)
+      .innerJoin(schema.pessoa, eq(schema.associado.pessoaId, schema.pessoa.id))
+      .where(isNull(schema.pessoa.deletedAt));
+    
+    const total = Number(totalResult.count) || 0;
+    const associados = Number(assocResult.count) || 0;
+    
     return {
-      total: total.count,
-      associados: associados.count,
-      naoAssociados: total.count - associados.count,
+      total,
+      associados,
+      naoAssociados: total - associados,
     };
   }),
 
@@ -1054,6 +1067,91 @@ const pessoasRouter = router({
       valorTotal: parseFloat(row.valor_total),
     }));
   }),
+
+  // Busca pessoa existente por nome normalizado ou CPF, retorna null se não encontrar
+  findByNameOrCpf: publicProcedure
+    .input(z.object({ nome: z.string(), cpf: z.string().optional() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      
+      // Primeiro, busca por CPF se fornecido
+      if (input.cpf) {
+        const cpfNormalizado = input.cpf.replace(/\D/g, '');
+        const [byCpf] = await db.execute(sql`
+          SELECT p.id, p.nome FROM pessoa p
+          INNER JOIN pessoa_documento pd ON pd.pessoa_id = p.id
+          WHERE pd.tipo = 'cpf' AND pd.numero = ${cpfNormalizado}
+            AND p.deleted_at IS NULL
+          LIMIT 1
+        `);
+        if (byCpf) return { id: (byCpf as any).id, nome: (byCpf as any).nome, matchType: 'cpf' };
+      }
+      
+      // Depois, busca por nome normalizado
+      const nomeNorm = input.nome.trim().toUpperCase();
+      const [byNome] = await db.execute(sql`
+        SELECT id, nome FROM pessoa 
+        WHERE UPPER(TRIM(nome)) = ${nomeNorm} AND deleted_at IS NULL
+        LIMIT 1
+      `);
+      if (byNome) return { id: (byNome as any).id, nome: (byNome as any).nome, matchType: 'nome' };
+      
+      return null;
+    }),
+
+  // Cria pessoa apenas se não existir duplicata, senão retorna a existente
+  findOrCreate: protectedProcedure
+    .input(z.object({
+      nome: z.string().min(2),
+      tipo: z.enum(['fisica', 'juridica']).default('fisica'),
+      cpf: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      const nomeNorm = input.nome.trim().toUpperCase();
+      
+      // Verifica CPF primeiro
+      if (input.cpf) {
+        const cpfNorm = input.cpf.replace(/\D/g, '');
+        const existingByCpf = await db.execute(sql`
+          SELECT p.id, p.nome FROM pessoa p
+          INNER JOIN pessoa_documento pd ON pd.pessoa_id = p.id
+          WHERE pd.tipo = 'cpf' AND pd.numero = ${cpfNorm} AND p.deleted_at IS NULL
+          LIMIT 1
+        `);
+        if (existingByCpf.rows.length > 0) {
+          return { id: (existingByCpf.rows[0] as any).id, created: false, matchType: 'cpf' };
+        }
+      }
+      
+      // Verifica nome
+      const existingByNome = await db.execute(sql`
+        SELECT id, nome FROM pessoa 
+        WHERE UPPER(TRIM(nome)) = ${nomeNorm} AND deleted_at IS NULL
+        LIMIT 1
+      `);
+      if (existingByNome.rows.length > 0) {
+        return { id: (existingByNome.rows[0] as any).id, created: false, matchType: 'nome' };
+      }
+      
+      // Cria nova pessoa
+      const [newPessoa] = await db.insert(schema.pessoa).values({
+        nome: input.nome.trim(),
+        tipo: input.tipo,
+        createdBy: ctx.user.id,
+      }).returning({ id: schema.pessoa.id });
+      
+      // Se CPF fornecido, cria documento
+      if (input.cpf) {
+        await db.insert(schema.pessoaDocumento).values({
+          pessoaId: newPessoa.id,
+          tipo: 'cpf',
+          numero: input.cpf.replace(/\D/g, ''),
+        });
+      }
+      
+      return { id: newPessoa.id, created: true, matchType: null };
+    }),
 });
 
 // ==================== TÍTULOS ROUTER ====================
@@ -1269,9 +1367,16 @@ const dashboardRouter = router({
   kpis: publicProcedure.query(async () => {
     const db = await getDb();
 
-    // Pessoas
-    const [pessoas] = await db.select({ count: sql<number>`count(*)` }).from(schema.pessoa).where(isNull(schema.pessoa.deletedAt));
-    const [associados] = await db.select({ count: sql<number>`count(*)` }).from(schema.associado);
+    // Pessoas (não deletadas)
+    const [pessoas] = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.pessoa)
+      .where(isNull(schema.pessoa.deletedAt));
+    
+    // Associados (cujas pessoas não foram deletadas)
+    const [associados] = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.associado)
+      .innerJoin(schema.pessoa, eq(schema.associado.pessoaId, schema.pessoa.id))
+      .where(isNull(schema.pessoa.deletedAt));
 
     // Títulos
     const [titulos] = await db.select({

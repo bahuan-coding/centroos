@@ -1,12 +1,81 @@
-id;origem;data;valor;descricao;tipo_problema;severidade;evidencia;hipotese;acao
-OUT-CEF-1;"caixa_extrato_novembro_2025_lancamentos.csv";2025-11-11;7865,00;"PREMIACAO";OUTLIER;Alta;"Z-score: 3.41 (valor extremo estatisticamente)";"Valor atípico - pode ser pagamento grande ou erro de digitação";"Conferir comprovante original"
-OUT-BB-2;"banco_do_brasil_extrato_novembro_2025_raw.txt";2025-11-03;720,00;"351 BB Rende Fácil";OUTLIER;Alta;"Z-score: 5.88";"Valor fora do padrão de transações típicas";"Conferir extrato bancário original"
-MISS-CEF-3;"Novembro.tsv (Excel)";2025-11-03;8,50;"Caixa Economica Federal - Tarifa de Pix";MISSING_IN_BASE;Alta;"Valor R$ 8.50 não encontrado no extrato CEF";"Transação não baixada no banco ou data divergente";"Verificar se a transação foi efetivada e em qual data"
-MISS-CEF-4;"Novembro.tsv (Excel)";2025-11-07;150,64;"Claro S/A - Pagamento Telefone";MISSING_IN_BASE;Alta;"Valor R$ 150.64 não encontrado no extrato CEF";"Transação não baixada no banco ou data divergente";"Verificar se a transação foi efetivada e em qual data"
-MISS-CEF-5;"Novembro.tsv (Excel)";2025-11-07;171,14;"Equatorial Alagoas Distribuidora de Energia S/A - Pagmento de Energia";MISSING_IN_BASE;Alta;"Valor R$ 171.14 não encontrado no extrato CEF";"Transação não baixada no banco ou data divergente";"Verificar se a transação foi efetivada e em qual data"
-MISS-CEF-6;"Novembro.tsv (Excel)";2025-11-07;5,34;"Caixa Economica Federal - Tarifa de Pix";MISSING_IN_BASE;Alta;"Valor R$ 5.34 não encontrado no extrato CEF";"Transação não baixada no banco ou data divergente";"Verificar se a transação foi efetivada e em qual data"
-MISS-CEF-7;"Novembro.tsv (Excel)";2025-10-10;600,00;"Messias de Lima Santos - Pag. de Serv.de montagem da porta da cozinha e ajuste das portas";MISSING_IN_BASE;Alta;"Valor R$ 600.00 não encontrado no extrato CEF";"Transação não baixada no banco ou data divergente";"Verificar se a transação foi efetivada e em qual data"
-MISS-CEF-8;"Novembro.tsv (Excel)";2025-11-10;7865,30;"Caixa Economica Federal - Premiação";MISSING_IN_BASE;Alta;"Valor R$ 7865.30 não encontrado no extrato CEF";"Transação não baixada no banco ou data divergente";"Verificar se a transação foi efetivada e em qual data"
-MISS-CEF-9;"Novembro.tsv (Excel)";2025-11-17;433,32;"BRK - Pagamento de Agua";MISSING_IN_BASE;Alta;"Valor R$ 433.32 não encontrado no extrato CEF";"Transação não baixada no banco ou data divergente";"Verificar se a transação foi efetivada e em qual data"
-MISS-CEF-10;"Novembro.tsv (Excel)";2025-11-28;618,86;"Plastifestas Ltda - Aquisição de material de embalagens";MISSING_IN_BASE;Alta;"Valor R$ 618.86 não encontrado no extrato CEF";"Transação não baixada no banco ou data divergente";"Verificar se a transação foi efetivada e em qual data"
-MISS-CEF-11;"Novembro.tsv (Excel)";2025-11-28;5,50;"Caixa Economica Federal - Tarifa de Pix";MISSING_IN_BASE;Alta;"Valor R$ 5.50 não encontrado no extrato CEF";"Transação não baixada no banco ou data divergente";"Verificar se a transação foi efetivada e em qual data"
+Nome,Tipo,Matricula,Total_Contribuicoes,Valor_Total,Status
+"CELIA COSTA DOS SANTOS",associado,3,10,1000.00,OK
+"CÉLIA MARIA BRAGA NETTO COSTA",associado,4,0,0.00,SEM_DOACAO
+"DIVA GALVÃO CAVALCANTE",associado,5,0,0.00,SEM_DOACAO
+"EDLEUZA MELO VASCONCELOS",associado,7,2,150.00,OK
+"GLEICIANA SANTIAGO SOARES",associado,8,12,180.00,OK
+"JAILTON RODRIGUES DOS SANTOS",associado,9,10,230.00,OK
+"LÍDIA ROBERTA MELO VASCONCELOS",associado,12,2,150.00,OK
+"MARIA JÚLIA TEIXEIRA LEMOS",associado,14,0,0.00,SEM_DOACAO
+"LUIZ CARLOS MARINHO SIMÕES",associado,15,9,180.00,OK
+"MARIA CRISTINA ANTUNES DO C.PINHEIRO",associado,18,9,960.00,OK
+"MARIA DE FÁTIMA OLIVEIRA DOS SANTOS",associado,19,9,195.00,OK
+"MARIA DE LOURDES LOPES DOS SANTOS",associado,20,10,205.00,OK
+"ELISABETE FREIRE COSTA BARROS",associado,26,0,0.00,SEM_DOACAO
+"ROSILENE MARQUES AGUIAR BORGES",associado,28,10,800.00,OK
+"SAMIRA CAVALCANTE LIMA",associado,29,0,0.00,SEM_DOACAO
+"SEVERINA CORREIA SILVA",associado,30,10,200.00,OK
+"SIRLEIDE G. DE ALBUQUERQUE SANTOS",associado,31,12,590.00,OK
+"HELENA DE FÁTIMA OLIVEIRA DA SILVA",associado,34,10,275.00,OK
+"ELIANE FERREIRA DOS SANTOS",associado,36,0,0.00,SEM_DOACAO
+"IRACI SILVA MELO",associado,37,0,0.00,SEM_DOACAO
+"PATRÍCIA LOPES BRANDÃO",associado,38,9,250.00,OK
+"MAURÍCIO FERREIRA DA SILVA",associado,39,10,275.00,OK
+"CRISTINA RAQUEL LOPES DOS S. TONIAL",associado,42,0,0.00,SEM_DOACAO
+"ANA PAULA BORGES MENDONÇA",associado,43,0,0.00,SEM_DOACAO
+"GUSTAVO REIS SARMENTO",associado,45,9,450.00,OK
+"MARIA ADRIANA DE MELO SARMENTO",associado,46,0,0.00,SEM_DOACAO
+"MARIA DENISE BUARQUE DE CARVALHO",associado,47,10,250.00,OK
+"ALZIRA MARIA PERDIGÃO",associado,48,9,225.00,OK
+"MARCOS ANTÔNIO SANTIAGO SOARES",associado,49,10,300.00,OK
+"CRISTINA FEITOSA  SILVA",associado,51,0,0.00,SEM_DOACAO
+"ZEJANE CARDOSO DA SILVA CAMINHO",associado,52,0,0.00,SEM_DOACAO
+"PAULO GOMES  DE MELO JUNIOR",associado,53,8,160.00,OK
+"BIANCA RENATA DE ALMEIDA",associado,54,9,180.00,OK
+"CLAUDIO F. PERRELLI",associado,56,0,0.00,SEM_DOACAO
+"LUIZ BEZERRA MENDONÇA",associado,58,0,0.00,SEM_DOACAO
+"EDUARDO HENRIQUE NUNES BUARQUE",associado,59,10,250.00,OK
+"PAULO OLIVEIRA DE MORAIS",associado,60,0,0.00,SEM_DOACAO
+"NAZIDIR MARIA DOS SANTOS",associado,62,31,2625.00,OK
+"EDNILTON LUCENA",associado,63,0,0.00,SEM_DOACAO
+"SONIA MARIA ALVES DE LIMA",associado,66,0,0.00,SEM_DOACAO
+"ANGELA LÚCIA OLIVEIRA DA SILVA",associado,67,0,0.00,SEM_DOACAO
+"JOSE MARIA VIEIRA DA SILVA",associado,68,0,0.00,SEM_DOACAO
+"JEFERSON GABRIEL SOARES",associado,69,0,0.00,SEM_DOACAO
+"RENATA DE MELO FRANCO",associado,80,1,10.00,OK
+"LAÍS SANTIAGO SOARES",associado,87,0,0.00,SEM_DOACAO
+"KILARE TAWYNNE S. MONTEIRO",associado,85,9,125.00,OK
+"JOSEDIR JUSSARA DOS SANTOS",associado,104,9,125.00,OK
+"JORGE MEDEIROS",associado,99,0,0.00,SEM_DOACAO
+"LUCIANA DA SILVA CAVALCANTE",associado,,9,135.00,OK
+"ELILDIERLI SOARES FERREIRA",associado,,0,0.00,SEM_DOACAO
+"LUCIANO GOMES DA SILVA",associado,,2,200.00,OK
+"SANDRA GABRIELA LOPES DOS SANTOS",associado,,9,90.00,OK
+"ALCIONE SOARES FERREIRA",associado,,0,0.00,SEM_DOACAO
+"JANE COSTA DA SILVA",associado,,0,0.00,SEM_DOACAO
+"YAGO ALMEIDA",associado,,0,0.00,SEM_DOACAO
+"ANDREIA SANTOS SANTANA",associado,,7,350.00,OK
+"DAYSE LIDIANE SILVA",associado,,2,50.00,OK
+"LARISSA MOURA",nao_associado,,0,0.00,SEM_DOACAO
+"EDNA S TENORIO",nao_associado,,9,1350.00,OK
+"MARIA EDUARDO",nao_associado,,0,0.00,SEM_DOACAO
+"ENEIDE ROSSO",nao_associado,,3,300.00,OK
+"THAYZE KEYLLA",nao_associado,,0,0.00,SEM_DOACAO
+"JOSE OLINDINO",nao_associado,,2,600.00,OK
+"VICTOR FERREIRA",nao_associado,,0,0.00,SEM_DOACAO
+"MICHELINE BATISTA",nao_associado,,8,400.00,OK
+"TATIANE MOREIRA",nao_associado,,9,1350.00,OK
+"CLAUDINETE B. TENORIO  CAVALCANTE",nao_associado,,8,750.00,OK
+"MAURICIO FERREIRA DA SILVA",nao_associado,,1,105.50,OK
+"Rafael Santana",nao_associado,,2,35.00,OK
+"Maria Lopes Milhones",nao_associado,,1,200.00,OK
+"Aline Rose",nao_associado,,1,20.00,OK
+"Rosangela Maria Xaxier",nao_associado,,4,160.00,OK
+"Gabriela Santos",nao_associado,,1,25.00,OK
+"Nadjeson",nao_associado,,1,50.00,OK
+"MARLENE A ALBUQUERQUE",nao_associado,,1,1000.00,OK
+"PAULO CESAR",nao_associado,,2,60.00,OK
+"CRISTIANE CASSIANO",nao_associado,,1,10.00,OK
+"SANRA VASCONCELOS",nao_associado,,1,10.00,OK
+"LISYANE PENHA",nao_associado,,1,50.00,OK
+"MICHELINE GOMES",nao_associado,,1,50.00,OK

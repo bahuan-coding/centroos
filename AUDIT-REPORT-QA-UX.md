@@ -467,3 +467,4 @@ Gráfico Chart.js possui legendas pequenas em mobile (font size 11px).
 **Arquivos revisados**: 15 componentes React + 1 router backend + utils  
 
 
+

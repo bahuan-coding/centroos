@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { PageHeader, FilterBar } from '@/components/ui/page-header';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -68,8 +69,11 @@ function AccountTree({
 
   if (children.length === 0) return null;
 
+  // Responsive indent: smaller on mobile
+  const indentClass = level > 0 ? 'ml-3 sm:ml-6 border-l border-gray-200 dark:border-gray-700 pl-2 sm:pl-4' : '';
+
   return (
-    <div className={cn(level > 0 && 'ml-6 border-l border-gray-200 dark:border-gray-700 pl-4')}>
+    <div className={indentClass}>
       {children.map((account) => {
         const hasChildren = accounts.some((a) => a.parentId === account.id);
         const isExpanded = shouldExpand(account.id);
@@ -85,7 +89,7 @@ function AccountTree({
           <div key={account.id} className="py-0.5">
             <div 
               className={cn(
-                "flex items-center gap-2 group hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg p-2 -ml-2 transition-colors",
+                "flex items-center gap-1 sm:gap-2 group hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg p-1.5 sm:p-2 -ml-1 sm:-ml-2 transition-colors touch-target",
                 matchesSearch && "bg-yellow-50 dark:bg-yellow-900/20 ring-1 ring-yellow-200 dark:ring-yellow-800"
               )}
             >
@@ -96,47 +100,49 @@ function AccountTree({
                     isExpanded && !searchTerm ? n.delete(account.id) : n.add(account.id); 
                     return n; 
                   })} 
-                  className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded touch-target shrink-0"
                   aria-expanded={isExpanded}
                   aria-label={isExpanded ? 'Recolher' : 'Expandir'}
                 >
                   {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </button>
               ) : (
-                <span className="w-5 flex justify-center">
+                <span className="w-6 flex justify-center shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
                 </span>
               )}
-              <span className="font-mono text-sm text-muted-foreground min-w-[80px]">{account.code}</span>
+              <span className="font-mono text-[10px] sm:text-sm text-muted-foreground min-w-[50px] sm:min-w-[80px] shrink-0">{account.code}</span>
               <span className={cn(
-                'flex-1 text-sm',
+                'flex-1 text-xs sm:text-sm truncate min-w-0',
                 !account.active && 'text-muted-foreground line-through',
                 isSynthetic && 'font-medium'
               )}>
                 {account.name}
               </span>
-              <Badge variant="outline" className={cn('text-xs', typeColors[account.type])}>
-                {typeLabels[account.type]}
-              </Badge>
-              {isSynthetic && (
-                <Badge variant="secondary" className="text-xs">
-                  Sintética
+              <div className="flex items-center gap-1 shrink-0">
+                <Badge variant="outline" className={cn('text-[10px] sm:text-xs hidden xs:inline-flex', typeColors[account.type])}>
+                  {typeLabels[account.type]}
                 </Badge>
-              )}
-              {!account.active && (
-                <Badge variant="outline" className="text-xs text-muted-foreground">
-                  Inativa
-                </Badge>
-              )}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="opacity-0 group-hover:opacity-100 h-8 w-8 transition-opacity" 
-                onClick={() => onEdit(account)}
-                aria-label="Editar conta"
-              >
-                <Edit2 className="h-4 w-4" />
-              </Button>
+                {isSynthetic && (
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs hidden sm:inline-flex">
+                    Sintética
+                  </Badge>
+                )}
+                {!account.active && (
+                  <Badge variant="outline" className="text-[10px] sm:text-xs text-muted-foreground hidden sm:inline-flex">
+                    Inativa
+                  </Badge>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 h-7 w-7 sm:h-8 sm:w-8 transition-opacity shrink-0 touch-target" 
+                  onClick={() => onEdit(account)}
+                  aria-label={`Editar conta ${account.name}`}
+                >
+                  <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+              </div>
             </div>
             {isExpanded && hasChildren && (
               <AccountTree 
@@ -174,8 +180,10 @@ export default function Accounts() {
       setDialogOpen(false); 
       toast.success('Conta criada com sucesso'); 
     },
-    onError: (error) => {
-      toast.error('Erro ao criar conta', { description: error.message });
+    onError: (error: any) => {
+      toast.error('Erro ao criar conta', { 
+        description: error?.message || 'Verifique os dados e tente novamente'
+      });
     }
   });
   const updateMutation = trpc.accounts.update.useMutation({ 
@@ -184,8 +192,10 @@ export default function Accounts() {
       setDialogOpen(false); 
       toast.success('Conta atualizada'); 
     },
-    onError: (error) => {
-      toast.error('Erro ao atualizar conta', { description: error.message });
+    onError: (error: any) => {
+      toast.error('Erro ao atualizar conta', { 
+        description: error?.message || 'Verifique os dados e tente novamente'
+      });
     }
   });
 
@@ -278,80 +288,79 @@ export default function Accounts() {
   const hasActiveFilters = searchTerm || statusFilter !== 'all' || typeFilter !== 'all';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Plano de Contas</h1>
-          <p className="text-muted-foreground">Estrutura hierárquica de contas contábeis</p>
-        </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Conta
-        </Button>
-      </div>
+      <PageHeader
+        title="Plano de Contas"
+        description="Estrutura hierárquica de contas contábeis"
+        icon={<FolderTree className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />}
+        actions={
+          <Button onClick={handleNew} size="sm" className="touch-target">
+            <Plus className="mr-1 sm:mr-2 h-4 w-4" />
+            <span className="hidden xs:inline">Nova </span>Conta
+          </Button>
+        }
+      />
 
       {/* Filtros */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="pt-4 sm:pt-6">
+          <FilterBar showClear={hasActiveFilters} onClear={clearFilters}>
             {/* Busca */}
-            <div className="relative flex-1">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por código ou nome..."
+                placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="pl-9 w-full"
               />
             </div>
             
-            {/* Filtro Status */}
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="active">Ativas</SelectItem>
-                <SelectItem value="inactive">Inativas</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {/* Filtro Tipo */}
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os tipos</SelectItem>
-                {Object.entries(typeLabels).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2 flex-wrap">
+              {/* Filtro Status */}
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+                <SelectTrigger className="w-[100px] sm:w-[140px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="active">Ativas</SelectItem>
+                  <SelectItem value="inactive">Inativas</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Filtro Tipo */}
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[120px] sm:w-[160px]">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {Object.entries(typeLabels).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* Expandir/Recolher */}
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => setExpandedAll(!expandedAll)}
-              title={expandedAll ? 'Recolher tudo' : 'Expandir tudo'}
-            >
-              <ChevronsUpDown className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          {/* Limpar filtros */}
-          {hasActiveFilters && (
-            <div className="mt-3 flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                Mostrando {filteredAccounts.length} de {accounts.length} contas
-              </span>
-              <Button variant="link" size="sm" onClick={clearFilters} className="text-primary">
-                Limpar filtros
+              {/* Expandir/Recolher */}
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setExpandedAll(!expandedAll)}
+                title={expandedAll ? 'Recolher tudo' : 'Expandir tudo'}
+                className="touch-target shrink-0"
+              >
+                <ChevronsUpDown className="h-4 w-4" />
               </Button>
+            </div>
+          </FilterBar>
+          
+          {/* Info filtros */}
+          {hasActiveFilters && (
+            <div className="mt-3 flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+              <Filter className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>{filteredAccounts.length} de {accounts.length} contas</span>
             </div>
           )}
         </CardContent>
@@ -359,53 +368,55 @@ export default function Accounts() {
 
       {/* Lista de Contas */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Contas</CardTitle>
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-base sm:text-lg">Contas</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6 pt-0">
           {isLoading ? (
             // Loading skeleton
             <div className="space-y-2">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-8 sm:h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
               ))}
             </div>
           ) : accounts.length === 0 ? (
             // Estado vazio inicial
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <FolderTree className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold">Nenhuma conta cadastrada</h3>
-              <p className="text-sm text-muted-foreground mb-4 max-w-sm">
-                Crie a primeira conta para começar a organizar seu plano de contas contábil.
+            <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center px-4">
+              <FolderTree className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold">Nenhuma conta cadastrada</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 max-w-sm">
+                Crie a primeira conta para organizar seu plano de contas.
               </p>
-              <Button onClick={handleNew}>
+              <Button onClick={handleNew} size="sm">
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Conta
               </Button>
             </div>
           ) : filteredAccounts.length === 0 ? (
             // Estado sem resultados após filtro
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Search className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold">Nenhuma conta encontrada</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Tente alterar os filtros ou o termo de busca.
+            <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center px-4">
+              <Search className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold">Nenhuma conta encontrada</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+                Tente alterar os filtros.
               </p>
-              <Button variant="link" onClick={clearFilters}>
+              <Button variant="link" onClick={clearFilters} size="sm">
                 Limpar filtros
               </Button>
             </div>
           ) : (
             <>
-              <AccountTree 
-                accounts={filteredAccounts} 
-                onEdit={handleEdit} 
-                expandedAll={expandedAll}
-                searchTerm={searchTerm}
-              />
+              <div className="max-h-[60vh] overflow-auto">
+                <AccountTree 
+                  accounts={filteredAccounts} 
+                  onEdit={handleEdit} 
+                  expandedAll={expandedAll}
+                  searchTerm={searchTerm}
+                />
+              </div>
               {/* Rodapé com estatísticas */}
-              <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">
-                Mostrando {filteredAccounts.length} contas ({stats.analytic} analíticas, {stats.synthetic} sintéticas)
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t text-xs sm:text-sm text-muted-foreground">
+                {filteredAccounts.length} contas ({stats.analytic} analíticas, {stats.synthetic} sintéticas)
               </div>
             </>
           )}
@@ -414,19 +425,19 @@ export default function Accounts() {
 
       {/* Dialog Criar/Editar */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editAccount ? 'Editar Conta' : 'Nova Conta'}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base sm:text-lg">{editAccount ? 'Editar Conta' : 'Nova Conta'}</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
               {editAccount 
                 ? 'Altere as informações da conta contábil.'
-                : 'Preencha os dados para criar uma nova conta no plano de contas.'}
+                : 'Preencha os dados para criar uma nova conta.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="code">
+                <Label htmlFor="code" className="text-sm">
                   Código <span className="text-destructive">*</span>
                 </Label>
                 <Input 
@@ -435,24 +446,25 @@ export default function Accounts() {
                   onChange={(e) => setForm({ ...form, code: e.target.value })} 
                   disabled={!!editAccount} 
                   placeholder="1.1.1.001" 
+                  className="text-sm"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Ex: 1.1.1.001 (números separados por ponto)
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
+                  Ex: 1.1.1.001
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type">Tipo</Label>
+                <Label htmlFor="type" className="text-sm">Tipo</Label>
                 <Select 
                   value={form.type} 
                   onValueChange={(v) => setForm({ ...form, type: v })} 
                   disabled={!!editAccount}
                 >
-                  <SelectTrigger id="type">
+                  <SelectTrigger id="type" className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(typeLabels).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                      <SelectItem key={k} value={k} className="text-sm">{v}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -460,7 +472,7 @@ export default function Accounts() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="name">
+              <Label htmlFor="name" className="text-sm">
                 Nome <span className="text-destructive">*</span>
               </Label>
               <Input 
@@ -468,57 +480,54 @@ export default function Accounts() {
                 value={form.name} 
                 onChange={(e) => setForm({ ...form, name: e.target.value })} 
                 placeholder="Nome da conta" 
+                className="text-sm"
               />
-              <p className="text-xs text-muted-foreground">
-                Nome que aparecerá nos relatórios
-              </p>
             </div>
             
             {!editAccount && (
               <div className="space-y-2">
-                <Label htmlFor="parentId">Conta Pai (opcional)</Label>
+                <Label htmlFor="parentId" className="text-sm">Conta Pai (opcional)</Label>
                 <Select 
                   value={form.parentId} 
                   onValueChange={(v) => setForm({ ...form, parentId: v })}
                 >
-                  <SelectTrigger id="parentId">
-                    <SelectValue placeholder="Selecionar conta pai..." />
+                  <SelectTrigger id="parentId" className="text-sm">
+                    <SelectValue placeholder="Selecionar..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma (conta de primeiro nível)</SelectItem>
+                    <SelectItem value="" className="text-sm">Nenhuma</SelectItem>
                     {parentableAccounts.map((a) => (
-                      <SelectItem key={a.id} value={a.id.toString()}>
+                      <SelectItem key={a.id} value={a.id.toString()} className="text-sm">
                         {a.code} - {a.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  Deixe vazio para criar uma conta de primeiro nível
-                </p>
               </div>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="description">Descrição (opcional)</Label>
+              <Label htmlFor="description" className="text-sm">Descrição (opcional)</Label>
               <Textarea 
                 id="description"
                 value={form.description} 
                 onChange={(e) => setForm({ ...form, description: e.target.value })} 
-                placeholder="Observações sobre esta conta..." 
-                rows={3}
+                placeholder="Observações..." 
+                rows={2}
+                className="text-sm"
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
             <Button 
               onClick={handleSubmit} 
               disabled={createMutation.isPending || updateMutation.isPending}
+              className="w-full sm:w-auto"
             >
-              {createMutation.isPending || updateMutation.isPending ? 'Salvando...' : (editAccount ? 'Salvar' : 'Criar Conta')}
+              {createMutation.isPending || updateMutation.isPending ? 'Salvando...' : (editAccount ? 'Salvar' : 'Criar')}
             </Button>
           </DialogFooter>
         </DialogContent>

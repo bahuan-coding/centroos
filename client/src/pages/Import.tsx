@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
-import { Upload, FileText, CheckCircle, AlertTriangle, ArrowRight, ArrowLeft, X } from 'lucide-react';
+import { Upload, FileText, CheckCircle, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, ResponsiveTable, TableCardView } from '@/components/ui/table';
+import { PageHeader, StatsGrid } from '@/components/ui/page-header';
 import { cn, formatCurrency, formatDate, formatPeriod } from '@/lib/utils';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
@@ -59,7 +60,16 @@ export default function Import() {
     e.preventDefault();
     setIsDragging(false);
     const f = e.dataTransfer.files[0];
-    if (f && getFileType(f.name)) {
+    if (!f) return;
+    
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (f.size > maxSize) {
+      toast.error('Arquivo muito grande. Tamanho máximo: 10MB');
+      return;
+    }
+    
+    if (getFileType(f.name)) {
       setFile(f);
     } else {
       toast.error('Formato não suportado. Use CSV, OFX ou TXT.');
@@ -68,9 +78,18 @@ export default function Import() {
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f && getFileType(f.name)) {
+    if (!f) return;
+    
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (f.size > maxSize) {
+      toast.error('Arquivo muito grande. Tamanho máximo: 10MB');
+      return;
+    }
+    
+    if (getFileType(f.name)) {
       setFile(f);
-    } else if (f) {
+    } else {
       toast.error('Formato não suportado. Use CSV, OFX ou TXT.');
     }
   }, []);
@@ -171,29 +190,43 @@ export default function Import() {
   const selectedCount = transactions.filter(tx => tx.selected).length;
   const classifiedCount = transactions.filter(tx => tx.selected && tx.accountId).length;
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Importar Extrato</h1>
-        <p className="text-muted-foreground">Importe extratos bancários em CSV, OFX ou TXT</p>
-      </div>
+  const steps = [
+    { key: 'upload', label: 'Upload', shortLabel: '1' },
+    { key: 'review', label: 'Revisão', shortLabel: '2' },
+    { key: 'confirm', label: 'Confirmar', shortLabel: '3' },
+  ];
 
-      {/* Steps indicator */}
-      <div className="flex items-center gap-4">
-        <div className={cn('flex items-center gap-2 px-4 py-2 rounded-lg', step === 'upload' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-          <span className="w-6 h-6 rounded-full bg-background text-foreground flex items-center justify-center text-sm font-bold">1</span>
-          <span className="font-medium">Upload</span>
-        </div>
-        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-        <div className={cn('flex items-center gap-2 px-4 py-2 rounded-lg', step === 'review' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-          <span className="w-6 h-6 rounded-full bg-background text-foreground flex items-center justify-center text-sm font-bold">2</span>
-          <span className="font-medium">Revisão</span>
-        </div>
-        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-        <div className={cn('flex items-center gap-2 px-4 py-2 rounded-lg', step === 'confirm' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-          <span className="w-6 h-6 rounded-full bg-background text-foreground flex items-center justify-center text-sm font-bold">3</span>
-          <span className="font-medium">Confirmar</span>
-        </div>
+  const currentStepIndex = steps.findIndex(s => s.key === step);
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <PageHeader
+        title="Importar Extrato"
+        description="Importe extratos bancários em CSV, OFX ou TXT"
+        icon={<Upload className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />}
+      />
+
+      {/* Steps indicator - Responsivo */}
+      <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+        {steps.map((s, i) => (
+          <div key={s.key} className="flex items-center">
+            <div className={cn(
+              'flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors',
+              step === s.key ? 'bg-primary text-primary-foreground' : i < currentStepIndex ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
+            )}>
+              <span className={cn(
+                'w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold',
+                step === s.key ? 'bg-primary-foreground text-primary' : i < currentStepIndex ? 'bg-green-600 text-white' : 'bg-background text-foreground'
+              )}>
+                {i < currentStepIndex ? <Check className="h-3 w-3" /> : i + 1}
+              </span>
+              <span className="font-medium text-xs sm:text-sm hidden xs:inline">{s.label}</span>
+            </div>
+            {i < steps.length - 1 && (
+              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 mx-1 sm:mx-2 text-muted-foreground shrink-0" />
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Step 1: Upload */}
@@ -248,91 +281,158 @@ export default function Import() {
       {/* Step 2: Review */}
       {step === 'review' && (
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
+          <CardHeader className="pb-3 sm:pb-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle>Revisar Transações</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base sm:text-lg">Revisar Transações</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   {selectedCount} de {transactions.length} selecionadas • {classifiedCount} classificadas
                 </CardDescription>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => toggleAll(true)}>Selecionar Todas</Button>
-                <Button variant="outline" onClick={() => toggleAll(false)}>Desmarcar Todas</Button>
+                <Button variant="outline" size="sm" onClick={() => toggleAll(true)} className="text-xs sm:text-sm">
+                  <span className="hidden xs:inline">Selecionar </span>Todas
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => toggleAll(false)} className="text-xs sm:text-sm">
+                  <span className="hidden xs:inline">Desmarcar </span>Todas
+                </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="max-h-[500px] overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12"></TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead>Conta</TableHead>
-                    <TableHead>NFC</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactions.map((tx) => (
-                    <TableRow key={tx.index} className={cn(tx.isDuplicate && 'bg-yellow-50 dark:bg-yellow-950/20')}>
-                      <TableCell>
-                        <Checkbox 
-                          checked={tx.selected}
-                          onCheckedChange={(checked) => updateTransaction(tx.index, { selected: !!checked })}
-                          disabled={tx.isDuplicate}
-                        />
-                      </TableCell>
-                      <TableCell>{formatDate(tx.date)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="max-w-[200px] truncate">{tx.description}</span>
-                          {tx.isDuplicate && <Badge variant="warning">Duplicado</Badge>}
-                          {tx.confidence === 'high' && <Badge variant="success">Auto</Badge>}
+          <CardContent className="p-0 sm:p-6 sm:pt-0">
+            {/* Desktop Table */}
+            <div className="hidden md:block">
+              <ResponsiveTable stickyHeader density="compact">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead>Conta</TableHead>
+                      <TableHead className="w-12">NFC</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((tx) => (
+                      <TableRow key={tx.index} className={cn(tx.isDuplicate && 'bg-yellow-50 dark:bg-yellow-950/20')}>
+                        <TableCell>
+                          <Checkbox 
+                            checked={tx.selected}
+                            onCheckedChange={(checked) => updateTransaction(tx.index, { selected: !!checked })}
+                            disabled={tx.isDuplicate}
+                          />
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs">{formatDate(tx.date)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="max-w-[150px] lg:max-w-[200px] truncate text-xs">{tx.description}</span>
+                            {tx.isDuplicate && <Badge variant="secondary" className="text-[10px]">Dup</Badge>}
+                            {tx.confidence === 'high' && <Badge className="bg-green-100 text-green-700 text-[10px]">Auto</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs whitespace-nowrap">
+                          <span className={tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}>
+                            {tx.type === 'credit' ? '+' : '-'}{formatCurrency(tx.amountCents)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={tx.accountId?.toString() || ''} 
+                            onValueChange={(v) => updateTransaction(tx.index, { accountId: v ? parseInt(v) : undefined })}
+                          >
+                            <SelectTrigger className="w-[140px] lg:w-[180px] h-8 text-xs">
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {analyticAccounts.map((a) => (
+                                <SelectItem key={a.id} value={a.id.toString()} className="text-xs">
+                                  {a.code} - {a.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Checkbox 
+                            checked={tx.isNfc || false}
+                            onCheckedChange={(checked) => updateTransaction(tx.index, { isNfc: !!checked })}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ResponsiveTable>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden px-4 max-h-[60vh] overflow-auto">
+              <TableCardView
+                data={transactions}
+                keyExtractor={(tx) => tx.index}
+                renderCard={(tx) => (
+                  <div className={cn('space-y-3', tx.isDuplicate && 'opacity-60')}>
+                    <div className="flex items-start gap-3">
+                      <Checkbox 
+                        checked={tx.selected}
+                        onCheckedChange={(checked) => updateTransaction(tx.index, { selected: !!checked })}
+                        disabled={tx.isDuplicate}
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs text-muted-foreground">{formatDate(tx.date)}</span>
+                          {tx.isDuplicate && <Badge variant="secondary" className="text-[10px]">Duplicado</Badge>}
+                          {tx.confidence === 'high' && <Badge className="bg-green-100 text-green-700 text-[10px]">Auto</Badge>}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        <span className={tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}>
+                        <p className="text-sm font-medium truncate">{tx.description}</p>
+                        <p className={cn(
+                          'font-mono font-bold text-sm',
+                          tx.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                        )}>
                           {tx.type === 'credit' ? '+' : '-'}{formatCurrency(tx.amountCents)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={tx.accountId?.toString() || ''} 
-                          onValueChange={(v) => updateTransaction(tx.index, { accountId: v ? parseInt(v) : undefined })}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Selecione..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {analyticAccounts.map((a) => (
-                              <SelectItem key={a.id} value={a.id.toString()}>{a.code} - {a.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pl-7">
+                      <Select 
+                        value={tx.accountId?.toString() || ''} 
+                        onValueChange={(v) => updateTransaction(tx.index, { accountId: v ? parseInt(v) : undefined })}
+                      >
+                        <SelectTrigger className="flex-1 h-8 text-xs">
+                          <SelectValue placeholder="Selecione conta..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {analyticAccounts.map((a) => (
+                            <SelectItem key={a.id} value={a.id.toString()} className="text-xs">
+                              {a.code} - {a.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-1">
                         <Checkbox 
                           checked={tx.isNfc || false}
                           onCheckedChange={(checked) => updateTransaction(tx.index, { isNfc: !!checked })}
                         />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        <span className="text-xs text-muted-foreground">NFC</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              />
             </div>
 
-            <div className="flex justify-between mt-6">
-              <Button variant="outline" onClick={() => setStep('upload')}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar
+            <div className="flex justify-between mt-4 sm:mt-6 px-4 sm:px-0">
+              <Button variant="outline" size="sm" onClick={() => setStep('upload')} className="touch-target">
+                <ArrowLeft className="mr-1 sm:mr-2 h-4 w-4" />
+                <span className="hidden xs:inline">Voltar</span>
               </Button>
-              <Button onClick={() => setStep('confirm')} disabled={classifiedCount === 0}>
-                Continuar
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <Button size="sm" onClick={() => setStep('confirm')} disabled={classifiedCount === 0} className="touch-target">
+                <span className="hidden xs:inline">Continuar</span>
+                <ArrowRight className="ml-1 sm:ml-2 h-4 w-4" />
               </Button>
             </div>
           </CardContent>
@@ -342,40 +442,40 @@ export default function Import() {
       {/* Step 3: Confirm */}
       {step === 'confirm' && (
         <Card>
-          <CardHeader>
-            <CardTitle>Confirmar Importação</CardTitle>
-            <CardDescription>Revise e confirme a criação dos lançamentos</CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-base sm:text-lg">Confirmar Importação</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Revise e confirme a criação dos lançamentos</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-3 gap-4">
+          <CardContent className="space-y-4 sm:space-y-6">
+            <StatsGrid columns={3}>
               <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-green-600">{classifiedCount}</div>
-                  <div className="text-sm text-muted-foreground">Lançamentos a criar</div>
+                <CardContent className="pt-4 sm:pt-6">
+                  <div className="text-xl sm:text-2xl font-bold text-green-600">{classifiedCount}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Lançamentos</div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold">
+                <CardContent className="pt-4 sm:pt-6">
+                  <div className="text-base sm:text-2xl font-bold text-green-600">
                     {formatCurrency(transactions.filter(tx => tx.selected && tx.accountId && tx.type === 'credit').reduce((sum, tx) => sum + tx.amountCents, 0))}
                   </div>
-                  <div className="text-sm text-muted-foreground">Total Receitas</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Receitas</div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold">
+                <CardContent className="pt-4 sm:pt-6">
+                  <div className="text-base sm:text-2xl font-bold text-red-600">
                     {formatCurrency(transactions.filter(tx => tx.selected && tx.accountId && tx.type === 'debit').reduce((sum, tx) => sum + tx.amountCents, 0))}
                   </div>
-                  <div className="text-sm text-muted-foreground">Total Despesas</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Despesas</div>
                 </CardContent>
               </Card>
-            </div>
+            </StatsGrid>
 
-            <div>
-              <Label>Período de Destino</Label>
+            <div className="space-y-2">
+              <Label className="text-sm">Período de Destino</Label>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-full max-w-xs">
+                <SelectTrigger className="w-full sm:max-w-xs">
                   <SelectValue placeholder="Selecione o período" />
                 </SelectTrigger>
                 <SelectContent>
@@ -386,13 +486,18 @@ export default function Import() {
               </Select>
             </div>
 
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep('review')}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar
+            <div className="flex justify-between pt-2">
+              <Button variant="outline" size="sm" onClick={() => setStep('review')} className="touch-target">
+                <ArrowLeft className="mr-1 sm:mr-2 h-4 w-4" />
+                <span className="hidden xs:inline">Voltar</span>
               </Button>
-              <Button onClick={handleConfirm} disabled={confirmMutation.isPending || !selectedPeriod}>
-                {confirmMutation.isPending ? 'Criando...' : `Criar ${classifiedCount} Lançamentos`}
+              <Button size="sm" onClick={handleConfirm} disabled={confirmMutation.isPending || !selectedPeriod} className="touch-target">
+                {confirmMutation.isPending ? 'Criando...' : (
+                  <>
+                    <span className="hidden sm:inline">Criar {classifiedCount} Lançamentos</span>
+                    <span className="sm:hidden">Criar ({classifiedCount})</span>
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
@@ -402,31 +507,31 @@ export default function Import() {
       {/* Supported formats */}
       {step === 'upload' && (
         <Card>
-          <CardHeader>
-            <CardTitle>Formatos Suportados</CardTitle>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-base sm:text-lg">Formatos Suportados</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
+            <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 border rounded-lg">
+                <h4 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <FileText className="h-4 w-4 shrink-0" />
                   CSV
                 </h4>
-                <p className="text-sm text-muted-foreground mt-1">Arquivo separado por vírgula ou ponto-e-vírgula</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Separado por vírgula</p>
               </div>
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
+              <div className="p-3 sm:p-4 border rounded-lg">
+                <h4 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <FileText className="h-4 w-4 shrink-0" />
                   OFX
                 </h4>
-                <p className="text-sm text-muted-foreground mt-1">Formato padrão bancário</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Padrão bancário</p>
               </div>
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
+              <div className="p-3 sm:p-4 border rounded-lg">
+                <h4 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <FileText className="h-4 w-4 shrink-0" />
                   TXT
                 </h4>
-                <p className="text-sm text-muted-foreground mt-1">Extrato em texto simples</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Texto simples</p>
               </div>
             </div>
           </CardContent>

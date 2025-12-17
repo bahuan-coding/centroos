@@ -1,8 +1,10 @@
 import { Link, useLocation } from 'wouter';
-import { LayoutDashboard, FolderTree, FileText, Calendar, Upload, BarChart3, Settings, Menu, Shield, Users, Building2, ArrowLeftRight } from 'lucide-react';
+import { LayoutDashboard, FolderTree, FileText, Calendar, Upload, BarChart3, Settings, Menu, Shield, Users, Building2, ArrowLeftRight, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
+import { getUserEmail, logout } from '@/lib/auth';
+import { toast } from 'sonner';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -19,8 +21,14 @@ const navItems = [
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logout realizado com sucesso');
+    setLocation('/login');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -76,15 +84,19 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="p-4 border-t">
-            <div className="flex items-center gap-3 px-3 py-2">
+            <div className="flex items-center gap-3 px-3 py-2 mb-2">
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                <span className="text-sm font-medium text-gray-600">D</span>
+                <span className="text-sm font-medium text-gray-600">{getUserEmail()?.charAt(0).toUpperCase() || 'U'}</span>
               </div>
-              <div>
-                <p className="text-sm font-medium">Desenvolvedor</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{getUserEmail() || 'Usuário'}</p>
                 <p className="text-xs text-muted-foreground">Admin</p>
               </div>
             </div>
+            <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
           </div>
         </div>
       </aside>

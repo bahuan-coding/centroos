@@ -24,6 +24,10 @@
     --input: 214 32% 91%;
     --ring: 217 91% 60%;
     --radius: 0.5rem;
+    /* Spacing tokens responsivos */
+    --space-page: clamp(1rem, 3vw, 2rem);
+    --space-section: clamp(1rem, 2vw, 1.5rem);
+    --space-card: clamp(0.75rem, 2vw, 1.5rem);
   }
 }
 
@@ -33,4 +37,142 @@
 }
 
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+/* ========================================
+   RESPONSIVE UTILITIES
+   ======================================== */
+
+@layer utilities {
+  /* Touch-friendly targets (min 44px) */
+  .touch-target { @apply min-h-[44px] min-w-[44px]; }
+  
+  /* Responsive text that scales with viewport */
+  .text-fluid-sm { font-size: clamp(0.75rem, 1.5vw, 0.875rem); }
+  .text-fluid-base { font-size: clamp(0.875rem, 2vw, 1rem); }
+  .text-fluid-lg { font-size: clamp(1rem, 2.5vw, 1.125rem); }
+  .text-fluid-xl { font-size: clamp(1.125rem, 3vw, 1.25rem); }
+  .text-fluid-2xl { font-size: clamp(1.25rem, 4vw, 1.5rem); }
+  .text-fluid-3xl { font-size: clamp(1.5rem, 5vw, 1.875rem); }
+  
+  /* Safe area for notched devices */
+  .safe-area-inset { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  
+  /* Hide on specific breakpoints (mobile-first) */
+  .hide-below-sm { @apply hidden xs:block; }
+  .hide-below-md { @apply hidden md:block; }
+  .hide-below-lg { @apply hidden lg:block; }
+  
+  /* Show only on specific breakpoints */
+  .show-only-mobile { @apply block md:hidden; }
+  .show-only-tablet { @apply hidden md:block lg:hidden; }
+  .show-only-desktop { @apply hidden lg:block; }
+}
+
+/* ========================================
+   RESPONSIVE TABLE UTILITIES
+   ======================================== */
+
+@layer components {
+  /* Wrapper para tabela com scroll horizontal controlado */
+  .table-responsive-wrapper {
+    @apply relative w-full;
+  }
+  
+  .table-responsive-wrapper::before,
+  .table-responsive-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  
+  .table-responsive-wrapper::before {
+    left: 0;
+    background: linear-gradient(to right, hsl(var(--background)), transparent);
+  }
+  
+  .table-responsive-wrapper::after {
+    right: 0;
+    background: linear-gradient(to left, hsl(var(--background)), transparent);
+  }
+  
+  .table-responsive-wrapper.has-scroll-left::before,
+  .table-responsive-wrapper.has-scroll-right::after {
+    opacity: 1;
+  }
+
+  /* Coluna sticky para primeira coluna em mobile */
+  .table-sticky-first td:first-child,
+  .table-sticky-first th:first-child {
+    @apply sticky left-0 bg-background z-10;
+  }
+  
+  /* Esconder colunas por prioridade em mobile */
+  @media (max-width: 767px) {
+    .col-priority-low { @apply hidden; }
+  }
+  
+  @media (max-width: 639px) {
+    .col-priority-medium { @apply hidden; }
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  /* Reset para impressão */
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Esconder elementos de navegação */
+  aside, nav, .no-print, button:not(.print-show) {
+    display: none !important;
+  }
+  
+  /* Remover sidebar margin */
+  main {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+  
+  /* Cards sem sombra */
+  .card, [class*="Card"] {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  /* Tabelas não quebram no meio */
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  thead { display: table-header-group; }
+  
+  /* Quebra de página controlada */
+  .page-break-before { page-break-before: always; }
+  .page-break-after { page-break-after: always; }
+  .avoid-break { page-break-inside: avoid; }
+  
+  /* Tamanho da página */
+  @page {
+    size: A4 portrait;
+    margin: 1.5cm;
+  }
+  
+  /* Links mostram URL */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+}
 

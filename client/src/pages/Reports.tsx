@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { FileBarChart, FileCheck, FileSpreadsheet, Download, Loader2, TrendingUp, Building2 } from 'lucide-react';
+import { FileBarChart, FileCheck, FileSpreadsheet, Download, Loader2, TrendingUp, Building2, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PageHeader } from '@/components/ui/page-header';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { formatPeriod } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 const reports = [
   {
@@ -125,30 +127,31 @@ export default function Reports() {
   const selectedReportInfo = reports.find((r) => r.id === selectedReport);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Relatórios</h1>
-        <p className="text-muted-foreground">Gere relatórios contábeis e de compliance em PDF</p>
-      </div>
+    <div className="space-y-4 sm:space-y-6">
+      <PageHeader
+        title="Relatórios"
+        description="Gere relatórios contábeis e de compliance em PDF"
+        icon={<BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />}
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
         {reports.map((report) => (
-          <Card key={report.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-lg ${report.color}`}>
-                  <report.icon className="h-6 w-6" />
+          <Card key={report.id} className="hover:shadow-lg transition-shadow flex flex-col">
+            <CardHeader className="pb-2 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={cn('p-2 sm:p-3 rounded-lg shrink-0', report.color)}>
+                  <report.icon className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
-                <CardTitle className="text-lg">{report.title}</CardTitle>
+                <CardTitle className="text-sm sm:text-lg leading-tight">{report.title}</CardTitle>
               </div>
             </CardHeader>
-            <CardContent>
-              <CardDescription>{report.description}</CardDescription>
+            <CardContent className="flex-1 pb-2 sm:pb-4">
+              <CardDescription className="text-xs sm:text-sm">{report.description}</CardDescription>
             </CardContent>
-            <CardFooter>
-              <Button className="w-full" onClick={() => openDialog(report.id)}>
-                <Download className="mr-2 h-4 w-4" />
-                Gerar PDF
+            <CardFooter className="pt-0">
+              <Button className="w-full touch-target" size="sm" onClick={() => openDialog(report.id)}>
+                <Download className="mr-1 sm:mr-2 h-4 w-4" />
+                <span className="hidden xs:inline">Gerar </span>PDF
               </Button>
             </CardFooter>
           </Card>
@@ -156,22 +159,22 @@ export default function Reports() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
               {selectedReportInfo && (
                 <>
-                  <div className={`p-2 rounded-lg ${selectedReportInfo.color}`}>
-                    <selectedReportInfo.icon className="h-4 w-4" />
+                  <div className={cn('p-1.5 sm:p-2 rounded-lg shrink-0', selectedReportInfo.color)}>
+                    <selectedReportInfo.icon className="h-3 w-3 sm:h-4 sm:w-4" />
                   </div>
-                  {selectedReportInfo.title}
+                  <span className="truncate">{selectedReportInfo.title}</span>
                 </>
               )}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label>Período</Label>
+            <div className="space-y-2">
+              <Label className="text-sm">Período</Label>
               <Select value={periodId} onValueChange={setPeriodId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o período" />
@@ -186,14 +189,14 @@ export default function Reports() {
               </Select>
             </div>
             {selectedReportInfo && (
-              <p className="text-sm text-muted-foreground">{selectedReportInfo.description}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">{selectedReportInfo.description}</p>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleGenerate} disabled={isPending || !periodId}>
+            <Button onClick={handleGenerate} disabled={isPending || !periodId} className="w-full sm:w-auto">
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Gerar PDF
             </Button>

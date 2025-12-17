@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pagination } from '@/components/ui/page-header';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { formatCurrency, formatDate, formatPeriod } from '@/lib/utils';
@@ -17,12 +18,17 @@ import { formatCurrency, formatDate, formatPeriod } from '@/lib/utils';
 export default function Entries() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [periodFilter, setPeriodFilter] = useState<string>('');
+  const [page, setPage] = useState(1);
   const [form, setForm] = useState({ periodId: '', accountId: '', type: 'debit' as 'debit' | 'credit', amountCents: '', transactionDate: '', description: '', isNfc: false, nfcCategory: '' as '' | 'project_70' | 'operating_30', notes: '' });
 
   const utils = trpc.useUtils();
   const { data: periods = [] } = trpc.periods.list.useQuery();
   const { data: accounts = [] } = trpc.accounts.list.useQuery();
-  const { data: entriesData } = trpc.entries.list.useQuery({ periodId: periodFilter ? parseInt(periodFilter) : undefined });
+  const { data: entriesData } = trpc.entries.list.useQuery({ 
+    periodId: periodFilter ? parseInt(periodFilter) : undefined,
+    page,
+    limit: 20,
+  });
   const createMutation = trpc.entries.create.useMutation({ onSuccess: () => { utils.entries.list.invalidate(); setDialogOpen(false); toast.success('Lançamento criado'); } });
   const exportMutation = trpc.entries.exportCSV.useMutation();
 
@@ -43,8 +49,10 @@ export default function Entries() {
       URL.revokeObjectURL(url);
       
       toast.success(`${result.count} lançamentos exportados`);
-    } catch (error) {
-      toast.error('Erro ao exportar dados');
+    } catch (error: any) {
+      toast.error('Erro ao exportar dados', {
+        description: error?.message || 'Tente novamente'
+      });
     }
   };
 
@@ -73,36 +81,34 @@ export default function Entries() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold">Lançamentos</h1>
-          <p className="text-muted-foreground">Registro de receitas e despesas</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Lançamentos</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Registro de receitas e despesas</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExport} disabled={exportMutation.isPending}>
-            <Download className="mr-2 h-4 w-4" />
-            Exportar CSV
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={handleExport} disabled={exportMutation.isPending} size="sm" className="flex-1 sm:flex-none">
+            <Download className="mr-1 sm:mr-2 h-4 w-4" />
+            <span className="hidden xs:inline">Exportar </span>CSV
           </Button>
-          <Button onClick={handleNew}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Lançamento
+          <Button onClick={handleNew} size="sm" className="flex-1 sm:flex-none">
+            <Plus className="mr-1 sm:mr-2 h-4 w-4" />
+            <span className="hidden xs:inline">Novo </span>Lançamento
           </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Filtros</CardTitle>
-          </div>
+          <CardTitle className="text-base sm:text-lg">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <div className="w-64">
-              <Label>Período</Label>
-              <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+            <div className="w-full sm:w-64">
+              <Label className="text-sm">Período</Label>
+              <Select value={periodFilter} onValueChange={(v) => { setPeriodFilter(v); setPage(1); }}>
+                <SelectTrigger className="text-sm"><SelectValue placeholder="Todos" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Todos</SelectItem>
                   {periods.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{formatPeriod(p.month, p.year)}</SelectItem>)}
@@ -114,37 +120,52 @@ export default function Entries() {
       </Card>
 
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-0 sm:p-6 sm:pt-6">
           {!entriesData?.entries.length ? (
-            <p className="text-center text-muted-foreground py-8">Nenhum lançamento encontrado</p>
+            <p className="text-center text-muted-foreground py-8 text-sm px-4">Nenhum lançamento encontrado</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Conta</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead>Tipo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entriesData.entries.map((e: any) => (
-                  <TableRow key={e.id}>
-                    <TableCell>{formatDate(e.transactionDate)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {e.description}
-                        {e.isNfc === 1 && <Badge variant="nfc">NFC</Badge>}
-                      </div>
-                    </TableCell>
-                    <TableCell>{e.account?.code} - {e.account?.name}</TableCell>
-                    <TableCell className="text-right font-mono">{formatCurrency(e.amountCents)}</TableCell>
-                    <TableCell><Badge variant={e.type === 'credit' ? 'revenue' : 'expense'}>{e.type === 'credit' ? 'Crédito' : 'Débito'}</Badge></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs sm:text-sm">Data</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Descrição</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Conta</TableHead>
+                      <TableHead className="text-right text-xs sm:text-sm">Valor</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Tipo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {entriesData.entries.map((e: any) => (
+                      <TableRow key={e.id}>
+                        <TableCell className="text-xs sm:text-sm whitespace-nowrap">{formatDate(e.transactionDate)}</TableCell>
+                        <TableCell className="text-xs sm:text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate max-w-[150px] sm:max-w-none">{e.description}</span>
+                            {e.isNfc === 1 && <Badge variant="nfc" className="text-[10px] shrink-0">NFC</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs sm:text-sm max-w-[150px] truncate">{e.account?.code} - {e.account?.name}</TableCell>
+                        <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap">{formatCurrency(e.amountCents)}</TableCell>
+                        <TableCell><Badge variant={e.type === 'credit' ? 'revenue' : 'expense'} className="text-[10px] sm:text-xs">{e.type === 'credit' ? 'Crédito' : 'Débito'}</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              <div className="px-4 sm:px-0 mt-4">
+                <Pagination
+                  page={page}
+                  totalPages={entriesData?.pages || 1}
+                  totalItems={entriesData?.total || 0}
+                  itemsShown={entriesData?.entries.length || 0}
+                  onPageChange={setPage}
+                  itemLabel="lançamentos"
+                />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

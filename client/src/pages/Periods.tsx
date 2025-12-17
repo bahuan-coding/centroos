@@ -25,7 +25,7 @@ export default function Periods() {
   const closeMutation = trpc.periods.close.useMutation({ onSuccess: () => { utils.periods.list.invalidate(); setCloseOpen(null); toast.success('Período fechado'); } });
 
   const handleCreate = () => {
-    const ob = parseFloat(closeForm.closingBalance.replace(',', '.')) * 100 || 0;
+    const ob = parseFloat(form.openingBalance.replace(',', '.')) * 100 || 0;
     createMutation.mutate({ month: parseInt(form.month), year: parseInt(form.year), openingBalance: Math.round(ob) });
   };
 

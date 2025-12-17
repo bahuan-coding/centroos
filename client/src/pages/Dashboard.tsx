@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, DollarSign, Users, Building2, FileText, Calendar, AlertCircle, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, Building2, FileText, Calendar, AlertCircle, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,8 @@ import { trpc } from '@/lib/trpc';
 import { Link } from 'wouter';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { PageHeader, StatsGrid } from '@/components/ui/page-header';
+import { cn } from '@/lib/utils';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -43,7 +45,10 @@ export default function Dashboard() {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top' as const },
+      legend: { 
+        position: 'top' as const,
+        labels: { boxWidth: 12, padding: 8, font: { size: 11 } }
+      },
       tooltip: {
         callbacks: {
           label: (ctx: any) => `${ctx.dataset.label}: R$ ${ctx.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
@@ -53,149 +58,157 @@ export default function Dashboard() {
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { callback: (value: any) => `R$ ${value.toLocaleString('pt-BR')}` },
+        ticks: { 
+          callback: (value: any) => `R$ ${value.toLocaleString('pt-BR')}`,
+          font: { size: 10 }
+        },
       },
+      x: {
+        ticks: { font: { size: 10 } }
+      }
     },
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Dashboard
-          </h1>
-          <p className="text-muted-foreground">Visão geral do sistema financeiro</p>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        title="Dashboard"
+        description={`Visão geral do sistema financeiro${titulosPorMes.length > 0 ? ` • Últimos ${Math.min(12, titulosPorMes.length)} meses` : ''}`}
+        actions={
           <Link href="/entries">
-            <Button><FileText className="mr-2 h-4 w-4" />Novo Lançamento</Button>
+            <Button size="sm" className="touch-target">
+              <FileText className="mr-2 h-4 w-4" />
+              <span className="hidden xs:inline">Novo </span>Lançamento
+            </Button>
           </Link>
-        </div>
-      </div>
+        }
+      />
 
       {/* KPI Cards - Row 1: Financeiro */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <StatsGrid columns={4}>
         <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Total</CardTitle>
-            <Wallet className="h-5 w-5 text-emerald-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Saldo Total</CardTitle>
+            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{formatCurrency((kpis?.saldoTotal || 0) * 100)}</div>
+            <div className="text-lg sm:text-2xl font-bold text-emerald-600">{formatCurrency((kpis?.saldoTotal || 0) * 100)}</div>
             <p className="text-xs text-muted-foreground mt-1">{kpis?.contasFinanceiras} contas ativas</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Receitas</CardTitle>
-            <ArrowUpRight className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Receitas</CardTitle>
+            <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(kpis?.receitas || 0)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Total acumulado</p>
+            <div className="text-lg sm:text-2xl font-bold text-green-600">{formatCurrency(kpis?.receitas || 0)}</div>
+            <p className="text-xs text-muted-foreground mt-1 hidden xs:block">Total acumulado</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-red-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Despesas</CardTitle>
-            <ArrowDownRight className="h-5 w-5 text-red-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Despesas</CardTitle>
+            <ArrowDownRight className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(kpis?.despesas || 0)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Total acumulado</p>
+            <div className="text-lg sm:text-2xl font-bold text-red-600">{formatCurrency(kpis?.despesas || 0)}</div>
+            <p className="text-xs text-muted-foreground mt-1 hidden xs:block">Total acumulado</p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Resultado</CardTitle>
-            <DollarSign className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Resultado</CardTitle>
+            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${(kpis?.resultado || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+            <div className={cn(
+              'text-lg sm:text-2xl font-bold',
+              (kpis?.resultado || 0) >= 0 ? 'text-blue-600' : 'text-red-600'
+            )}>
               {formatCurrency(kpis?.resultado || 0)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">{(kpis?.resultado || 0) >= 0 ? 'Superávit' : 'Déficit'}</p>
           </CardContent>
         </Card>
-      </div>
+      </StatsGrid>
 
       {/* KPI Cards - Row 2: Cadastros */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <StatsGrid columns={4}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pessoas</CardTitle>
-            <Users className="h-5 w-5 text-violet-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Pessoas</CardTitle>
+            <Users className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis?.pessoas || 0}</div>
-            <div className="flex gap-2 mt-1">
-              <Badge variant="secondary" className="text-xs">{kpis?.associados} associados</Badge>
-              <Badge variant="outline" className="text-xs">{kpis?.naoAssociados} outros</Badge>
+            <div className="text-lg sm:text-2xl font-bold">{kpis?.pessoas || 0}</div>
+            <div className="flex flex-wrap gap-1 sm:gap-2 mt-1">
+              <Badge variant="secondary" className="text-[10px] sm:text-xs">{kpis?.associados} assoc.</Badge>
+              <Badge variant="outline" className="text-[10px] sm:text-xs hidden xs:inline-flex">{kpis?.naoAssociados} outros</Badge>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Lançamentos</CardTitle>
-            <FileText className="h-5 w-5 text-amber-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Lançamentos</CardTitle>
+            <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis?.lancamentos || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Títulos registrados</p>
+            <div className="text-lg sm:text-2xl font-bold">{kpis?.lancamentos || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1 hidden xs:block">Títulos registrados</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Períodos</CardTitle>
-            <Calendar className="h-5 w-5 text-cyan-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Períodos</CardTitle>
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis?.periodos || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Períodos contábeis</p>
+            <div className="text-lg sm:text-2xl font-bold">{kpis?.periodos || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1 hidden xs:block">Períodos contábeis</p>
           </CardContent>
         </Card>
 
-        <Card className={kpis?.extratosPendentes ? 'border-amber-200 bg-amber-50/50' : ''}>
+        <Card className={cn(kpis?.extratosPendentes && 'border-amber-200 bg-amber-50/50')}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Conciliação</CardTitle>
-            {kpis?.extratosPendentes ? <AlertCircle className="h-5 w-5 text-amber-600" /> : <Building2 className="h-5 w-5 text-slate-600" />}
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Conciliação</CardTitle>
+            {kpis?.extratosPendentes ? <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" /> : <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis?.extratosPendentes || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Linhas pendentes</p>
+            <div className="text-lg sm:text-2xl font-bold">{kpis?.extratosPendentes || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1 hidden xs:block">Linhas pendentes</p>
           </CardContent>
         </Card>
-      </div>
+      </StatsGrid>
 
       {/* Charts and Contas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Gráfico de Barras */}
         {titulosPorMes.length > 0 && (
           <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
                 Evolução Financeira
               </CardTitle>
-              <CardDescription>Receitas vs Despesas por mês</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Receitas vs Despesas por mês</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-72">
+              <div className="h-48 sm:h-64 lg:h-72">
                 <Bar data={barChartData} options={barChartOptions} />
               </div>
             </CardContent>
@@ -204,28 +217,31 @@ export default function Dashboard() {
 
         {/* Contas Financeiras */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Building2 className="h-4 w-4 sm:h-5 sm:w-5" />
               Contas Financeiras
             </CardTitle>
-            <CardDescription>Saldo por conta</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">Saldo por conta</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4 max-h-64 overflow-auto">
               {contasFinanceiras.map((conta: any) => (
-                <div key={conta.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div>
-                    <p className="font-medium text-sm">{conta.nome}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{conta.tipo.replace('_', ' ')}</p>
+                <div key={conta.id} className="flex items-center justify-between py-2 border-b last:border-0 gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-xs sm:text-sm truncate">{conta.nome}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground capitalize">{conta.tipo.replace('_', ' ')}</p>
                   </div>
-                  <span className={`font-semibold ${conta.saldoAtual >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className={cn(
+                    'font-semibold text-xs sm:text-sm whitespace-nowrap',
+                    conta.saldoAtual >= 0 ? 'text-green-600' : 'text-red-600'
+                  )}>
                     {formatCurrency(conta.saldoAtual * 100)}
                   </span>
                 </div>
               ))}
               {contasFinanceiras.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">Nenhuma conta cadastrada</p>
+                <p className="text-center text-muted-foreground py-4 text-sm">Nenhuma conta cadastrada</p>
               )}
             </div>
           </CardContent>
@@ -234,33 +250,33 @@ export default function Dashboard() {
 
       {/* Ações Rápidas */}
       <Card>
-        <CardHeader>
-          <CardTitle>Ações Rápidas</CardTitle>
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg">Ações Rápidas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             <Link href="/pessoas">
-              <Button className="w-full h-auto py-4 flex-col gap-2" variant="outline">
-                <Users className="h-6 w-6 text-violet-600" />
-                <span>Pessoas</span>
+              <Button className="w-full h-auto py-3 sm:py-4 flex-col gap-1 sm:gap-2 touch-target" variant="outline">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-violet-600" />
+                <span className="text-xs sm:text-sm">Pessoas</span>
               </Button>
             </Link>
-            <Link href="/entries">
-              <Button className="w-full h-auto py-4 flex-col gap-2" variant="outline">
-                <FileText className="h-6 w-6 text-amber-600" />
-                <span>Lançamentos</span>
+            <Link href="/titulos">
+              <Button className="w-full h-auto py-3 sm:py-4 flex-col gap-1 sm:gap-2 touch-target" variant="outline">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
+                <span className="text-xs sm:text-sm">Lançamentos</span>
               </Button>
             </Link>
             <Link href="/contas">
-              <Button className="w-full h-auto py-4 flex-col gap-2" variant="outline">
-                <Building2 className="h-6 w-6 text-emerald-600" />
-                <span>Contas</span>
+              <Button className="w-full h-auto py-3 sm:py-4 flex-col gap-1 sm:gap-2 touch-target" variant="outline">
+                <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
+                <span className="text-xs sm:text-sm">Contas</span>
               </Button>
             </Link>
             <Link href="/reports">
-              <Button className="w-full h-auto py-4 flex-col gap-2" variant="outline">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
-                <span>Relatórios</span>
+              <Button className="w-full h-auto py-3 sm:py-4 flex-col gap-1 sm:gap-2 touch-target" variant="outline">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                <span className="text-xs sm:text-sm">Relatórios</span>
               </Button>
             </Link>
           </div>

@@ -916,24 +916,29 @@ const pessoasRouter = router({
       const limit = input?.limit || 50;
       const offset = (page - 1) * limit;
 
-      // Build query with joins
-      const results = await db.select({
-        pessoa: schema.pessoa,
-        associado: schema.associado,
-      })
-        .from(schema.pessoa)
-        .leftJoin(schema.associado, eq(schema.associado.pessoaId, schema.pessoa.id))
-        .where(
-          and(
-            isNull(schema.pessoa.deletedAt),
-            input?.tipo ? eq(schema.pessoa.tipo, input.tipo) : undefined,
-            input?.apenasAssociados ? sql`${schema.associado.id} IS NOT NULL` : undefined,
-            input?.search ? like(schema.pessoa.nome, `%${input.search}%`) : undefined,
-          )
-        )
-        .orderBy(asc(schema.pessoa.nome))
-        .limit(limit)
-        .offset(offset);
+      // Query with joins and titulo count
+      const results = await db.execute(sql`
+        SELECT 
+          p.id, p.tipo, p.nome, p.nome_fantasia, p.ativo, p.observacoes, 
+          p.created_at, p.updated_at,
+          a.id as associado_id, a.numero_registro, a.data_admissao, a.status as associado_status, 
+          a.categoria, a.valor_contribuicao_sugerido, a.periodicidade, a.isento, a.dia_vencimento,
+          COALESCE(tc.total_contribuicoes, 0) as total_contribuicoes,
+          COALESCE(tc.valor_total, 0) as valor_total
+        FROM pessoa p
+        LEFT JOIN associado a ON a.pessoa_id = p.id
+        LEFT JOIN (
+          SELECT pessoa_id, COUNT(*) as total_contribuicoes, SUM(CAST(valor_liquido AS NUMERIC)) as valor_total
+          FROM titulo WHERE deleted_at IS NULL AND tipo = 'receber'
+          GROUP BY pessoa_id
+        ) tc ON tc.pessoa_id = p.id
+        WHERE p.deleted_at IS NULL
+          ${input?.tipo ? sql`AND p.tipo = ${input.tipo}` : sql``}
+          ${input?.apenasAssociados ? sql`AND a.id IS NOT NULL` : sql``}
+          ${input?.search ? sql`AND p.nome ILIKE ${'%' + input.search + '%'}` : sql``}
+        ORDER BY p.nome ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `);
 
       const [countResult] = await db.select({ count: sql<number>`count(*)` })
         .from(schema.pessoa)
@@ -948,10 +953,29 @@ const pessoasRouter = router({
         );
 
       return {
-        pessoas: results.map(r => ({
-          ...r.pessoa,
-          associado: r.associado,
-          isAssociado: !!r.associado,
+        pessoas: results.rows.map((r: any) => ({
+          id: r.id,
+          tipo: r.tipo,
+          nome: r.nome,
+          nomeFantasia: r.nome_fantasia,
+          ativo: r.ativo,
+          observacoes: r.observacoes,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at,
+          isAssociado: !!r.associado_id,
+          associado: r.associado_id ? {
+            id: r.associado_id,
+            numeroRegistro: r.numero_registro,
+            dataAdmissao: r.data_admissao,
+            status: r.associado_status,
+            categoria: r.categoria,
+            valorContribuicaoSugerido: r.valor_contribuicao_sugerido,
+            periodicidade: r.periodicidade,
+            isento: r.isento,
+            diaVencimento: r.dia_vencimento,
+          } : null,
+          totalContribuicoes: Number(r.total_contribuicoes),
+          valorTotal: parseFloat(r.valor_total) || 0,
         })),
         total: countResult.count,
         page,
@@ -982,6 +1006,53 @@ const pessoasRouter = router({
       associados: associados.count,
       naoAssociados: total.count - associados.count,
     };
+  }),
+
+  duplicates: publicProcedure.query(async () => {
+    const db = await getDb();
+    // Find duplicates by normalized name (uppercase, trimmed)
+    const duplicates = await db.execute(sql`
+      SELECT UPPER(TRIM(nome)) as nome_normalizado, 
+             COUNT(*) as count,
+             ARRAY_AGG(id) as ids,
+             ARRAY_AGG(nome) as nomes
+      FROM pessoa 
+      WHERE deleted_at IS NULL
+      GROUP BY UPPER(TRIM(nome))
+      HAVING COUNT(*) > 1
+      ORDER BY COUNT(*) DESC
+    `);
+    return duplicates.rows.map((row: any) => ({
+      nomeNormalizado: row.nome_normalizado,
+      count: Number(row.count),
+      ids: row.ids,
+      nomes: row.nomes,
+    }));
+  }),
+
+  topDoadores: publicProcedure.input(z.number().default(10)).query(async ({ input: limite }) => {
+    const db = await getDb();
+    const topDoadores = await db.execute(sql`
+      SELECT p.id, p.nome, p.tipo,
+             COUNT(t.id) as total_contribuicoes,
+             COALESCE(SUM(CAST(t.valor_liquido AS NUMERIC)), 0) as valor_total
+      FROM pessoa p
+      INNER JOIN titulo t ON t.pessoa_id = p.id
+      WHERE p.deleted_at IS NULL
+        AND t.deleted_at IS NULL
+        AND t.tipo = 'receber'
+      GROUP BY p.id, p.nome, p.tipo
+      HAVING COUNT(t.id) > 1
+      ORDER BY COUNT(t.id) DESC, SUM(CAST(t.valor_liquido AS NUMERIC)) DESC
+      LIMIT ${limite}
+    `);
+    return topDoadores.rows.map((row: any) => ({
+      id: row.id,
+      nome: row.nome,
+      tipo: row.tipo,
+      totalContribuicoes: Number(row.total_contribuicoes),
+      valorTotal: parseFloat(row.valor_total),
+    }));
   }),
 });
 

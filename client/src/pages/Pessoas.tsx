@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Search, UserCheck, UserX } from 'lucide-react';
+import { Users, Search, UserCheck, UserX, Heart, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Responsi
 import { PageHeader, FilterBar, StatsGrid, Pagination } from '@/components/ui/page-header';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
 export default function Pessoas() {
   const [search, setSearch] = useState('');
@@ -22,6 +26,7 @@ export default function Pessoas() {
   });
 
   const { data: stats } = trpc.pessoas.stats.useQuery();
+  const { data: topDoadores } = trpc.pessoas.topDoadores.useQuery(5);
 
   const pessoas = data?.pessoas || [];
   const totalPages = data?.pages || 1;
@@ -77,6 +82,47 @@ export default function Pessoas() {
         </Card>
       </StatsGrid>
 
+      {/* Top Doadores */}
+      {topDoadores && topDoadores.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-emerald-600" />
+              <CardTitle className="text-sm font-medium">Maiores Contribuidores</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {topDoadores.map((doador, idx) => (
+                <div 
+                  key={doador.id} 
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-lg border",
+                    idx === 0 && "bg-amber-50 border-amber-200"
+                  )}
+                >
+                  <div className={cn(
+                    "flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold shrink-0",
+                    idx === 0 ? "bg-amber-500 text-white" :
+                    idx === 1 ? "bg-slate-400 text-white" :
+                    idx === 2 ? "bg-amber-700 text-white" :
+                    "bg-slate-200 text-slate-600"
+                  )}>
+                    {idx + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{doador.nome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {doador.totalContribuicoes}x · {formatCurrency(doador.valorTotal)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Search and Filter */}
       <Card>
         <CardHeader className="pb-3 sm:pb-6">
@@ -113,13 +159,21 @@ export default function Pessoas() {
                         <TableHead className="col-priority-medium">Tipo</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="col-priority-low">Categoria</TableHead>
+                        <TableHead className="text-center">Contribuições</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {pessoas.map((pessoa: any) => (
                         <TableRow key={pessoa.id}>
-                          <TableCell className="font-medium">{pessoa.nome}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {pessoa.nome}
+                              {pessoa.totalContribuicoes > 3 && (
+                                <Heart className="h-3 w-3 text-rose-500 fill-rose-500" title="Doador frequente" />
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="col-priority-medium">
                             <Badge variant="outline" className="text-xs">
                               {pessoa.tipo === 'fisica' ? 'PF' : 'PJ'}
@@ -140,6 +194,27 @@ export default function Pessoas() {
                               <Badge variant="outline" className="capitalize text-xs">{pessoa.associado.categoria}</Badge>
                             )}
                           </TableCell>
+                          <TableCell className="text-center">
+                            {pessoa.totalContribuicoes > 0 ? (
+                              <div className="flex flex-col items-center">
+                                <Badge 
+                                  className={cn(
+                                    "text-xs",
+                                    pessoa.totalContribuicoes > 5 ? "bg-emerald-100 text-emerald-700" :
+                                    pessoa.totalContribuicoes > 2 ? "bg-amber-100 text-amber-700" :
+                                    "bg-slate-100 text-slate-700"
+                                  )}
+                                >
+                                  {pessoa.totalContribuicoes}x
+                                </Badge>
+                                <span className="text-[10px] text-muted-foreground mt-0.5">
+                                  {formatCurrency(pessoa.valorTotal)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">-</span>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button variant="ghost" size="sm">Ver</Button>
                           </TableCell>
@@ -158,7 +233,12 @@ export default function Pessoas() {
                   renderCard={(pessoa: any) => (
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate">{pessoa.nome}</p>
+                        <div className="flex items-center gap-1">
+                          <p className="font-medium text-sm truncate">{pessoa.nome}</p>
+                          {pessoa.totalContribuicoes > 3 && (
+                            <Heart className="h-3 w-3 text-rose-500 fill-rose-500 shrink-0" />
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <Badge variant="outline" className="text-[10px]">
                             {pessoa.tipo === 'fisica' ? 'PF' : 'PJ'}
@@ -167,6 +247,11 @@ export default function Pessoas() {
                             <Badge className="bg-violet-100 text-violet-700 text-[10px]">Associado</Badge>
                           ) : (
                             <Badge variant="secondary" className="text-[10px]">Não Assoc.</Badge>
+                          )}
+                          {pessoa.totalContribuicoes > 0 && (
+                            <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">
+                              {pessoa.totalContribuicoes}x · {formatCurrency(pessoa.valorTotal)}
+                            </Badge>
                           )}
                         </div>
                       </div>

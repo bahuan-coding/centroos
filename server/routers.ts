@@ -1099,8 +1099,8 @@ const contasFinanceirasRouter = router({
     const contasComSaldo = await Promise.all(contas.map(async (conta) => {
       // Saldo das baixas
       const [baixas] = await db.select({
-        entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN valor_pago::numeric ELSE 0 END), 0)`,
-        saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN valor_pago::numeric ELSE 0 END), 0)`,
+        entradas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'receber' THEN valor_pago::numeric ELSE 0 END), 0)`,
+        saidas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'pagar' THEN valor_pago::numeric ELSE 0 END), 0)`,
       })
         .from(schema.tituloBaixa)
         .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id))
@@ -1126,8 +1126,8 @@ const contasFinanceirasRouter = router({
     let saldoTotal = 0;
     for (const conta of contas) {
       const [baixas] = await db.select({
-        entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN valor_pago::numeric ELSE 0 END), 0)`,
-        saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN valor_pago::numeric ELSE 0 END), 0)`,
+        entradas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'receber' THEN valor_pago::numeric ELSE 0 END), 0)`,
+        saidas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'pagar' THEN valor_pago::numeric ELSE 0 END), 0)`,
       })
         .from(schema.tituloBaixa)
         .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id))
@@ -1214,8 +1214,8 @@ const dashboardRouter = router({
     let saldoTotal = 0;
     for (const conta of contas) {
       const [baixas] = await db.select({
-        entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN valor_pago::numeric ELSE 0 END), 0)`,
-        saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN valor_pago::numeric ELSE 0 END), 0)`,
+        entradas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'receber' THEN valor_pago::numeric ELSE 0 END), 0)`,
+        saidas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'pagar' THEN valor_pago::numeric ELSE 0 END), 0)`,
       })
         .from(schema.tituloBaixa)
         .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id))

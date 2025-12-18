@@ -53,6 +53,23 @@ function formatCompact(value: number): string {
   return formatCurrency(value);
 }
 
+function formatCurrencyCompact(value: number): string {
+  if (value >= 1000000) {
+    const m = value / 1000000;
+    return `R$ ${m.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi`;
+  }
+  if (value >= 1000) {
+    const k = value / 1000;
+    return `R$ ${k.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil`;
+  }
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value);
+}
+
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return 'Bom dia';
@@ -167,51 +184,51 @@ export default function Dashboard() {
     servico: 'Serviços',
   };
 
+  // Cores refinadas para o donut
+  const chartColors = ['#3b82f6', '#8b5cf6']; // Blue-500, Violet-500
+  
   const doughnutData = {
     labels: composicao?.porTipoPessoa.map(p => p.tipo === 'associado' ? 'Associados' : 'Não Associados') || [],
     datasets: [{
       data: composicao?.porTipoPessoa.map(p => p.total) || [],
-      backgroundColor: [
-        'hsl(220 70% 50%)',  // Primary blue
-        'hsl(270 60% 60%)',  // Violet
-      ],
-      borderWidth: 0,
-      hoverOffset: 8,
+      backgroundColor: chartColors,
+      borderColor: 'white',
+      borderWidth: 3,
+      hoverOffset: 6,
+      hoverBorderWidth: 0,
     }],
   };
 
   const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '70%',
+    cutout: '72%',
     plugins: {
-      legend: {
-        display: true,
-        position: 'bottom' as const,
-        labels: { 
-          boxWidth: 12, 
-          padding: 16, 
-          font: { size: 12, family: 'Plus Jakarta Sans' },
-          usePointStyle: true,
-        }
-      },
+      legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#1a1a2e',
-        bodyColor: '#4a5568',
-        borderColor: 'rgba(0, 0, 0, 0.1)',
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        titleColor: '#f8fafc',
+        bodyColor: '#e2e8f0',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
         borderWidth: 1,
-        padding: 12,
-        cornerRadius: 8,
+        padding: 14,
+        cornerRadius: 10,
+        titleFont: { size: 13, weight: '600' as const, family: 'Plus Jakarta Sans' },
+        bodyFont: { size: 12, family: 'Plus Jakarta Sans' },
         callbacks: {
+          title: () => '',
           label: (ctx: any) => {
             const value = ctx.parsed;
             const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0);
-            const pct = ((value / total) * 100).toFixed(1);
+            const pct = ((value / total) * 100).toFixed(0);
             return `${ctx.label}: ${formatCurrency(value)} (${pct}%)`;
           },
         },
       },
+    },
+    animation: {
+      animateRotate: true,
+      animateScale: true,
     },
   };
 
@@ -319,7 +336,7 @@ export default function Dashboard() {
           </ChartContainer>
         )}
 
-        {/* Composição de Receitas */}
+        {/* Composição de Receitas - Redesign Premium */}
         {loadingComposicao ? (
           <ChartContainerSkeleton minHeight="300px" />
         ) : (
@@ -330,18 +347,48 @@ export default function Dashboard() {
             minHeight="300px"
             delay={6}
           >
-            <div className="relative h-full flex flex-col items-center justify-center">
-              <div className="w-full max-w-[220px] mx-auto">
-                <Doughnut data={doughnutData} options={doughnutOptions} />
-              </div>
-              {/* Center text */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ marginBottom: '40px' }}>
-                <div className="text-center">
-                  <p className="text-fluid-xs text-muted-foreground">Total</p>
-                  <p className="text-fluid-lg font-bold text-foreground">
-                    {formatCompact(composicao?.totalReceitas || 0)}
-                  </p>
+            <div className="flex flex-col h-full">
+              {/* Gráfico com centro absoluto */}
+              <div className="relative flex-1 flex items-center justify-center py-2">
+                <div className="relative w-36 h-36">
+                  <Doughnut data={doughnutData} options={doughnutOptions} />
+                  {/* Centro do donut - posição absoluta precisa */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="text-center">
+                      <span className="block text-[10px] text-muted-foreground/70 uppercase tracking-widest font-medium">
+                        Total
+                      </span>
+                      <p className="text-lg font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent leading-tight">
+                        {formatCurrencyCompact(composicao?.totalReceitas || 0)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              </div>
+              
+              {/* Legenda customizada externa */}
+              <div className="flex justify-center gap-6 pt-3 pb-1 border-t border-border/30">
+                {composicao?.porTipoPessoa.map((p, i) => {
+                  const pct = composicao.totalReceitas > 0 
+                    ? ((p.total / composicao.totalReceitas) * 100).toFixed(0) 
+                    : '0';
+                  return (
+                    <div key={p.tipo} className="flex items-center gap-2 group cursor-default">
+                      <span 
+                        className="w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm" 
+                        style={{ backgroundColor: chartColors[i] }} 
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-foreground/80">
+                          {p.tipo === 'associado' ? 'Associados' : 'Não Associados'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {pct}% · {formatCurrency(p.total)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </ChartContainer>

@@ -1216,7 +1216,8 @@ const titulosRouter = router({
       if (input?.mesAno) {
         const [ano, mes] = input.mesAno.split('-').map(Number);
         const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
-        const fim = `${ano}-${String(mes).padStart(2, '0')}-31`;
+        const ultimoDia = new Date(ano, mes, 0).getDate();
+        const fim = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
         conditions.push(between(schema.titulo.dataCompetencia, inicio, fim));
       }
 
@@ -1478,7 +1479,9 @@ const dashboardRouter = router({
     const getTotaisMes = async (mesAno: string) => {
       const [anoNum, mesNum] = mesAno.split('-').map(Number);
       const inicio = `${anoNum}-${String(mesNum).padStart(2, '0')}-01`;
-      const fim = `${anoNum}-${String(mesNum).padStart(2, '0')}-31`;
+      // Calcular último dia do mês corretamente (0 = último dia do mês anterior ao próximo mês)
+      const ultimoDia = new Date(anoNum, mesNum, 0).getDate();
+      const fim = `${anoNum}-${String(mesNum).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
       
       const [result] = await db.select({
         receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
@@ -1654,7 +1657,8 @@ const dashboardRouter = router({
     if (input?.mesAno) {
       const [ano, mes] = input.mesAno.split('-').map(Number);
       const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
-      const fim = `${ano}-${String(mes).padStart(2, '0')}-31`;
+      const ultimoDia = new Date(ano, mes, 0).getDate();
+      const fim = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
       whereClause = sql`t.deleted_at IS NULL AND t.tipo = 'receber' AND t.data_competencia BETWEEN ${inicio} AND ${fim}`;
     }
 

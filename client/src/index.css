@@ -1,71 +1,315 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* ========================================
+       GLASSMORPHISM DESIGN TOKENS
+       Centro Espírita - Tons Espirituais
+       ======================================== */
+    
+    /* Base Colors */
+    --background: 220 30% 97%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 217 91% 60%;
+    
+    /* Primary - Azul Sereno */
+    --primary: 220 70% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
+    
+    /* Secondary */
+    --secondary: 220 20% 96%;
     --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
+    
+    /* Muted */
+    --muted: 220 20% 96%;
+    --muted-foreground: 220 10% 46%;
+    
+    /* Accent - Violeta Transmutação */
+    --accent: 270 60% 60%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
-    --radius: 0.5rem;
-    /* Spacing tokens responsivos */
+    
+    /* Borders & Inputs */
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --ring: 220 70% 50%;
+    --radius: 0.75rem;
+    
+    /* ========================================
+       GLASSMORPHISM SPECIFIC TOKENS
+       ======================================== */
+    
+    /* Glass backgrounds */
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-bg-strong: rgba(255, 255, 255, 0.9);
+    --glass-bg-subtle: rgba(255, 255, 255, 0.5);
+    
+    /* Glass borders */
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-border-strong: rgba(255, 255, 255, 0.6);
+    
+    /* Glass shadows */
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
+    --glass-shadow-hover: 0 12px 40px rgba(31, 38, 135, 0.18);
+    --glass-shadow-sm: 0 4px 16px rgba(31, 38, 135, 0.08);
+    
+    /* Blur values */
+    --glass-blur: 12px;
+    --glass-blur-strong: 20px;
+    
+    /* ========================================
+       SPIRITUAL COLOR PALETTE
+       ======================================== */
+    
+    /* Dourado Espiritual */
+    --gold: 45 90% 55%;
+    --gold-muted: 45 60% 75%;
+    
+    /* Violeta Transmutação */
+    --violet: 270 60% 60%;
+    --violet-muted: 270 40% 80%;
+    
+    /* Verde Esperança */
+    --success: 160 60% 45%;
+    --success-muted: 160 40% 85%;
+    
+    /* Azul Serenidade */
+    --info: 200 80% 55%;
+    --info-muted: 200 60% 90%;
+    
+    /* Warning */
+    --warning: 38 92% 50%;
+    --warning-muted: 38 70% 90%;
+    
+    /* ========================================
+       SPACING TOKENS RESPONSIVOS
+       ======================================== */
     --space-page: clamp(1rem, 3vw, 2rem);
     --space-section: clamp(1rem, 2vw, 1.5rem);
-    --space-card: clamp(0.75rem, 2vw, 1.5rem);
+    --space-card: clamp(0.875rem, 2vw, 1.25rem);
+    
+    /* ========================================
+       ANIMATION TOKENS
+       ======================================== */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 }
 
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground font-sans antialiased; }
+  
+  body { 
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* Gradient background sutil */
+    background: 
+      radial-gradient(ellipse at 20% 0%, hsl(270 60% 95% / 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, hsl(220 70% 95% / 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, hsl(45 90% 98% / 0.2) 0%, transparent 70%),
+      hsl(var(--background));
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
 }
 
-body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-
 /* ========================================
-   RESPONSIVE UTILITIES
+   GLASSMORPHISM UTILITIES
    ======================================== */
 
 @layer utilities {
+  /* Glass card base */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+  
+  .glass-strong {
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(var(--glass-blur-strong));
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: var(--glass-shadow);
+  }
+  
+  .glass-subtle {
+    background: var(--glass-bg-subtle);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-sm);
+  }
+  
+  /* Glass hover effect */
+  .glass-hover {
+    transition: 
+      box-shadow var(--transition-base),
+      transform var(--transition-base),
+      background var(--transition-base);
+  }
+  
+  .glass-hover:hover {
+    box-shadow: var(--glass-shadow-hover);
+    transform: translateY(-2px);
+    background: var(--glass-bg-strong);
+  }
+  
   /* Touch-friendly targets (min 44px) */
   .touch-target { @apply min-h-[44px] min-w-[44px]; }
   
   /* Responsive text that scales with viewport */
+  .text-fluid-xs { font-size: clamp(0.625rem, 1.2vw, 0.75rem); }
   .text-fluid-sm { font-size: clamp(0.75rem, 1.5vw, 0.875rem); }
   .text-fluid-base { font-size: clamp(0.875rem, 2vw, 1rem); }
   .text-fluid-lg { font-size: clamp(1rem, 2.5vw, 1.125rem); }
   .text-fluid-xl { font-size: clamp(1.125rem, 3vw, 1.25rem); }
   .text-fluid-2xl { font-size: clamp(1.25rem, 4vw, 1.5rem); }
-  .text-fluid-3xl { font-size: clamp(1.5rem, 5vw, 1.875rem); }
+  .text-fluid-3xl { font-size: clamp(1.5rem, 5vw, 2rem); }
+  .text-fluid-4xl { font-size: clamp(2rem, 6vw, 2.5rem); }
   
   /* Safe area for notched devices */
-  .safe-area-inset { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  .safe-area-inset { 
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); 
+  }
   
-  /* Hide on specific breakpoints (mobile-first) */
+  /* Breakpoint visibility utilities */
   .hide-below-sm { @apply hidden xs:block; }
   .hide-below-md { @apply hidden md:block; }
   .hide-below-lg { @apply hidden lg:block; }
-  
-  /* Show only on specific breakpoints */
   .show-only-mobile { @apply block md:hidden; }
   .show-only-tablet { @apply hidden md:block lg:hidden; }
   .show-only-desktop { @apply hidden lg:block; }
+  
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  }
+  
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(45 70% 45%) 100%);
+  }
+}
+
+/* ========================================
+   ANIMATION KEYFRAMES
+   ======================================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer utilities {
+  /* Animation classes */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight 0.4s ease-out forwards;
+  }
+  
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted) / 0.5) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+  
+  .animate-count-up {
+    animation: countUp 0.6s ease-out forwards;
+  }
+  
+  /* Staggered animation delays */
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
+  .stagger-7 { animation-delay: 350ms; }
+  .stagger-8 { animation-delay: 400ms; }
 }
 
 /* ========================================
@@ -73,9 +317,8 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans
    ======================================== */
 
 @layer components {
-  /* Wrapper para tabela com scroll horizontal controlado */
   .table-responsive-wrapper {
-    @apply relative w-full;
+    @apply relative w-full overflow-x-auto;
   }
   
   .table-responsive-wrapper::before,
@@ -84,7 +327,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 20px;
+    width: 24px;
     pointer-events: none;
     z-index: 10;
     opacity: 0;
@@ -93,12 +336,12 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans
   
   .table-responsive-wrapper::before {
     left: 0;
-    background: linear-gradient(to right, hsl(var(--background)), transparent);
+    background: linear-gradient(to right, var(--glass-bg), transparent);
   }
   
   .table-responsive-wrapper::after {
     right: 0;
-    background: linear-gradient(to left, hsl(var(--background)), transparent);
+    background: linear-gradient(to left, var(--glass-bg), transparent);
   }
   
   .table-responsive-wrapper.has-scroll-left::before,
@@ -106,13 +349,12 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans
     opacity: 1;
   }
 
-  /* Coluna sticky para primeira coluna em mobile */
   .table-sticky-first td:first-child,
   .table-sticky-first th:first-child {
-    @apply sticky left-0 bg-background z-10;
+    @apply sticky left-0 z-10;
+    background: var(--glass-bg-strong);
   }
   
-  /* Esconder colunas por prioridade em mobile */
   @media (max-width: 767px) {
     .col-priority-low { @apply hidden; }
   }
@@ -123,11 +365,115 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans
 }
 
 /* ========================================
+   SKELETON LOADING
+   ======================================== */
+
+@layer components {
+  .skeleton {
+    @apply rounded-md bg-muted animate-shimmer;
+  }
+  
+  .skeleton-text {
+    @apply h-4 w-full rounded skeleton;
+  }
+  
+  .skeleton-title {
+    @apply h-6 w-3/4 rounded skeleton;
+  }
+  
+  .skeleton-avatar {
+    @apply h-10 w-10 rounded-full skeleton;
+  }
+  
+  .skeleton-card {
+    @apply h-32 w-full rounded-xl skeleton;
+  }
+}
+
+/* ========================================
+   KPI CARD SPECIFIC STYLES
+   ======================================== */
+
+@layer components {
+  .kpi-value {
+    @apply text-fluid-3xl font-bold tracking-tight;
+    line-height: 1.1;
+  }
+  
+  .kpi-label {
+    @apply text-fluid-sm font-medium text-muted-foreground;
+  }
+  
+  .kpi-change {
+    @apply text-fluid-xs font-semibold inline-flex items-center gap-1 px-2 py-0.5 rounded-full;
+  }
+  
+  .kpi-change-positive {
+    @apply bg-success/10 text-success;
+  }
+  
+  .kpi-change-negative {
+    @apply bg-destructive/10 text-destructive;
+  }
+  
+  .kpi-change-neutral {
+    @apply bg-muted text-muted-foreground;
+  }
+}
+
+/* ========================================
+   CHART CONTAINER
+   ======================================== */
+
+@layer components {
+  .chart-container {
+    @apply glass rounded-2xl p-4 md:p-6;
+  }
+  
+  .chart-header {
+    @apply flex items-center justify-between mb-4;
+  }
+  
+  .chart-title {
+    @apply text-fluid-lg font-semibold text-foreground;
+  }
+  
+  .chart-subtitle {
+    @apply text-fluid-sm text-muted-foreground;
+  }
+}
+
+/* ========================================
+   ALERT BANNER
+   ======================================== */
+
+@layer components {
+  .alert-banner {
+    @apply glass rounded-xl p-4 border-l-4;
+  }
+  
+  .alert-banner-info {
+    @apply border-l-info bg-info/5;
+  }
+  
+  .alert-banner-warning {
+    @apply border-l-warning bg-warning/5;
+  }
+  
+  .alert-banner-success {
+    @apply border-l-success bg-success/5;
+  }
+  
+  .alert-banner-danger {
+    @apply border-l-destructive bg-destructive/5;
+  }
+}
+
+/* ========================================
    PRINT STYLES
    ======================================== */
 
 @media print {
-  /* Reset para impressão */
   body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -135,44 +481,32 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans
     color: black !important;
   }
   
-  /* Esconder elementos de navegação */
   aside, nav, .no-print, button:not(.print-show) {
     display: none !important;
   }
   
-  /* Remover sidebar margin */
   main {
     margin-left: 0 !important;
     padding-left: 0 !important;
   }
   
-  /* Cards sem sombra */
-  .card, [class*="Card"] {
+  .glass, .card, [class*="Card"] {
     box-shadow: none !important;
     border: 1px solid #ddd !important;
+    background: white !important;
+    backdrop-filter: none !important;
   }
   
-  /* Tabelas não quebram no meio */
   table { page-break-inside: auto; }
   tr { page-break-inside: avoid; page-break-after: auto; }
   thead { display: table-header-group; }
   
-  /* Quebra de página controlada */
   .page-break-before { page-break-before: always; }
   .page-break-after { page-break-after: always; }
   .avoid-break { page-break-inside: avoid; }
   
-  /* Tamanho da página */
   @page {
     size: A4 portrait;
     margin: 1.5cm;
   }
-  
-  /* Links mostram URL */
-  a[href^="http"]::after {
-    content: " (" attr(href) ")";
-    font-size: 0.8em;
-    color: #666;
-  }
 }
-

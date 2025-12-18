@@ -51,6 +51,27 @@ export default {
         revenue: 'hsl(142 71% 45%)',
         expense: 'hsl(0 84% 60%)',
         nfc: 'hsl(271 81% 56%)',
+        // Spiritual color palette
+        gold: {
+          DEFAULT: 'hsl(var(--gold))',
+          muted: 'hsl(var(--gold-muted))',
+        },
+        violet: {
+          DEFAULT: 'hsl(var(--violet))',
+          muted: 'hsl(var(--violet-muted))',
+        },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          muted: 'hsl(var(--success-muted))',
+        },
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+          muted: 'hsl(var(--info-muted))',
+        },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          muted: 'hsl(var(--warning-muted))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

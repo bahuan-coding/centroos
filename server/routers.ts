@@ -1401,30 +1401,27 @@ const extratosRouter = router({
   }),
 });
 
-// ==================== DASHBOARD ROUTER ====================
+// ==================== DASHBOARD ROUTER (ENHANCED) ====================
 const dashboardRouter = router({
+  // KPIs básicos mantidos para compatibilidade
   kpis: publicProcedure.query(async () => {
     const db = await getDb();
 
-    // Pessoas (não deletadas)
     const [pessoas] = await db.select({ count: sql<number>`count(*)` })
       .from(schema.pessoa)
       .where(isNull(schema.pessoa.deletedAt));
     
-    // Associados (cujas pessoas não foram deletadas)
     const [associados] = await db.select({ count: sql<number>`count(*)` })
       .from(schema.associado)
       .innerJoin(schema.pessoa, eq(schema.associado.pessoaId, schema.pessoa.id))
       .where(isNull(schema.pessoa.deletedAt));
 
-    // Títulos
     const [titulos] = await db.select({
       total: sql<number>`count(*)`,
       receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
       despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
     }).from(schema.titulo).where(isNull(schema.titulo.deletedAt));
 
-    // Contas financeiras e saldo
     const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
     let saldoTotal = 0;
     for (const conta of contas) {
@@ -1438,10 +1435,7 @@ const dashboardRouter = router({
       saldoTotal += Number(conta.saldoInicial) + Number(baixas.entradas) - Number(baixas.saidas);
     }
 
-    // Períodos
     const [periodos] = await db.select({ count: sql<number>`count(*)` }).from(schema.periodoContabil);
-
-    // Extratos pendentes
     const [pendentes] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoLinha).where(eq(schema.extratoLinha.status, 'pendente'));
 
     return {
@@ -1457,6 +1451,463 @@ const dashboardRouter = router({
       periodos: periodos.count,
       extratosPendentes: pendentes.count,
     };
+  }),
+
+  // KPIs aprimorados com variação percentual mês a mês
+  kpisEnhanced: publicProcedure.query(async () => {
+    const db = await getDb();
+    const now = new Date();
+    const mesAtual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const mesAnterior = now.getMonth() === 0 
+      ? `${now.getFullYear() - 1}-12` 
+      : `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
+
+    // Função helper para calcular totais por mês
+    const getTotaisMes = async (mesAno: string) => {
+      const [ano, mes] = mesAno.split('-').map(Number);
+      const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
+      const fim = `${ano}-${String(mes).padStart(2, '0')}-31`;
+      
+      const [result] = await db.select({
+        receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+        despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      })
+        .from(schema.titulo)
+        .where(and(
+          isNull(schema.titulo.deletedAt),
+          between(schema.titulo.dataCompetencia, inicio, fim)
+        ));
+      
+      return {
+        receitas: Number(result.receitas),
+        despesas: Number(result.despesas),
+        resultado: Number(result.receitas) - Number(result.despesas),
+      };
+    };
+
+    const atual = await getTotaisMes(mesAtual);
+    const anterior = await getTotaisMes(mesAnterior);
+
+    // Calcular variações percentuais
+    const calcVariacao = (valorAtual: number, valorAnterior: number) => {
+      if (valorAnterior === 0) return valorAtual > 0 ? 100 : 0;
+      return ((valorAtual - valorAnterior) / valorAnterior) * 100;
+    };
+
+    // Totais gerais
+    const [totaisGerais] = await db.select({
+      receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+    }).from(schema.titulo).where(isNull(schema.titulo.deletedAt));
+
+    // Saldo consolidado das contas
+    const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
+    let saldoConsolidado = 0;
+    for (const conta of contas) {
+      saldoConsolidado += Number(conta.saldoInicial);
+    }
+    // Adicionar receitas e subtrair despesas para saldo real
+    saldoConsolidado += Number(totaisGerais.receitas) - Number(totaisGerais.despesas);
+
+    // Contagens
+    const [pessoas] = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.pessoa).where(isNull(schema.pessoa.deletedAt));
+    const [associados] = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.associado)
+      .innerJoin(schema.pessoa, eq(schema.associado.pessoaId, schema.pessoa.id))
+      .where(isNull(schema.pessoa.deletedAt));
+
+    return {
+      mesAtual,
+      saldoConsolidado,
+      receitasMes: atual.receitas,
+      receitasVariacao: calcVariacao(atual.receitas, anterior.receitas),
+      despesasMes: atual.despesas,
+      despesasVariacao: calcVariacao(atual.despesas, anterior.despesas),
+      resultadoMes: atual.resultado,
+      resultadoVariacao: calcVariacao(atual.resultado, anterior.resultado),
+      receitasTotal: Number(totaisGerais.receitas),
+      despesasTotal: Number(totaisGerais.despesas),
+      resultadoTotal: Number(totaisGerais.receitas) - Number(totaisGerais.despesas),
+      totalPessoas: pessoas.count,
+      totalAssociados: associados.count,
+      totalNaoAssociados: pessoas.count - associados.count,
+      contasAtivas: contas.length,
+    };
+  }),
+
+  // Fluxo de caixa mensal (últimos 12 meses)
+  fluxoCaixa: publicProcedure.input(z.number().default(12)).query(async ({ input: meses }) => {
+    const db = await getDb();
+    
+    const results = await db.select({
+      mes: sql<string>`TO_CHAR(data_competencia::date, 'YYYY-MM')`,
+      receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      qtdReceitas: sql<number>`COUNT(CASE WHEN tipo = 'receber' THEN 1 END)`,
+      qtdDespesas: sql<number>`COUNT(CASE WHEN tipo = 'pagar' THEN 1 END)`,
+    })
+      .from(schema.titulo)
+      .where(isNull(schema.titulo.deletedAt))
+      .groupBy(sql`TO_CHAR(data_competencia::date, 'YYYY-MM')`)
+      .orderBy(sql`TO_CHAR(data_competencia::date, 'YYYY-MM') DESC`)
+      .limit(meses);
+
+    // Calcular saldo acumulado
+    let saldoAcumulado = 0;
+    const fluxo = results.reverse().map(r => {
+      const receitas = Number(r.receitas);
+      const despesas = Number(r.despesas);
+      saldoAcumulado += receitas - despesas;
+      
+      return {
+        mes: r.mes,
+        mesFormatado: (() => {
+          const [ano, mes] = r.mes.split('-');
+          const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+          return `${meses[parseInt(mes) - 1]}/${ano.slice(2)}`;
+        })(),
+        receitas,
+        despesas,
+        resultado: receitas - despesas,
+        saldoAcumulado,
+        qtdReceitas: Number(r.qtdReceitas),
+        qtdDespesas: Number(r.qtdDespesas),
+      };
+    });
+
+    return fluxo;
+  }),
+
+  // Composição de receitas por natureza/tipo
+  composicaoReceitas: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    // Por natureza
+    const porNatureza = await db.select({
+      natureza: schema.titulo.natureza,
+      total: sql<number>`COALESCE(SUM(valor_liquido::numeric), 0)`,
+      quantidade: sql<number>`COUNT(*)`,
+    })
+      .from(schema.titulo)
+      .where(and(
+        isNull(schema.titulo.deletedAt),
+        eq(schema.titulo.tipo, 'receber')
+      ))
+      .groupBy(schema.titulo.natureza)
+      .orderBy(sql`SUM(valor_liquido::numeric) DESC`);
+
+    // Por tipo de pessoa (associado vs não associado)
+    const porTipoPessoa = await db.execute(sql`
+      SELECT 
+        CASE WHEN a.id IS NOT NULL THEN 'associado' ELSE 'nao_associado' END as tipo_pessoa,
+        COALESCE(SUM(t.valor_liquido::numeric), 0) as total,
+        COUNT(*) as quantidade
+      FROM titulo t
+      LEFT JOIN pessoa p ON t.pessoa_id = p.id
+      LEFT JOIN associado a ON a.pessoa_id = p.id
+      WHERE t.deleted_at IS NULL AND t.tipo = 'receber'
+      GROUP BY CASE WHEN a.id IS NOT NULL THEN 'associado' ELSE 'nao_associado' END
+    `);
+
+    const totalReceitas = porNatureza.reduce((acc, n) => acc + Number(n.total), 0);
+
+    return {
+      porNatureza: porNatureza.map(n => ({
+        natureza: n.natureza,
+        total: Number(n.total),
+        quantidade: Number(n.quantidade),
+        percentual: totalReceitas > 0 ? (Number(n.total) / totalReceitas) * 100 : 0,
+      })),
+      porTipoPessoa: porTipoPessoa.rows.map((r: any) => ({
+        tipo: r.tipo_pessoa,
+        total: Number(r.total),
+        quantidade: Number(r.quantidade),
+        percentual: totalReceitas > 0 ? (Number(r.total) / totalReceitas) * 100 : 0,
+      })),
+      totalReceitas,
+    };
+  }),
+
+  // Top contribuintes
+  topContribuintes: publicProcedure.input(z.object({
+    limite: z.number().default(10),
+    mesAno: z.string().optional(), // formato: "2025-01"
+  }).optional()).query(async ({ input }) => {
+    const db = await getDb();
+    const limite = input?.limite || 10;
+    
+    let whereClause = sql`t.deleted_at IS NULL AND t.tipo = 'receber'`;
+    
+    if (input?.mesAno) {
+      const [ano, mes] = input.mesAno.split('-').map(Number);
+      const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
+      const fim = `${ano}-${String(mes).padStart(2, '0')}-31`;
+      whereClause = sql`t.deleted_at IS NULL AND t.tipo = 'receber' AND t.data_competencia BETWEEN ${inicio} AND ${fim}`;
+    }
+
+    const results = await db.execute(sql`
+      SELECT 
+        p.id,
+        p.nome,
+        p.tipo as pessoa_tipo,
+        CASE WHEN a.id IS NOT NULL THEN true ELSE false END as is_associado,
+        COUNT(t.id) as total_contribuicoes,
+        COALESCE(SUM(t.valor_liquido::numeric), 0) as valor_total,
+        MAX(t.data_competencia) as ultima_contribuicao
+      FROM titulo t
+      INNER JOIN pessoa p ON t.pessoa_id = p.id
+      LEFT JOIN associado a ON a.pessoa_id = p.id
+      WHERE ${whereClause}
+      GROUP BY p.id, p.nome, p.tipo, a.id
+      ORDER BY SUM(t.valor_liquido::numeric) DESC
+      LIMIT ${limite}
+    `);
+
+    return results.rows.map((r: any) => ({
+      id: r.id,
+      nome: r.nome,
+      pessoaTipo: r.pessoa_tipo,
+      isAssociado: r.is_associado,
+      totalContribuicoes: Number(r.total_contribuicoes),
+      valorTotal: Number(r.valor_total),
+      ultimaContribuicao: r.ultima_contribuicao,
+    }));
+  }),
+
+  // Alertas fiscais e compliance
+  alertasFiscais: publicProcedure.query(async () => {
+    const db = await getDb();
+    const now = new Date();
+    const alerts: Array<{
+      id: string;
+      tipo: 'info' | 'warning' | 'danger' | 'success';
+      titulo: string;
+      mensagem: string;
+      acao?: string;
+    }> = [];
+
+    // Verificar período contábil atual
+    const [periodoAtual] = await db.select()
+      .from(schema.periodoContabil)
+      .where(and(
+        eq(schema.periodoContabil.ano, now.getFullYear()),
+        eq(schema.periodoContabil.mes, now.getMonth() + 1)
+      ));
+
+    if (!periodoAtual) {
+      alerts.push({
+        id: 'periodo-nao-criado',
+        tipo: 'warning',
+        titulo: 'Período Contábil',
+        mensagem: `O período contábil de ${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ainda não foi criado.`,
+        acao: 'Criar período',
+      });
+    }
+
+    // Verificar períodos anteriores não fechados
+    const periodosAbertos = await db.select()
+      .from(schema.periodoContabil)
+      .where(and(
+        eq(schema.periodoContabil.status, 'aberto'),
+        sql`(ano < ${now.getFullYear()} OR (ano = ${now.getFullYear()} AND mes < ${now.getMonth() + 1}))`
+      ))
+      .orderBy(desc(schema.periodoContabil.ano), desc(schema.periodoContabil.mes));
+
+    if (periodosAbertos.length > 0) {
+      alerts.push({
+        id: 'periodos-abertos',
+        tipo: 'warning',
+        titulo: 'Períodos Pendentes',
+        mensagem: `Existem ${periodosAbertos.length} período(s) contábil(is) anterior(es) ainda aberto(s).`,
+        acao: 'Revisar períodos',
+      });
+    }
+
+    // Verificar extratos pendentes de conciliação
+    const [extratosPendentes] = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.extratoLinha)
+      .where(eq(schema.extratoLinha.status, 'pendente'));
+
+    if (extratosPendentes.count > 0) {
+      alerts.push({
+        id: 'extratos-pendentes',
+        tipo: 'info',
+        titulo: 'Conciliação Bancária',
+        mensagem: `${extratosPendentes.count} linha(s) de extrato aguardando conciliação.`,
+        acao: 'Conciliar',
+      });
+    }
+
+    // Alertas de compliance para entidades do terceiro setor (ITG 2002)
+    const mesAtual = now.getMonth() + 1;
+    
+    // Janeiro - Prazo para DIRF
+    if (mesAtual === 1 || mesAtual === 2) {
+      alerts.push({
+        id: 'dirf-prazo',
+        tipo: 'warning',
+        titulo: 'DIRF - Declaração do IR Retido',
+        mensagem: 'Prazo para entrega da DIRF até o último dia útil de fevereiro.',
+        acao: 'Verificar retenções',
+      });
+    }
+
+    // Março - RAIS
+    if (mesAtual === 3 || mesAtual === 4) {
+      alerts.push({
+        id: 'rais-prazo',
+        tipo: 'info',
+        titulo: 'RAIS - Relação Anual',
+        mensagem: 'Verificar prazo da RAIS (se houver funcionários).',
+      });
+    }
+
+    // Junho - ECD para entidades imunes/isentas
+    if (mesAtual >= 5 && mesAtual <= 7) {
+      alerts.push({
+        id: 'ecd-prazo',
+        tipo: 'warning',
+        titulo: 'ECD - Escrituração Contábil Digital',
+        mensagem: 'Entidades do terceiro setor: prazo ECD até julho.',
+        acao: 'Verificar obrigatoriedade',
+      });
+    }
+
+    // Lembrete permanente sobre ITG 2002
+    alerts.push({
+      id: 'itg-2002',
+      tipo: 'info',
+      titulo: 'ITG 2002 - Norma Contábil',
+      mensagem: 'Entidades sem fins lucrativos devem seguir as normas da ITG 2002 (R1).',
+    });
+
+    return alerts;
+  }),
+
+  // Contas financeiras com saldo
+  contasComSaldo: publicProcedure.query(async () => {
+    const db = await getDb();
+    const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true)).orderBy(asc(schema.contaFinanceira.nome));
+
+    const contasComSaldo = await Promise.all(contas.map(async (conta) => {
+      const [totais] = await db.select({
+        entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN tb.valor_pago::numeric ELSE 0 END), 0)`,
+        saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN tb.valor_pago::numeric ELSE 0 END), 0)`,
+      })
+        .from(schema.tituloBaixa)
+        .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id))
+        .where(eq(schema.tituloBaixa.contaFinanceiraId, conta.id));
+
+      const saldoInicial = Number(conta.saldoInicial);
+      const entradas = Number(totais.entradas);
+      const saidas = Number(totais.saidas);
+      const saldoAtual = saldoInicial + entradas - saidas;
+      const totalMovimentado = entradas + saidas;
+
+      return {
+        id: conta.id,
+        nome: conta.nome,
+        tipo: conta.tipo,
+        banco: conta.bancoNome || conta.bancoCodigo,
+        saldoInicial,
+        entradas,
+        saidas,
+        saldoAtual,
+        percentualEntradas: totalMovimentado > 0 ? (entradas / totalMovimentado) * 100 : 50,
+      };
+    }));
+
+    const saldoTotal = contasComSaldo.reduce((acc, c) => acc + c.saldoAtual, 0);
+
+    return { contas: contasComSaldo, saldoTotal };
+  }),
+
+  // Feed de notícias (mock - em produção usaria RSS real)
+  newsFeed: publicProcedure.query(async () => {
+    // Em produção, isso buscaria RSS de:
+    // - FEB (Federação Espírita Brasileira)
+    // - USE-AL (União das Sociedades Espíritas de Alagoas)
+    // - FEAL (Federação Espírita Alagoana)
+    // - GIFE, ABONG (terceiro setor)
+    
+    const mockNews = [
+      {
+        id: '1',
+        title: 'FEB divulga programação do Congresso Espírita Brasileiro 2025',
+        summary: 'Evento reunirá lideranças espíritas de todo o país para debater a atualidade da Doutrina.',
+        source: 'FEB',
+        url: 'https://www.febnet.org.br',
+        imageUrl: null,
+        publishedAt: new Date().toISOString(),
+        category: 'Eventos',
+      },
+      {
+        id: '2',
+        title: 'Novo Marco Regulatório do Terceiro Setor entra em vigor',
+        summary: 'Entidades devem se adequar às novas regras de prestação de contas e transparência.',
+        source: 'GIFE',
+        url: 'https://gife.org.br',
+        imageUrl: null,
+        publishedAt: new Date(Date.now() - 86400000).toISOString(),
+        category: 'Legislação',
+      },
+      {
+        id: '3',
+        title: 'USE-AL promove encontro de trabalhadores espíritas',
+        summary: 'Evento gratuito acontece no próximo mês com palestras e workshops.',
+        source: 'USE-AL',
+        url: 'https://use-al.org.br',
+        imageUrl: null,
+        publishedAt: new Date(Date.now() - 172800000).toISOString(),
+        category: 'Regional',
+      },
+      {
+        id: '4',
+        title: 'ITG 2002: O que as entidades sem fins lucrativos precisam saber',
+        summary: 'Guia prático sobre a norma contábil específica para o terceiro setor.',
+        source: 'CFC',
+        url: 'https://cfc.org.br',
+        imageUrl: null,
+        publishedAt: new Date(Date.now() - 259200000).toISOString(),
+        category: 'Contabilidade',
+      },
+      {
+        id: '5',
+        title: 'Prazo para declarações anuais do terceiro setor se aproxima',
+        summary: 'Veja quais obrigações acessórias sua entidade precisa cumprir.',
+        source: 'ABONG',
+        url: 'https://abong.org.br',
+        imageUrl: null,
+        publishedAt: new Date(Date.now() - 345600000).toISOString(),
+        category: 'Fiscal',
+      },
+    ];
+
+    return mockNews;
+  }),
+
+  // Sparkline data - últimos 6 meses resumido
+  sparklineData: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    const results = await db.select({
+      mes: sql<string>`TO_CHAR(data_competencia::date, 'YYYY-MM')`,
+      receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+    })
+      .from(schema.titulo)
+      .where(isNull(schema.titulo.deletedAt))
+      .groupBy(sql`TO_CHAR(data_competencia::date, 'YYYY-MM')`)
+      .orderBy(sql`TO_CHAR(data_competencia::date, 'YYYY-MM') DESC`)
+      .limit(6);
+
+    return results.reverse().map(r => ({
+      mes: r.mes,
+      receitas: Number(r.receitas),
+      despesas: Number(r.despesas),
+      saldo: Number(r.receitas) - Number(r.despesas),
+    }));
   }),
 });
 

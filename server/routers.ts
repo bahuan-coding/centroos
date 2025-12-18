@@ -1456,17 +1456,29 @@ const dashboardRouter = router({
   // KPIs aprimorados com variação percentual mês a mês
   kpisEnhanced: publicProcedure.query(async () => {
     const db = await getDb();
-    const now = new Date();
-    const mesAtual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const mesAnterior = now.getMonth() === 0 
-      ? `${now.getFullYear() - 1}-12` 
-      : `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
+    
+    // Buscar o último mês com dados ao invés de usar mês calendário atual
+    const [ultimoMesComDados] = await db.select({
+      mes: sql<string>`TO_CHAR(data_competencia::date, 'YYYY-MM')`,
+    })
+      .from(schema.titulo)
+      .where(isNull(schema.titulo.deletedAt))
+      .orderBy(sql`data_competencia DESC`)
+      .limit(1);
+    
+    const mesAtual = ultimoMesComDados?.mes || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    
+    // Calcular mês anterior baseado no último mês com dados
+    const [ano, mes] = mesAtual.split('-').map(Number);
+    const mesAnterior = mes === 1 
+      ? `${ano - 1}-12` 
+      : `${ano}-${String(mes - 1).padStart(2, '0')}`;
 
     // Função helper para calcular totais por mês
     const getTotaisMes = async (mesAno: string) => {
-      const [ano, mes] = mesAno.split('-').map(Number);
-      const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
-      const fim = `${ano}-${String(mes).padStart(2, '0')}-31`;
+      const [anoNum, mesNum] = mesAno.split('-').map(Number);
+      const inicio = `${anoNum}-${String(mesNum).padStart(2, '0')}-01`;
+      const fim = `${anoNum}-${String(mesNum).padStart(2, '0')}-31`;
       
       const [result] = await db.select({
         receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
@@ -1479,9 +1491,9 @@ const dashboardRouter = router({
         ));
       
       return {
-        receitas: Number(result.receitas),
-        despesas: Number(result.despesas),
-        resultado: Number(result.receitas) - Number(result.despesas),
+        receitas: Number(result.receitas) || 0,
+        despesas: Number(result.despesas) || 0,
+        resultado: (Number(result.receitas) || 0) - (Number(result.despesas) || 0),
       };
     };
 
@@ -1494,20 +1506,17 @@ const dashboardRouter = router({
       return ((valorAtual - valorAnterior) / valorAnterior) * 100;
     };
 
-    // Totais gerais
+    // Totais gerais (todos os meses)
     const [totaisGerais] = await db.select({
       receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
       despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
     }).from(schema.titulo).where(isNull(schema.titulo.deletedAt));
 
-    // Saldo consolidado das contas
-    const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
-    let saldoConsolidado = 0;
-    for (const conta of contas) {
-      saldoConsolidado += Number(conta.saldoInicial);
-    }
-    // Adicionar receitas e subtrair despesas para saldo real
-    saldoConsolidado += Number(totaisGerais.receitas) - Number(totaisGerais.despesas);
+    const receitasTotal = Number(totaisGerais.receitas) || 0;
+    const despesasTotal = Number(totaisGerais.despesas) || 0;
+
+    // Saldo consolidado: receitas - despesas (saldo real baseado em títulos)
+    const saldoConsolidado = receitasTotal - despesasTotal;
 
     // Contagens
     const [pessoas] = await db.select({ count: sql<number>`count(*)` })
@@ -1516,6 +1525,9 @@ const dashboardRouter = router({
       .from(schema.associado)
       .innerJoin(schema.pessoa, eq(schema.associado.pessoaId, schema.pessoa.id))
       .where(isNull(schema.pessoa.deletedAt));
+    
+    // Contas financeiras ativas
+    const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
 
     return {
       mesAtual,
@@ -1526,12 +1538,12 @@ const dashboardRouter = router({
       despesasVariacao: calcVariacao(atual.despesas, anterior.despesas),
       resultadoMes: atual.resultado,
       resultadoVariacao: calcVariacao(atual.resultado, anterior.resultado),
-      receitasTotal: Number(totaisGerais.receitas),
-      despesasTotal: Number(totaisGerais.despesas),
-      resultadoTotal: Number(totaisGerais.receitas) - Number(totaisGerais.despesas),
-      totalPessoas: pessoas.count,
-      totalAssociados: associados.count,
-      totalNaoAssociados: pessoas.count - associados.count,
+      receitasTotal,
+      despesasTotal,
+      resultadoTotal: receitasTotal - despesasTotal,
+      totalPessoas: Number(pessoas.count) || 0,
+      totalAssociados: Number(associados.count) || 0,
+      totalNaoAssociados: (Number(pessoas.count) || 0) - (Number(associados.count) || 0),
       contasAtivas: contas.length,
     };
   }),

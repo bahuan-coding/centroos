@@ -107,7 +107,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <main className="lg:pl-64">
         <div className="pt-16 lg:pt-0 min-h-screen">
-          <div className="p-6 lg:p-8">{children}</div>
+          <div className="p-6 lg:p-8">
+            <div className="max-w-screen-2xl mx-auto">
+              {children}
+            </div>
+          </div>
         </div>
       </main>
     </div>

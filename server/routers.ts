@@ -1107,6 +1107,47 @@ const pessoasRouter = router({
     };
   }),
 
+  create: protectedProcedure
+    .input(z.object({
+      nome: z.string().min(2).max(255),
+      tipo: z.enum(['fisica', 'juridica']).default('fisica'),
+      cpfCnpj: z.string().optional(),
+      email: z.string().email().optional(),
+      telefone: z.string().optional(),
+      observacoes: z.string().optional(),
+      tornarAssociado: z.boolean().default(false),
+      categoria: z.enum(['trabalhador', 'frequentador', 'benemerito', 'honorario']).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      
+      const [newPessoa] = await db.insert(schema.pessoa).values({
+        nome: input.nome.trim(),
+        tipo: input.tipo,
+        observacoes: input.observacoes || null,
+        createdBy: ctx.user.id,
+      }).returning({ id: schema.pessoa.id });
+      
+      if (input.cpfCnpj) {
+        await db.insert(schema.pessoaDocumento).values({
+          pessoaId: newPessoa.id,
+          tipo: input.tipo === 'fisica' ? 'cpf' : 'cnpj',
+          numero: input.cpfCnpj.replace(/\D/g, ''),
+        });
+      }
+      
+      if (input.tornarAssociado && input.categoria) {
+        await db.insert(schema.associado).values({
+          pessoaId: newPessoa.id,
+          categoria: input.categoria,
+          dataAdmissao: new Date().toISOString().split('T')[0],
+          status: 'ativo',
+        });
+      }
+      
+      return { id: newPessoa.id };
+    }),
+
   // Busca pessoa existente por nome normalizado ou CPF, retorna null se não encontrar
   findByNameOrCpf: publicProcedure
     .input(z.object({ nome: z.string(), cpf: z.string().optional() }))
@@ -1594,11 +1635,23 @@ const dashboardRouter = router({
     return fluxo;
   }),
 
-  // Composição de receitas por natureza/tipo
+  // Composição de receitas por natureza/tipo (filtrado pelo mês atual)
   composicaoReceitas: publicProcedure.query(async () => {
     const db = await getDb();
     
-    // Por natureza
+    // Determinar mês atual (mesmo do kpisEnhanced)
+    const [ultimo] = await db.select({ data: sql<string>`MAX(data_competencia)` })
+      .from(schema.titulo)
+      .where(isNull(schema.titulo.deletedAt));
+    
+    const dataRef = ultimo?.data ? new Date(ultimo.data) : new Date();
+    const ano = dataRef.getFullYear();
+    const mes = dataRef.getMonth() + 1;
+    const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    const fim = `${ano}-${String(mes).padStart(2, '0')}-${ultimoDia}`;
+    
+    // Por natureza - COM filtro de data
     const porNatureza = await db.select({
       natureza: schema.titulo.natureza,
       total: sql<number>`COALESCE(SUM(valor_liquido::numeric), 0)`,
@@ -1607,12 +1660,13 @@ const dashboardRouter = router({
       .from(schema.titulo)
       .where(and(
         isNull(schema.titulo.deletedAt),
-        eq(schema.titulo.tipo, 'receber')
+        eq(schema.titulo.tipo, 'receber'),
+        sql`data_competencia >= ${inicio} AND data_competencia <= ${fim}`
       ))
       .groupBy(schema.titulo.natureza)
       .orderBy(sql`SUM(valor_liquido::numeric) DESC`);
 
-    // Por tipo de pessoa (associado vs não associado)
+    // Por tipo de pessoa (associado vs não associado) - COM filtro de data
     const porTipoPessoa = await db.execute(sql`
       SELECT 
         CASE WHEN a.id IS NOT NULL THEN 'associado' ELSE 'nao_associado' END as tipo_pessoa,
@@ -1621,7 +1675,10 @@ const dashboardRouter = router({
       FROM titulo t
       LEFT JOIN pessoa p ON t.pessoa_id = p.id
       LEFT JOIN associado a ON a.pessoa_id = p.id
-      WHERE t.deleted_at IS NULL AND t.tipo = 'receber'
+      WHERE t.deleted_at IS NULL 
+        AND t.tipo = 'receber'
+        AND t.data_competencia >= ${inicio}
+        AND t.data_competencia <= ${fim}
       GROUP BY CASE WHEN a.id IS NOT NULL THEN 'associado' ELSE 'nao_associado' END
     `);
 

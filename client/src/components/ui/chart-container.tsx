@@ -42,7 +42,7 @@ export function ChartContainer({
 
   return (
     <GlassCard 
-      className={cn('overflow-hidden animate-fade-in-up opacity-0', className)} 
+      className={cn('overflow-visible animate-fade-in-up opacity-0', className)} 
       padding="md"
       style={{ animationDelay: `${delay * 50}ms`, animationFillMode: 'forwards' }}
       {...props}

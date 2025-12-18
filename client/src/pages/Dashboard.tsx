@@ -205,27 +205,7 @@ export default function Dashboard() {
     cutout: '72%',
     plugins: {
       legend: { display: false },
-      tooltip: {
-        position: 'average' as const,
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        titleColor: '#f8fafc',
-        bodyColor: '#e2e8f0',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
-        padding: 14,
-        cornerRadius: 10,
-        titleFont: { size: 13, weight: '600' as const, family: 'Plus Jakarta Sans' },
-        bodyFont: { size: 12, family: 'Plus Jakarta Sans' },
-        callbacks: {
-          title: () => '',
-          label: (ctx: any) => {
-            const value = ctx.parsed;
-            const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0);
-            const pct = ((value / total) * 100).toFixed(0);
-            return `${ctx.label}: ${formatCurrency(value)} (${pct}%)`;
-          },
-        },
-      },
+      tooltip: { enabled: false }, // Desabilitado - legenda externa mostra todas as infos
     },
     animation: {
       animateRotate: true,

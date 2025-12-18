@@ -206,6 +206,7 @@ export default function Dashboard() {
     plugins: {
       legend: { display: false },
       tooltip: {
+        position: 'average' as const,
         backgroundColor: 'rgba(15, 23, 42, 0.95)',
         titleColor: '#f8fafc',
         bodyColor: '#e2e8f0',
@@ -347,10 +348,10 @@ export default function Dashboard() {
             minHeight="300px"
             delay={6}
           >
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full overflow-visible">
               {/* Gráfico com centro absoluto */}
-              <div className="relative flex-1 flex items-center justify-center py-2">
-                <div className="relative w-36 h-36">
+              <div className="relative flex-1 flex items-center justify-center py-2 overflow-visible">
+                <div className="relative w-36 h-36 overflow-visible">
                   <Doughnut data={doughnutData} options={doughnutOptions} />
                   {/* Centro do donut - posição absoluta precisa */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

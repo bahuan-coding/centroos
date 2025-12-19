@@ -33,24 +33,6 @@ function formatDate(date: string | null): string {
   return new Date(date).toLocaleDateString('pt-BR');
 }
 
-function formatMonthLabel(mes: string | null | undefined): string {
-  if (!mes) return '-';
-  
-  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  
-  // Handle both formats: 'MM/YYYY' (from backend) and 'YYYY-MM'
-  if (mes.includes('/')) {
-    const [month, year] = mes.split('/');
-    const monthIdx = parseInt(month) - 1;
-    return monthIdx >= 0 && monthIdx < 12 ? `${months[monthIdx]}/${year.slice(-2)}` : mes;
-  } else if (mes.includes('-')) {
-    const [year, month] = mes.split('-');
-    const monthIdx = parseInt(month) - 1;
-    return monthIdx >= 0 && monthIdx < 12 ? `${months[monthIdx]}/${year.slice(-2)}` : mes;
-  }
-  return mes;
-}
-
 // Detectar gênero pelo primeiro nome para avatares
 function detectGender(nome: string): 'male' | 'female' | 'neutral' {
   const firstName = nome.trim().split(' ')[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -103,11 +85,6 @@ function PessoaDrawer({ pessoa, onClose }: { pessoa: any; onClose: () => void })
   const { data: historico, isLoading } = trpc.pessoas.historico.useQuery(pessoa.id);
   const gender = detectGender(pessoa.nome);
   
-  const validPorMes = historico?.porMes?.filter(m => m.total > 0) || [];
-  const maxValor = validPorMes.length 
-    ? Math.max(...validPorMes.map(m => m.total)) 
-    : 0;
-
   return (
     <div className="fixed inset-0 z-40 flex justify-end pt-16">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -175,61 +152,23 @@ function PessoaDrawer({ pessoa, onClose }: { pessoa: any; onClose: () => void })
             </div>
           ) : (
             <>
-              {/* Gráfico de barras */}
-              {historico?.porMes && historico.porMes.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">📊 Contribuições por Mês</h3>
-                  <div className="flex items-end gap-1 h-32">
-                    {historico.porMes.map((m, idx) => {
-                      const height = maxValor > 0 ? (m.total / maxValor) * 100 : 0;
-                      return (
-                        <div key={m.mes} className="flex-1 flex flex-col items-center gap-1">
-                          <div 
-                            className={cn(
-                              "w-full rounded-t transition-all duration-500",
-                              idx === historico.porMes.length - 1 
-                                ? gender === 'female' 
-                                  ? "bg-gradient-to-t from-pink-500 to-pink-400"
-                                  : gender === 'male'
-                                  ? "bg-gradient-to-t from-blue-500 to-blue-400"
-                                  : "bg-gradient-to-t from-violet-500 to-violet-400"
-                                : "bg-gradient-to-t from-slate-300 to-slate-200"
-                            )}
-                            style={{ 
-                              height: `${Math.max(height, 4)}%`,
-                              animationDelay: `${idx * 50}ms`
-                            }}
-                            title={`${formatMonthLabel(m.mes)}: ${formatCurrency(m.total)}`}
-                          />
-                          <span className="text-[9px] text-muted-foreground">
-                            {formatMonthLabel(m.mes).split('/')[0]}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Timeline de doações */}
+              {/* Lista de doações */}
               <div>
                 <h3 className="text-sm font-semibold text-muted-foreground mb-3">💝 Histórico de Doações</h3>
                 {historico?.doacoes && historico.doacoes.length > 0 ? (
-                  <div className="relative space-y-0 overflow-hidden">
-                    <div className="absolute left-[11px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-violet-200 via-slate-200 to-transparent" />
+                  <div className="space-y-1">
                     {historico.doacoes.map((doacao, idx) => (
                       <div 
                         key={doacao.id} 
-                        className="relative flex items-start gap-4 py-3"
-                        style={{ animationDelay: `${idx * 30}ms` }}
+                        className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors"
                       >
                         <div className={cn(
-                          "relative z-10 w-6 h-6 rounded-full flex items-center justify-center shrink-0",
+                          "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
                           idx === 0 
-                            ? gender === 'female' ? "bg-pink-500 text-white" : gender === 'male' ? "bg-blue-500 text-white" : "bg-violet-500 text-white"
-                            : "bg-slate-100 border-2 border-slate-200"
+                            ? gender === 'female' ? "bg-pink-100 text-pink-500" : gender === 'male' ? "bg-blue-100 text-blue-500" : "bg-violet-100 text-violet-500"
+                            : "bg-slate-100 text-slate-400"
                         )}>
-                          <Heart className={cn("h-3 w-3", idx === 0 ? "fill-white" : "text-slate-400")} />
+                          <Heart className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
@@ -240,7 +179,7 @@ function PessoaDrawer({ pessoa, onClose }: { pessoa: any; onClose: () => void })
                               {formatDate(doacao.dataCompetencia)}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          <p className="text-xs text-muted-foreground truncate">
                             {doacao.descricao || doacao.natureza}
                           </p>
                         </div>

@@ -1198,36 +1198,6 @@ const pessoasRouter = router({
       FROM titulo WHERE pessoa_id = ${pessoaId} AND deleted_at IS NULL AND tipo = 'receber'
     `);
     
-    // Buscar todos os titulos para agrupar por mes no JavaScript (evita problema com GROUP BY no driver)
-    const allTitulos = await db.execute(sql`
-      SELECT valor_liquido, data_competencia
-      FROM titulo 
-      WHERE pessoa_id = ${pessoaId} AND deleted_at IS NULL AND tipo = 'receber'
-    `);
-    
-    // Agrupar por mes no JavaScript
-    const porMesMap = new Map<string, number>();
-    for (const row of allTitulos.rows as any[]) {
-      // Extrair mes/ano diretamente da string de data (formato YYYY-MM-DD ou Date object)
-      const dataStr = String(row.data_competencia);
-      const match = dataStr.match(/(\d{4})-(\d{2})/);
-      if (!match) continue;
-      const [, year, month] = match;
-      const mes = `${month}/${year}`;
-      const valor = parseFloat(row.valor_liquido) || 0;
-      porMesMap.set(mes, (porMesMap.get(mes) || 0) + valor);
-    }
-    
-    // Ordenar por data e limitar a 12 meses
-    const porMesArray = Array.from(porMesMap.entries())
-      .map(([mes, total]) => ({ mes, total }))
-      .sort((a, b) => {
-        const [mA, yA] = a.mes.split('/').map(Number);
-        const [mB, yB] = b.mes.split('/').map(Number);
-        return (yA * 12 + mA) - (yB * 12 + mB);
-      })
-      .slice(-12);
-    
     const doacoes = await db.execute(sql`
       SELECT id, valor_liquido, data_competencia, descricao, natureza
       FROM titulo 
@@ -1241,7 +1211,6 @@ const pessoasRouter = router({
     
     return {
       stats: { totalDoacoes: total, valorTotal, mediaDoacao: total > 0 ? valorTotal / total : 0 },
-      porMes: porMesArray,
       doacoes: doacoes.rows.map((r: any) => ({
         id: r.id, valor: parseFloat(r.valor_liquido), dataCompetencia: r.data_competencia,
         descricao: r.descricao, natureza: r.natureza

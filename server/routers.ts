@@ -1234,6 +1234,318 @@ const pessoasRouter = router({
     }),
 });
 
+// ==================== PAPÉIS DE PESSOAS ROUTER ====================
+// Conforme Lei 10.406/2002 (Código Civil) e Lei 9.790/1999 (OSCIP)
+const pessoaPapelRouter = router({
+  list: publicProcedure
+    .input(z.object({
+      pessoaId: z.string().uuid().optional(),
+      papelTipo: z.enum(['captador_doacao', 'administrador_financeiro', 'diretor', 'conselheiro', 'voluntario']).optional(),
+      status: z.enum(['ativo', 'suspenso', 'encerrado']).optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const results = await db.execute(sql`
+        SELECT 
+          pp.id, pp.pessoa_id, pp.papel_tipo, pp.data_inicio, pp.data_fim, 
+          pp.status, pp.ato_designacao, pp.observacoes, pp.created_at,
+          p.nome as pessoa_nome, p.tipo as pessoa_tipo,
+          cd.id as captador_id, cd.regiao_atuacao, cd.meta_captacao_anual, 
+          cd.total_captado_acumulado, cd.quantidade_doacoes,
+          af.id as admin_id, af.responsabilidades, af.alcada_valor_maximo,
+          af.pode_aprovar_pagamentos, af.acesso_contas_bancarias, af.cargo_estatutario
+        FROM pessoa_papel pp
+        INNER JOIN pessoa p ON pp.pessoa_id = p.id
+        LEFT JOIN captador_doacao cd ON cd.pessoa_papel_id = pp.id
+        LEFT JOIN administrador_financeiro af ON af.pessoa_papel_id = pp.id
+        WHERE 1=1
+          ${input?.pessoaId ? sql`AND pp.pessoa_id = ${input.pessoaId}` : sql``}
+          ${input?.papelTipo ? sql`AND pp.papel_tipo = ${input.papelTipo}` : sql``}
+          ${input?.status ? sql`AND pp.status = ${input.status}` : sql``}
+        ORDER BY pp.created_at DESC
+      `);
+
+      return results.rows.map((r: any) => ({
+        id: r.id,
+        pessoaId: r.pessoa_id,
+        pessoaNome: r.pessoa_nome,
+        pessoaTipo: r.pessoa_tipo,
+        papelTipo: r.papel_tipo,
+        dataInicio: r.data_inicio,
+        dataFim: r.data_fim,
+        status: r.status,
+        atoDesignacao: r.ato_designacao,
+        observacoes: r.observacoes,
+        createdAt: r.created_at,
+        captadorDoacao: r.captador_id ? {
+          id: r.captador_id,
+          regiaoAtuacao: r.regiao_atuacao,
+          metaCaptacaoAnual: parseFloat(r.meta_captacao_anual) || null,
+          totalCaptadoAcumulado: parseFloat(r.total_captado_acumulado) || 0,
+          quantidadeDoacoes: Number(r.quantidade_doacoes) || 0,
+        } : null,
+        administradorFinanceiro: r.admin_id ? {
+          id: r.admin_id,
+          responsabilidades: r.responsabilidades,
+          alcadaValorMaximo: parseFloat(r.alcada_valor_maximo) || null,
+          podeAprovarPagamentos: r.pode_aprovar_pagamentos,
+          acessoContasBancarias: r.acesso_contas_bancarias,
+          cargoEstatutario: r.cargo_estatutario,
+        } : null,
+      }));
+    }),
+
+  getById: publicProcedure.input(z.string().uuid()).query(async ({ input }) => {
+    const db = await getDb();
+    const results = await db.execute(sql`
+      SELECT 
+        pp.*, p.nome as pessoa_nome, p.tipo as pessoa_tipo,
+        cd.id as captador_id, cd.regiao_atuacao, cd.meta_captacao_anual, 
+        cd.total_captado_acumulado, cd.quantidade_doacoes,
+        af.id as admin_id, af.responsabilidades, af.alcada_valor_maximo,
+        af.pode_aprovar_pagamentos, af.acesso_contas_bancarias, af.cargo_estatutario
+      FROM pessoa_papel pp
+      INNER JOIN pessoa p ON pp.pessoa_id = p.id
+      LEFT JOIN captador_doacao cd ON cd.pessoa_papel_id = pp.id
+      LEFT JOIN administrador_financeiro af ON af.pessoa_papel_id = pp.id
+      WHERE pp.id = ${input}
+    `);
+
+    if (!results.rows[0]) throw new TRPCError({ code: 'NOT_FOUND', message: 'Papel não encontrado' });
+    
+    const r = results.rows[0] as any;
+    return {
+      id: r.id,
+      pessoaId: r.pessoa_id,
+      pessoaNome: r.pessoa_nome,
+      papelTipo: r.papel_tipo,
+      dataInicio: r.data_inicio,
+      dataFim: r.data_fim,
+      status: r.status,
+      atoDesignacao: r.ato_designacao,
+      observacoes: r.observacoes,
+      captadorDoacao: r.captador_id ? {
+        regiaoAtuacao: r.regiao_atuacao,
+        metaCaptacaoAnual: parseFloat(r.meta_captacao_anual) || null,
+        totalCaptadoAcumulado: parseFloat(r.total_captado_acumulado) || 0,
+        quantidadeDoacoes: Number(r.quantidade_doacoes) || 0,
+      } : null,
+      administradorFinanceiro: r.admin_id ? {
+        responsabilidades: r.responsabilidades,
+        alcadaValorMaximo: parseFloat(r.alcada_valor_maximo) || null,
+        podeAprovarPagamentos: r.pode_aprovar_pagamentos,
+        acessoContasBancarias: r.acesso_contas_bancarias,
+        cargoEstatutario: r.cargo_estatutario,
+      } : null,
+    };
+  }),
+
+  create: protectedProcedure
+    .input(z.object({
+      pessoaId: z.string().uuid(),
+      papelTipo: z.enum(['captador_doacao', 'administrador_financeiro', 'diretor', 'conselheiro', 'voluntario']),
+      dataInicio: z.string(),
+      atoDesignacao: z.string().optional(),
+      observacoes: z.string().optional(),
+      // Campos específicos para captador
+      regiaoAtuacao: z.string().optional(),
+      metaCaptacaoAnual: z.number().optional(),
+      // Campos específicos para admin financeiro
+      responsabilidades: z.string().optional(),
+      alcadaValorMaximo: z.number().optional(),
+      podeAprovarPagamentos: z.boolean().optional(),
+      acessoContasBancarias: z.boolean().optional(),
+      cargoEstatutario: z.boolean().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+
+      // Verificar se a pessoa existe
+      const [pessoa] = await db.select().from(schema.pessoa).where(eq(schema.pessoa.id, input.pessoaId));
+      if (!pessoa) throw new TRPCError({ code: 'NOT_FOUND', message: 'Pessoa não encontrada' });
+
+      // Verificar se já não existe um papel ativo do mesmo tipo
+      const existingPapel = await db.execute(sql`
+        SELECT id FROM pessoa_papel 
+        WHERE pessoa_id = ${input.pessoaId} 
+          AND papel_tipo = ${input.papelTipo}
+          AND status = 'ativo'
+      `);
+      if (existingPapel.rows.length > 0) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Já existe um papel ativo deste tipo para esta pessoa' });
+      }
+
+      // Criar o papel
+      const newPapelResult = await db.execute(sql`
+        INSERT INTO pessoa_papel (pessoa_id, papel_tipo, data_inicio, ato_designacao, observacoes, created_by)
+        VALUES (${input.pessoaId}, ${input.papelTipo}, ${input.dataInicio}, ${input.atoDesignacao || null}, ${input.observacoes || null}, ${ctx.user.id})
+        RETURNING id
+      `);
+
+      const papelId = (newPapelResult.rows[0] as any).id;
+
+      // Criar registro específico se for captador ou admin
+      if (input.papelTipo === 'captador_doacao') {
+        await db.execute(sql`
+          INSERT INTO captador_doacao (pessoa_papel_id, regiao_atuacao, meta_captacao_anual)
+          VALUES (${papelId}, ${input.regiaoAtuacao || null}, ${input.metaCaptacaoAnual || null})
+        `);
+      } else if (input.papelTipo === 'administrador_financeiro') {
+        await db.execute(sql`
+          INSERT INTO administrador_financeiro (pessoa_papel_id, responsabilidades, alcada_valor_maximo, pode_aprovar_pagamentos, acesso_contas_bancarias, cargo_estatutario)
+          VALUES (${papelId}, ${input.responsabilidades || null}, ${input.alcadaValorMaximo || null}, ${input.podeAprovarPagamentos || false}, ${input.acessoContasBancarias || false}, ${input.cargoEstatutario || false})
+        `);
+      }
+
+      return { id: papelId };
+    }),
+
+  update: protectedProcedure
+    .input(z.object({
+      id: z.string().uuid(),
+      dataFim: z.string().optional(),
+      status: z.enum(['ativo', 'suspenso', 'encerrado']).optional(),
+      atoDesignacao: z.string().optional(),
+      observacoes: z.string().optional(),
+      // Campos específicos para captador
+      regiaoAtuacao: z.string().optional(),
+      metaCaptacaoAnual: z.number().optional(),
+      // Campos específicos para admin financeiro
+      responsabilidades: z.string().optional(),
+      alcadaValorMaximo: z.number().optional(),
+      podeAprovarPagamentos: z.boolean().optional(),
+      acessoContasBancarias: z.boolean().optional(),
+      cargoEstatutario: z.boolean().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+
+      // Buscar papel existente
+      const papelResult = await db.execute(sql`SELECT * FROM pessoa_papel WHERE id = ${input.id}`);
+      if (!papelResult.rows[0]) throw new TRPCError({ code: 'NOT_FOUND', message: 'Papel não encontrado' });
+      
+      const papel = papelResult.rows[0] as any;
+
+      // Atualizar pessoa_papel
+      await db.execute(sql`
+        UPDATE pessoa_papel SET
+          data_fim = COALESCE(${input.dataFim}, data_fim),
+          status = COALESCE(${input.status}, status),
+          ato_designacao = COALESCE(${input.atoDesignacao}, ato_designacao),
+          observacoes = COALESCE(${input.observacoes}, observacoes),
+          updated_at = now(),
+          updated_by = ${ctx.user.id}
+        WHERE id = ${input.id}
+      `);
+
+      // Atualizar tabela específica se necessário
+      if (papel.papel_tipo === 'captador_doacao') {
+        await db.execute(sql`
+          UPDATE captador_doacao SET
+            regiao_atuacao = COALESCE(${input.regiaoAtuacao}, regiao_atuacao),
+            meta_captacao_anual = COALESCE(${input.metaCaptacaoAnual}, meta_captacao_anual),
+            updated_at = now()
+          WHERE pessoa_papel_id = ${input.id}
+        `);
+      } else if (papel.papel_tipo === 'administrador_financeiro') {
+        await db.execute(sql`
+          UPDATE administrador_financeiro SET
+            responsabilidades = COALESCE(${input.responsabilidades}, responsabilidades),
+            alcada_valor_maximo = COALESCE(${input.alcadaValorMaximo}, alcada_valor_maximo),
+            pode_aprovar_pagamentos = COALESCE(${input.podeAprovarPagamentos}, pode_aprovar_pagamentos),
+            acesso_contas_bancarias = COALESCE(${input.acessoContasBancarias}, acesso_contas_bancarias),
+            cargo_estatutario = COALESCE(${input.cargoEstatutario}, cargo_estatutario),
+            updated_at = now()
+          WHERE pessoa_papel_id = ${input.id}
+        `);
+      }
+
+      return { success: true };
+    }),
+
+  encerrar: protectedProcedure
+    .input(z.object({
+      id: z.string().uuid(),
+      dataFim: z.string(),
+      motivo: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      
+      await db.execute(sql`
+        UPDATE pessoa_papel SET
+          data_fim = ${input.dataFim},
+          status = 'encerrado',
+          observacoes = CONCAT(COALESCE(observacoes, ''), ${input.motivo ? '\nMotivo encerramento: ' + input.motivo : ''}),
+          updated_at = now(),
+          updated_by = ${ctx.user.id}
+        WHERE id = ${input.id}
+      `);
+
+      return { success: true };
+    }),
+
+  // Estatísticas dos captadores de doação
+  captadoresStats: publicProcedure.query(async () => {
+    const db = await getDb();
+    const results = await db.execute(sql`
+      SELECT 
+        p.nome,
+        cd.regiao_atuacao,
+        cd.meta_captacao_anual,
+        cd.total_captado_acumulado,
+        cd.quantidade_doacoes,
+        CASE 
+          WHEN cd.meta_captacao_anual > 0 
+          THEN ROUND((cd.total_captado_acumulado / cd.meta_captacao_anual) * 100, 2)
+          ELSE 0 
+        END as percentual_meta
+      FROM pessoa_papel pp
+      INNER JOIN pessoa p ON pp.pessoa_id = p.id
+      INNER JOIN captador_doacao cd ON cd.pessoa_papel_id = pp.id
+      WHERE pp.status = 'ativo' AND pp.papel_tipo = 'captador_doacao'
+      ORDER BY cd.total_captado_acumulado DESC
+    `);
+
+    return results.rows.map((r: any) => ({
+      nome: r.nome,
+      regiaoAtuacao: r.regiao_atuacao,
+      metaCaptacaoAnual: parseFloat(r.meta_captacao_anual) || 0,
+      totalCaptadoAcumulado: parseFloat(r.total_captado_acumulado) || 0,
+      quantidadeDoacoes: Number(r.quantidade_doacoes) || 0,
+      percentualMeta: parseFloat(r.percentual_meta) || 0,
+    }));
+  }),
+
+  // Lista administradores financeiros ativos
+  administradoresAtivos: publicProcedure.query(async () => {
+    const db = await getDb();
+    const results = await db.execute(sql`
+      SELECT 
+        pp.id, p.nome, af.responsabilidades, af.alcada_valor_maximo,
+        af.pode_aprovar_pagamentos, af.acesso_contas_bancarias, af.cargo_estatutario,
+        pp.data_inicio, pp.ato_designacao
+      FROM pessoa_papel pp
+      INNER JOIN pessoa p ON pp.pessoa_id = p.id
+      INNER JOIN administrador_financeiro af ON af.pessoa_papel_id = pp.id
+      WHERE pp.status = 'ativo' AND pp.papel_tipo = 'administrador_financeiro'
+      ORDER BY pp.data_inicio ASC
+    `);
+
+    return results.rows.map((r: any) => ({
+      id: r.id,
+      nome: r.nome,
+      responsabilidades: r.responsabilidades,
+      alcadaValorMaximo: parseFloat(r.alcada_valor_maximo) || null,
+      podeAprovarPagamentos: r.pode_aprovar_pagamentos,
+      acessoContasBancarias: r.acesso_contas_bancarias,
+      cargoEstatutario: r.cargo_estatutario,
+      dataInicio: r.data_inicio,
+      atoDesignacao: r.ato_designacao,
+    }));
+  }),
+});
+
 // ==================== TÍTULOS ROUTER ====================
 const titulosRouter = router({
   list: publicProcedure
@@ -1996,6 +2308,7 @@ export const appRouter = router({
   bankImports: bankImportsRouter,
   // Novos routers
   pessoas: pessoasRouter,
+  pessoaPapel: pessoaPapelRouter,
   titulos: titulosRouter,
   contasFinanceiras: contasFinanceirasRouter,
   periodosContabeis: periodosContabeisRouter,

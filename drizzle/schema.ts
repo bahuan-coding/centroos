@@ -33,6 +33,10 @@ export const periodicidadeEnum = pgEnum('periodicidade', ['mensal', 'trimestral'
 export const tratamentoTipoEnum = pgEnum('tratamento_tipo', ['marketing', 'comunicacao', 'compartilhamento', 'dados_sensiveis']);
 export const baseLegalEnum = pgEnum('base_legal', ['consentimento', 'legitimo_interesse', 'obrigacao_legal', 'execucao_contrato']);
 
+// Papéis funcionais - Lei 10.406/2002 (Código Civil) e Lei 9.790/1999 (OSCIP)
+export const pessoaPapelTipoEnum = pgEnum('pessoa_papel_tipo', ['captador_doacao', 'administrador_financeiro', 'diretor', 'conselheiro', 'voluntario']);
+export const pessoaPapelStatusEnum = pgEnum('pessoa_papel_status', ['ativo', 'suspenso', 'encerrado']);
+
 // ============================================================================
 // ENUMS - Módulo B: Dinheiro (Caixa/Bancos)
 // ============================================================================
@@ -233,6 +237,65 @@ export const consentimentoLgpd = pgTable(
   (table) => ({
     pessoaIdx: index('idx_consentimento_pessoa').on(table.pessoaId),
     tipoIdx: index('idx_consentimento_tipo').on(table.tipoTratamento),
+  })
+);
+
+// Papéis Funcionais - Lei 10.406/2002 (Código Civil) e Lei 9.790/1999 (OSCIP)
+export const pessoaPapel = pgTable(
+  'pessoa_papel',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    pessoaId: uuid('pessoa_id').notNull().references(() => pessoa.id),
+    papelTipo: pessoaPapelTipoEnum('papel_tipo').notNull(),
+    dataInicio: date('data_inicio').notNull(),
+    dataFim: date('data_fim'),
+    status: pessoaPapelStatusEnum('status').notNull().default('ativo'),
+    atoDesignacao: varchar('ato_designacao', { length: 100 }),
+    observacoes: text('observacoes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    createdBy: uuid('created_by'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedBy: uuid('updated_by'),
+  },
+  (table) => ({
+    pessoaIdx: index('idx_pessoa_papel_pessoa').on(table.pessoaId),
+    tipoIdx: index('idx_pessoa_papel_tipo').on(table.papelTipo),
+    statusIdx: index('idx_pessoa_papel_status').on(table.status),
+  })
+);
+
+export const captadorDoacao = pgTable(
+  'captador_doacao',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    pessoaPapelId: uuid('pessoa_papel_id').notNull().unique().references(() => pessoaPapel.id),
+    regiaoAtuacao: varchar('regiao_atuacao', { length: 100 }),
+    metaCaptacaoAnual: numeric('meta_captacao_anual', { precision: 14, scale: 2 }),
+    totalCaptadoAcumulado: numeric('total_captado_acumulado', { precision: 14, scale: 2 }).notNull().default('0'),
+    quantidadeDoacoes: integer('quantidade_doacoes').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    papelIdx: index('idx_captador_doacao_papel').on(table.pessoaPapelId),
+  })
+);
+
+export const administradorFinanceiro = pgTable(
+  'administrador_financeiro',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    pessoaPapelId: uuid('pessoa_papel_id').notNull().unique().references(() => pessoaPapel.id),
+    responsabilidades: text('responsabilidades'),
+    alcadaValorMaximo: numeric('alcada_valor_maximo', { precision: 14, scale: 2 }),
+    podeAprovarPagamentos: boolean('pode_aprovar_pagamentos').notNull().default(false),
+    acessoContasBancarias: boolean('acesso_contas_bancarias').notNull().default(false),
+    cargoEstatutario: boolean('cargo_estatutario').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    papelIdx: index('idx_administrador_financeiro_papel').on(table.pessoaPapelId),
   })
 );
 
@@ -967,6 +1030,12 @@ export type AssociadoHistorico = typeof associadoHistorico.$inferSelect;
 export type InsertAssociadoHistorico = typeof associadoHistorico.$inferInsert;
 export type ConsentimentoLgpd = typeof consentimentoLgpd.$inferSelect;
 export type InsertConsentimentoLgpd = typeof consentimentoLgpd.$inferInsert;
+export type PessoaPapel = typeof pessoaPapel.$inferSelect;
+export type InsertPessoaPapel = typeof pessoaPapel.$inferInsert;
+export type CaptadorDoacao = typeof captadorDoacao.$inferSelect;
+export type InsertCaptadorDoacao = typeof captadorDoacao.$inferInsert;
+export type AdministradorFinanceiro = typeof administradorFinanceiro.$inferSelect;
+export type InsertAdministradorFinanceiro = typeof administradorFinanceiro.$inferInsert;
 
 // Módulo B
 export type ContaFinanceira = typeof contaFinanceira.$inferSelect;

@@ -488,14 +488,14 @@ export default function Accounts() {
               <div className="space-y-2">
                 <Label htmlFor="parentId" className="text-sm">Conta Pai (opcional)</Label>
                 <Select 
-                  value={form.parentId} 
-                  onValueChange={(v) => setForm({ ...form, parentId: v })}
+                  value={form.parentId || 'none'} 
+                  onValueChange={(v) => setForm({ ...form, parentId: v === 'none' ? '' : v })}
                 >
                   <SelectTrigger id="parentId" className="text-sm">
                     <SelectValue placeholder="Selecionar..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="" className="text-sm">Nenhuma</SelectItem>
+                    <SelectItem value="none" className="text-sm">Nenhuma</SelectItem>
                     {parentableAccounts.map((a) => (
                       <SelectItem key={a.id} value={a.id.toString()} className="text-sm">
                         {a.code} - {a.name}

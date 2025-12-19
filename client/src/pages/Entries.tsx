@@ -107,10 +107,10 @@ export default function Entries() {
           <div className="flex gap-4">
             <div className="w-full sm:w-64">
               <Label className="text-sm">Período</Label>
-              <Select value={periodFilter} onValueChange={(v) => { setPeriodFilter(v); setPage(1); }}>
+              <Select value={periodFilter || 'all'} onValueChange={(v) => { setPeriodFilter(v === 'all' ? '' : v); setPage(1); }}>
                 <SelectTrigger className="text-sm"><SelectValue placeholder="Todos" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {periods.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{formatPeriod(p.month, p.year)}</SelectItem>)}
                 </SelectContent>
               </Select>

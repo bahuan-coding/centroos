@@ -91,6 +91,136 @@ function formatDateForDB(date: Date): string {
 }
 
 // ============================================================================
+// MATCHING DE NOMES ROBUSTO
+// ============================================================================
+
+/**
+ * Normaliza um nome removendo acentos, convertendo para maiúsculas e removendo espaços extras
+ */
+function normalizeName(name: string): string {
+  if (!name) return '';
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .toUpperCase()
+    .replace(/\s+/g, ' ')           // Remove espaços múltiplos
+    .trim();
+}
+
+/**
+ * Extrai tokens (palavras) de um nome, ignorando preposições comuns
+ */
+function getNameTokens(name: string): string[] {
+  const normalized = normalizeName(name);
+  const stopWords = ['DE', 'DA', 'DO', 'DAS', 'DOS', 'E'];
+  return normalized
+    .split(' ')
+    .filter(token => token.length > 1 && !stopWords.includes(token));
+}
+
+/**
+ * Calcula similaridade entre dois nomes baseado em tokens compartilhados
+ * Retorna um score de 0 a 1
+ */
+function calculateNameSimilarity(name1: string, name2: string): number {
+  const tokens1 = getNameTokens(name1);
+  const tokens2 = getNameTokens(name2);
+  
+  if (tokens1.length === 0 || tokens2.length === 0) return 0;
+  
+  // Conta tokens que aparecem em ambos os nomes
+  let matchingTokens = 0;
+  let partialMatches = 0;
+  
+  for (const t1 of tokens1) {
+    for (const t2 of tokens2) {
+      if (t1 === t2) {
+        matchingTokens++;
+        break;
+      }
+      // Match parcial: um token contém o outro (para abreviações)
+      if (t1.length >= 3 && t2.length >= 3) {
+        if (t1.startsWith(t2) || t2.startsWith(t1)) {
+          partialMatches += 0.5;
+          break;
+        }
+      }
+    }
+  }
+  
+  const totalMatches = matchingTokens + partialMatches;
+  const maxTokens = Math.max(tokens1.length, tokens2.length);
+  const minTokens = Math.min(tokens1.length, tokens2.length);
+  
+  // Score baseado na proporção de tokens que combinam
+  // Usa média ponderada: dá mais peso quando o nome menor está contido no maior
+  const coverageScore = totalMatches / minTokens;
+  const overallScore = totalMatches / maxTokens;
+  
+  return (coverageScore * 0.7) + (overallScore * 0.3);
+}
+
+interface MatchResult {
+  pessoaId: string | null;
+  nome: string | null;
+  score: number;
+  isAmbiguous: boolean;
+}
+
+/**
+ * Encontra a melhor correspondência de pessoa para um nome de fornecedor
+ * @param fornecedor Nome do fornecedor nos lançamentos
+ * @param pessoaIdMap Mapa de nomes para IDs
+ * @param threshold Threshold mínimo de similaridade (0-1)
+ * @returns MatchResult com o melhor match encontrado
+ */
+function findBestPersonMatch(
+  fornecedor: string,
+  pessoaIdMap: Record<string, string>,
+  threshold: number = 0.6
+): MatchResult {
+  if (!fornecedor || fornecedor.trim() === '') {
+    return { pessoaId: null, nome: null, score: 0, isAmbiguous: false };
+  }
+  
+  const candidates: { nome: string; id: string; score: number }[] = [];
+  
+  for (const [nome, id] of Object.entries(pessoaIdMap)) {
+    const score = calculateNameSimilarity(fornecedor, nome);
+    if (score >= threshold) {
+      candidates.push({ nome, id, score });
+    }
+  }
+  
+  if (candidates.length === 0) {
+    return { pessoaId: null, nome: null, score: 0, isAmbiguous: false };
+  }
+  
+  // Ordena por score decrescente
+  candidates.sort((a, b) => b.score - a.score);
+  
+  const best = candidates[0];
+  
+  // Verifica se há ambiguidade (dois candidatos com scores muito próximos)
+  const isAmbiguous = candidates.length > 1 && 
+    (candidates[1].score >= best.score * 0.9);
+  
+  if (isAmbiguous) {
+    console.log(`  ⚠️  Match ambíguo para "${fornecedor}":`);
+    for (const c of candidates.slice(0, 3)) {
+      console.log(`     - "${c.nome}" (score: ${(c.score * 100).toFixed(1)}%)`);
+    }
+  }
+  
+  return {
+    pessoaId: best.id,
+    nome: best.nome,
+    score: best.score,
+    isAmbiguous,
+  };
+}
+
+// ============================================================================
 // 1. CONTAS FINANCEIRAS
 // ============================================================================
 
@@ -532,15 +662,12 @@ async function seedLancamentosMensais(
       const { tipo, natureza } = classificarLancamento(lanc.descricao);
       const valorAbsoluto = Math.abs(valor);
       
-      // Buscar pessoa pelo nome do fornecedor
+      // Buscar pessoa pelo nome do fornecedor usando algoritmo robusto
       let pessoaId: string | null = null;
       if (lanc.fornecedor) {
-        const fornecedorUpper = lanc.fornecedor.toUpperCase();
-        for (const [nome, id] of Object.entries(pessoaIdMap)) {
-          if (nome.includes(fornecedorUpper) || fornecedorUpper.includes(nome.split(' ')[0])) {
-            pessoaId = id;
-            break;
-          }
+        const match = findBestPersonMatch(lanc.fornecedor, pessoaIdMap, 0.6);
+        if (match.pessoaId && match.score >= 0.6) {
+          pessoaId = match.pessoaId;
         }
       }
 

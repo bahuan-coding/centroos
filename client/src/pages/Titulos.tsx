@@ -149,12 +149,12 @@ export default function Titulos() {
                 className="pl-10 w-full"
               />
             </div>
-            <Select value={mesFiltro} onValueChange={(v) => { setMesFiltro(v); setPage(1); }}>
+            <Select value={mesFiltro || 'all'} onValueChange={(v) => { setMesFiltro(v === 'all' ? '' : v); setPage(1); }}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Todos os meses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os meses</SelectItem>
+                <SelectItem value="all">Todos os meses</SelectItem>
                 {meses.map(m => (
                   <SelectItem key={m.value} value={m.value} className="capitalize">{m.label}</SelectItem>
                 ))}

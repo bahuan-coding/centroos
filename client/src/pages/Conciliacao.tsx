@@ -118,12 +118,12 @@ export default function Conciliacao() {
       <Card>
         <CardHeader className="pb-3 sm:pb-6">
           <FilterBar showClear={!!(statusFiltro || extratoFiltro)} onClear={() => { setStatusFiltro(''); setExtratoFiltro(''); }}>
-            <Select value={statusFiltro} onValueChange={setStatusFiltro}>
+            <Select value={statusFiltro || 'all'} onValueChange={(v) => setStatusFiltro(v === 'all' ? '' : v)}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="pendente">Pendentes</SelectItem>
                 <SelectItem value="conciliado">Conciliados</SelectItem>
                 <SelectItem value="ignorado">Ignorados</SelectItem>

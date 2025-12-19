@@ -1354,6 +1354,204 @@ const pessoasRouter = router({
       
       return { id: newPessoa.id, created: true, matchType: null };
     }),
+
+  // Listar inconsistências entre rawdata e banco de dados
+  inconsistencias: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    // Buscar todas as pessoas cadastradas para match
+    const todasPessoas = await db.execute(sql`
+      SELECT id, nome, UPPER(TRIM(nome)) as nome_normalizado
+      FROM pessoa WHERE deleted_at IS NULL
+    `);
+    
+    const pessoasMap = new Map<string, { id: string; nome: string }>();
+    for (const p of todasPessoas.rows as any[]) {
+      pessoasMap.set(p.nome_normalizado, { id: p.id, nome: p.nome });
+    }
+    
+    // Buscar títulos sem pessoa_id ou com pessoa não encontrada
+    const titulosSemPessoa = await db.execute(sql`
+      SELECT t.id, t.descricao, t.valor_liquido, t.data_competencia, t.natureza,
+             p.id as pessoa_id, p.nome as pessoa_nome
+      FROM titulo t
+      LEFT JOIN pessoa p ON t.pessoa_id = p.id
+      WHERE t.deleted_at IS NULL 
+        AND t.tipo = 'receber'
+        AND (t.pessoa_id IS NULL OR p.id IS NULL)
+      ORDER BY t.data_competencia DESC
+      LIMIT 100
+    `);
+    
+    // Buscar títulos que podem ter match de nome incorreto
+    // (título tem pessoa, mas descrição contém nome diferente)
+    const titulosComNomeDiferente = await db.execute(sql`
+      SELECT t.id, t.descricao, t.valor_liquido, t.data_competencia, t.natureza,
+             p.id as pessoa_id, p.nome as pessoa_nome
+      FROM titulo t
+      LEFT JOIN pessoa p ON t.pessoa_id = p.id
+      WHERE t.deleted_at IS NULL 
+        AND t.tipo = 'receber'
+        AND t.pessoa_id IS NOT NULL
+      ORDER BY t.data_competencia DESC
+      LIMIT 500
+    `);
+    
+    // Identificar pessoas que nunca doaram (cadastradas mas sem títulos)
+    const pessoasSemDoacoes = await db.execute(sql`
+      SELECT p.id, p.nome, p.tipo,
+             CASE WHEN a.id IS NOT NULL THEN true ELSE false END as is_associado
+      FROM pessoa p
+      LEFT JOIN associado a ON a.pessoa_id = p.id
+      LEFT JOIN titulo t ON t.pessoa_id = p.id AND t.deleted_at IS NULL AND t.tipo = 'receber'
+      WHERE p.deleted_at IS NULL AND t.id IS NULL
+      ORDER BY p.nome
+      LIMIT 50
+    `);
+    
+    // Estatísticas
+    const [stats] = await db.execute(sql`
+      SELECT 
+        COUNT(DISTINCT CASE WHEN t.pessoa_id IS NULL THEN t.id END) as titulos_sem_pessoa,
+        COUNT(DISTINCT p.id) FILTER (WHERE NOT EXISTS (
+          SELECT 1 FROM titulo t2 WHERE t2.pessoa_id = p.id AND t2.deleted_at IS NULL
+        )) as pessoas_sem_titulo
+      FROM pessoa p
+      LEFT JOIN titulo t ON t.pessoa_id = p.id AND t.deleted_at IS NULL
+      WHERE p.deleted_at IS NULL
+    `);
+    
+    return {
+      titulosSemPessoa: titulosSemPessoa.rows.map((t: any) => ({
+        id: t.id,
+        descricao: t.descricao,
+        valor: parseFloat(t.valor_liquido),
+        dataCompetencia: t.data_competencia,
+        natureza: t.natureza,
+        pessoaId: t.pessoa_id,
+        pessoaNome: t.pessoa_nome,
+      })),
+      pessoasSemDoacoes: pessoasSemDoacoes.rows.map((p: any) => ({
+        id: p.id,
+        nome: p.nome,
+        tipo: p.tipo,
+        isAssociado: p.is_associado,
+      })),
+      stats: {
+        titulosSemPessoa: Number((stats.rows[0] as any)?.titulos_sem_pessoa) || 0,
+        pessoasSemTitulo: Number((stats.rows[0] as any)?.pessoas_sem_titulo) || 0,
+      },
+    };
+  }),
+
+  // Buscar pessoas similares para sugestão de vinculação
+  buscarSimilares: publicProcedure
+    .input(z.object({ nome: z.string().min(2) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      const nomeNormalizado = input.nome.trim().toUpperCase();
+      
+      // Busca por similaridade usando trigrams ou LIKE
+      const similares = await db.execute(sql`
+        SELECT id, nome, tipo,
+               similarity(UPPER(TRIM(nome)), ${nomeNormalizado}) as score
+        FROM pessoa 
+        WHERE deleted_at IS NULL 
+          AND (
+            UPPER(TRIM(nome)) LIKE ${'%' + nomeNormalizado.split(' ')[0] + '%'}
+            OR similarity(UPPER(TRIM(nome)), ${nomeNormalizado}) > 0.2
+          )
+        ORDER BY similarity(UPPER(TRIM(nome)), ${nomeNormalizado}) DESC
+        LIMIT 10
+      `);
+      
+      // Fallback para busca simples se trigrams não estiver disponível
+      if (similares.rows.length === 0) {
+        const primeiroNome = nomeNormalizado.split(' ')[0];
+        const fallback = await db.execute(sql`
+          SELECT id, nome, tipo, 0.5 as score
+          FROM pessoa 
+          WHERE deleted_at IS NULL 
+            AND UPPER(TRIM(nome)) LIKE ${'%' + primeiroNome + '%'}
+          ORDER BY nome
+          LIMIT 10
+        `);
+        return fallback.rows.map((p: any) => ({
+          id: p.id,
+          nome: p.nome,
+          tipo: p.tipo,
+          score: p.score,
+        }));
+      }
+      
+      return similares.rows.map((p: any) => ({
+        id: p.id,
+        nome: p.nome,
+        tipo: p.tipo,
+        score: parseFloat(p.score) || 0.5,
+      }));
+    }),
+
+  // Vincular título a uma pessoa
+  vincularTitulo: protectedProcedure
+    .input(z.object({
+      tituloId: z.string().uuid(),
+      pessoaId: z.string().uuid(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      
+      // Verificar se o título existe
+      const [titulo] = await db.select().from(schema.titulo).where(eq(schema.titulo.id, input.tituloId));
+      if (!titulo) throw new TRPCError({ code: 'NOT_FOUND', message: 'Título não encontrado' });
+      
+      // Verificar se a pessoa existe
+      const [pessoa] = await db.select().from(schema.pessoa).where(eq(schema.pessoa.id, input.pessoaId));
+      if (!pessoa) throw new TRPCError({ code: 'NOT_FOUND', message: 'Pessoa não encontrada' });
+      
+      // Atualizar o título
+      await db.update(schema.titulo)
+        .set({ 
+          pessoaId: input.pessoaId,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.titulo.id, input.tituloId));
+      
+      return { success: true, tituloId: input.tituloId, pessoaId: input.pessoaId };
+    }),
+
+  // Criar pessoa e vincular título em uma única operação
+  criarEVincular: protectedProcedure
+    .input(z.object({
+      tituloId: z.string().uuid(),
+      nome: z.string().min(2),
+      tipo: z.enum(['fisica', 'juridica']).default('fisica'),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      
+      // Verificar se o título existe
+      const [titulo] = await db.select().from(schema.titulo).where(eq(schema.titulo.id, input.tituloId));
+      if (!titulo) throw new TRPCError({ code: 'NOT_FOUND', message: 'Título não encontrado' });
+      
+      // Criar nova pessoa usando SQL direto
+      const novaPessoaResult = await db.execute(sql`
+        INSERT INTO pessoa (nome, tipo)
+        VALUES (${input.nome.trim()}, ${input.tipo})
+        RETURNING id
+      `);
+      const novaPessoaId = (novaPessoaResult.rows[0] as any).id;
+      
+      // Vincular ao título
+      await db.update(schema.titulo)
+        .set({ 
+          pessoaId: novaPessoaId,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.titulo.id, input.tituloId));
+      
+      return { success: true, pessoaId: novaPessoaId, tituloId: input.tituloId };
+    }),
 });
 
 // ==================== PAPÉIS DE PESSOAS ROUTER ====================

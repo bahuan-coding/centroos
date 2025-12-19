@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Search, UserCheck, UserX, Heart, TrendingUp, Plus, Calendar, X, ChevronRight, AlertTriangle, Mail, Phone, FileText, MapPin } from 'lucide-react';
+import { Users, Search, UserCheck, UserX, Heart, TrendingUp, Plus, Calendar, X, ChevronRight, AlertTriangle, Mail, Phone, FileText, MapPin, Link2, UserPlus, CheckCircle2, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -34,9 +34,19 @@ function formatDate(date: string | null): string {
 }
 
 function formatMonthLabel(mes: string): string {
-  const [year, month] = mes.split('-');
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  return `${months[parseInt(month) - 1]}/${year.slice(2)}`;
+  
+  // Handle both formats: 'MM/YYYY' (from backend) and 'YYYY-MM'
+  if (mes.includes('/')) {
+    const [month, year] = mes.split('/');
+    const monthIdx = parseInt(month) - 1;
+    return monthIdx >= 0 && monthIdx < 12 ? `${months[monthIdx]}/${year.slice(2)}` : mes;
+  } else if (mes.includes('-')) {
+    const [year, month] = mes.split('-');
+    const monthIdx = parseInt(month) - 1;
+    return monthIdx >= 0 && monthIdx < 12 ? `${months[monthIdx]}/${year.slice(2)}` : mes;
+  }
+  return mes;
 }
 
 // Detectar gênero pelo primeiro nome para avatares
@@ -96,12 +106,12 @@ function PessoaDrawer({ pessoa, onClose }: { pessoa: any; onClose: () => void })
     : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-40 flex justify-end pt-16">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-background shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-background shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto rounded-tl-2xl">
         {/* Header */}
         <div className={cn(
-          "sticky top-0 text-white p-6 z-10",
+          "sticky top-0 text-white p-6 z-10 rounded-tl-2xl",
           gender === 'female' 
             ? "bg-gradient-to-br from-pink-500 to-rose-600" 
             : gender === 'male'
@@ -460,12 +470,253 @@ function DataHealthChart({ healthStats }: { healthStats: any }) {
   );
 }
 
+// Modal de Inconsistências
+function InconsistenciasModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const utils = trpc.useUtils();
+  const { data: inconsistencias, isLoading } = trpc.pessoas.inconsistencias.useQuery(undefined, { enabled: open });
+  const [searchNome, setSearchNome] = useState('');
+  const [selectedTitulo, setSelectedTitulo] = useState<any>(null);
+  
+  const { data: similares } = trpc.pessoas.buscarSimilares.useQuery(
+    { nome: searchNome },
+    { enabled: searchNome.length >= 2 }
+  );
+  
+  const vincularMutation = trpc.pessoas.vincularTitulo.useMutation({
+    onSuccess: () => {
+      utils.pessoas.inconsistencias.invalidate();
+      utils.pessoas.list.invalidate();
+      setSelectedTitulo(null);
+      setSearchNome('');
+    },
+  });
+  
+  const criarEVincularMutation = trpc.pessoas.criarEVincular.useMutation({
+    onSuccess: () => {
+      utils.pessoas.inconsistencias.invalidate();
+      utils.pessoas.list.invalidate();
+      setSelectedTitulo(null);
+      setSearchNome('');
+    },
+  });
+
+  const handleVincular = (pessoaId: string) => {
+    if (!selectedTitulo) return;
+    vincularMutation.mutate({ tituloId: selectedTitulo.id, pessoaId });
+  };
+
+  const handleCriarEVincular = () => {
+    if (!selectedTitulo || !searchNome.trim()) return;
+    criarEVincularMutation.mutate({
+      tituloId: selectedTitulo.id,
+      nome: searchNome.trim(),
+      tipo: 'fisica',
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="text-xl">🔗</span>
+            Central de Inconsistências
+          </DialogTitle>
+          <DialogDescription>
+            Títulos sem pessoa vinculada e pessoas sem doações registradas
+          </DialogDescription>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center h-48">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+            {/* Estatísticas */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-amber-600" />
+                  <span className="font-semibold text-amber-800">Títulos sem Pessoa</span>
+                </div>
+                <div className="text-2xl font-bold text-amber-600 mt-1">
+                  {inconsistencias?.stats?.titulosSemPessoa || 0}
+                </div>
+              </div>
+              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-slate-600" />
+                  <span className="font-semibold text-slate-800">Pessoas sem Doações</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-600 mt-1">
+                  {inconsistencias?.stats?.pessoasSemTitulo || 0}
+                </div>
+              </div>
+            </div>
+
+            {/* Lista de títulos sem pessoa */}
+            {inconsistencias?.titulosSemPessoa && inconsistencias.titulosSemPessoa.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  Contribuições para Vincular ({inconsistencias.titulosSemPessoa.length})
+                </h3>
+                <div className="space-y-2">
+                  {inconsistencias.titulosSemPessoa.slice(0, 20).map((titulo: any) => (
+                    <div 
+                      key={titulo.id}
+                      className={cn(
+                        "p-3 rounded-lg border transition-all cursor-pointer",
+                        selectedTitulo?.id === titulo.id 
+                          ? "border-violet-500 bg-violet-50" 
+                          : "border-slate-200 hover:border-violet-300 hover:bg-slate-50"
+                      )}
+                      onClick={() => {
+                        setSelectedTitulo(titulo);
+                        // Extrair nome da descrição se possível
+                        const match = titulo.descricao?.match(/Contribuição\s+(?:Associado|Não Associado)\s*-?\s*(.+)/i);
+                        if (match) setSearchNome(match[1].trim());
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate">{titulo.descricao || 'Sem descrição'}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {titulo.dataCompetencia ? new Date(titulo.dataCompetencia).toLocaleDateString('pt-BR') : '-'}
+                            {' • '}
+                            <span className="text-emerald-600 font-medium">{formatCurrency(titulo.valor)}</span>
+                          </p>
+                        </div>
+                        {selectedTitulo?.id === titulo.id ? (
+                          <CheckCircle2 className="h-5 w-5 text-violet-600 shrink-0" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Painel de vinculação */}
+            {selectedTitulo && (
+              <div className="p-4 rounded-lg bg-violet-50 border border-violet-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-violet-800 flex items-center gap-2">
+                    <Link2 className="h-4 w-4" />
+                    Vincular Contribuição
+                  </h4>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedTitulo(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="text-sm text-violet-700 bg-white/50 p-2 rounded">
+                  <strong>{selectedTitulo.descricao}</strong>
+                  <br />
+                  {formatCurrency(selectedTitulo.valor)} em {new Date(selectedTitulo.dataCompetencia).toLocaleDateString('pt-BR')}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Buscar pessoa existente:</Label>
+                  <Input
+                    placeholder="Digite o nome para buscar..."
+                    value={searchNome}
+                    onChange={(e) => setSearchNome(e.target.value)}
+                  />
+                </div>
+                
+                {similares && similares.length > 0 && (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Pessoas encontradas:</Label>
+                    {similares.map((pessoa: any) => (
+                      <button
+                        key={pessoa.id}
+                        onClick={() => handleVincular(pessoa.id)}
+                        disabled={vincularMutation.isPending}
+                        className="w-full p-2 text-left rounded border border-slate-200 hover:border-violet-400 hover:bg-violet-50 transition-all flex items-center justify-between"
+                      >
+                        <span className="text-sm font-medium">{pessoa.nome}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {Math.round((pessoa.score || 0) * 100)}% match
+                        </Badge>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {searchNome.length >= 2 && (!similares || similares.length === 0) && (
+                  <div className="text-sm text-muted-foreground italic">
+                    Nenhuma pessoa encontrada com esse nome
+                  </div>
+                )}
+                
+                {searchNome.length >= 2 && (
+                  <Button
+                    onClick={handleCriarEVincular}
+                    disabled={criarEVincularMutation.isPending}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Criar "{searchNome}" e Vincular
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Lista de pessoas sem doações */}
+            {inconsistencias?.pessoasSemDoacoes && inconsistencias.pessoasSemDoacoes.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-slate-500" />
+                  Pessoas Cadastradas sem Doações ({inconsistencias.pessoasSemDoacoes.length})
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {inconsistencias.pessoasSemDoacoes.slice(0, 12).map((pessoa: any) => (
+                    <div 
+                      key={pessoa.id}
+                      className="p-2 rounded border border-slate-200 text-sm"
+                    >
+                      <p className="font-medium truncate">{pessoa.nome}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {pessoa.isAssociado ? '🤝 Associado' : '👤 Não associado'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Mensagem de sucesso */}
+            {inconsistencias?.titulosSemPessoa?.length === 0 && inconsistencias?.pessoasSemDoacoes?.length === 0 && (
+              <div className="text-center py-8">
+                <span className="text-5xl">🎉</span>
+                <p className="mt-3 font-medium text-emerald-700">Tudo em ordem!</p>
+                <p className="text-sm text-muted-foreground">Não há inconsistências para resolver.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter className="pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Pessoas() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [filtroAssociados, setFiltroAssociados] = useState<boolean | undefined>(undefined);
   const [selectedPessoa, setSelectedPessoa] = useState<any>(null);
   const [showNovaModal, setShowNovaModal] = useState(false);
+  const [showInconsistencias, setShowInconsistencias] = useState(false);
 
   const { data, isLoading } = trpc.pessoas.list.useQuery({
     search: search || undefined,
@@ -477,6 +728,7 @@ export default function Pessoas() {
   const { data: stats } = trpc.pessoas.stats.useQuery();
   const { data: healthStats } = trpc.pessoas.healthStats.useQuery();
   const { data: topDoadores } = trpc.pessoas.topDoadores.useQuery(5);
+  const { data: inconsistencias } = trpc.pessoas.inconsistencias.useQuery();
 
   const pessoas = data?.pessoas || [];
   const totalPages = data?.pages || 1;
@@ -619,6 +871,36 @@ export default function Pessoas() {
         </Card>
       </div>
 
+      {/* Card de Inconsistências - Destaque */}
+      {(inconsistencias?.stats?.titulosSemPessoa || 0) > 0 && (
+        <Card 
+          className="cursor-pointer transition-all duration-200 hover:shadow-lg border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50"
+          onClick={() => setShowInconsistencias(true)}
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                  <AlertTriangle className="h-6 w-6 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-amber-800">
+                    {inconsistencias?.stats?.titulosSemPessoa || 0} Inconsistências Encontradas
+                  </h3>
+                  <p className="text-sm text-amber-600">
+                    Clique para vincular contribuições às pessoas corretas
+                  </p>
+                </div>
+              </div>
+              <Button className="bg-amber-600 hover:bg-amber-700">
+                <Link2 className="h-4 w-4 mr-2" />
+                Resolver
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Row com Top Doadores e Saúde dos Dados */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Top Doadores - 2 colunas */}
@@ -671,45 +953,77 @@ export default function Pessoas() {
           <CardContent className="p-4">
             {healthStats ? (
               <div className="space-y-4">
-                <DataHealthChart healthStats={healthStats} />
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-slate-400" />
-                      Com CPF
-                    </span>
-                    <Badge variant={healthStats.percentualCpf > 50 ? "default" : "destructive"}>
-                      {healthStats.percentualCpf}%
-                    </Badge>
+                {/* Verifica se todos os percentuais são 0 */}
+                {(healthStats.percentualCpf + healthStats.percentualEmail + healthStats.percentualTelefone + healthStats.percentualEndereco) === 0 ? (
+                  <div className="text-center py-4 space-y-3">
+                    <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center">
+                      <span className="text-3xl">📝</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-700">Dados de contato não preenchidos</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Os cadastros foram importados sem CPF, email, telefone ou endereço.
+                        <br />Clique em uma pessoa para completar seus dados.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-2">
+                      <div className="p-2 rounded bg-rose-50 text-rose-700 flex items-center gap-2">
+                        <FileText className="h-3 w-3" /> 0% com CPF
+                      </div>
+                      <div className="p-2 rounded bg-rose-50 text-rose-700 flex items-center gap-2">
+                        <Mail className="h-3 w-3" /> 0% com Email
+                      </div>
+                      <div className="p-2 rounded bg-rose-50 text-rose-700 flex items-center gap-2">
+                        <Phone className="h-3 w-3" /> 0% com Tel.
+                      </div>
+                      <div className="p-2 rounded bg-rose-50 text-rose-700 flex items-center gap-2">
+                        <MapPin className="h-3 w-3" /> 0% com End.
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-slate-400" />
-                      Com Email
-                    </span>
-                    <Badge variant={healthStats.percentualEmail > 50 ? "default" : "destructive"}>
-                      {healthStats.percentualEmail}%
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-slate-400" />
-                      Com Telefone
-                    </span>
-                    <Badge variant={healthStats.percentualTelefone > 50 ? "default" : "destructive"}>
-                      {healthStats.percentualTelefone}%
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-slate-400" />
-                      Com Endereço
-                    </span>
-                    <Badge variant={healthStats.percentualEndereco > 50 ? "default" : "destructive"}>
-                      {healthStats.percentualEndereco}%
-                    </Badge>
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <DataHealthChart healthStats={healthStats} />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-slate-400" />
+                          Com CPF
+                        </span>
+                        <Badge variant={healthStats.percentualCpf > 50 ? "default" : "destructive"}>
+                          {healthStats.percentualCpf}%
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-slate-400" />
+                          Com Email
+                        </span>
+                        <Badge variant={healthStats.percentualEmail > 50 ? "default" : "destructive"}>
+                          {healthStats.percentualEmail}%
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-slate-400" />
+                          Com Telefone
+                        </span>
+                        <Badge variant={healthStats.percentualTelefone > 50 ? "default" : "destructive"}>
+                          {healthStats.percentualTelefone}%
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-slate-400" />
+                          Com Endereço
+                        </span>
+                        <Badge variant={healthStats.percentualEndereco > 50 ? "default" : "destructive"}>
+                          {healthStats.percentualEndereco}%
+                        </Badge>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-32">
@@ -892,6 +1206,9 @@ export default function Pessoas() {
 
       {/* Modal de cadastro */}
       <NovaPessoaModal open={showNovaModal} onClose={() => setShowNovaModal(false)} />
+
+      {/* Modal de inconsistências */}
+      <InconsistenciasModal open={showInconsistencias} onClose={() => setShowInconsistencias(false)} />
     </div>
   );
 }

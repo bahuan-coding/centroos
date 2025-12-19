@@ -161,3 +161,4 @@
 
 *Correções aplicadas em 19/12/2025 via auditoria automatizada*
 
+

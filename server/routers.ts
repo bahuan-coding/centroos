@@ -1021,6 +1021,128 @@ const pessoasRouter = router({
     };
   }),
 
+  // Saúde cadastral - métricas de completude dos dados
+  healthStats: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    // Total de pessoas ativas
+    const [totalResult] = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.pessoa)
+      .where(isNull(schema.pessoa.deletedAt));
+    const total = Number(totalResult.count) || 0;
+    
+    if (total === 0) {
+      return {
+        total: 0,
+        comCpf: 0, percentualCpf: 0,
+        comEmail: 0, percentualEmail: 0,
+        comTelefone: 0, percentualTelefone: 0,
+        comEndereco: 0, percentualEndereco: 0,
+        comDoacoes: 0, percentualDoacoes: 0,
+        semDoacoes: 0,
+        totalArrecadado: 0,
+        mediaPorDoacao: 0,
+        alertas: [],
+      };
+    }
+    
+    // Pessoas com CPF/CNPJ
+    const cpfResult = await db.execute(sql`
+      SELECT COUNT(DISTINCT p.id) as count FROM pessoa p
+      INNER JOIN pessoa_documento pd ON pd.pessoa_id = p.id
+      WHERE p.deleted_at IS NULL
+    `);
+    const comCpf = Number((cpfResult.rows[0] as any)?.count) || 0;
+    
+    // Pessoas com Email
+    const emailResult = await db.execute(sql`
+      SELECT COUNT(DISTINCT p.id) as count FROM pessoa p
+      INNER JOIN pessoa_contato pc ON pc.pessoa_id = p.id AND pc.tipo = 'email'
+      WHERE p.deleted_at IS NULL
+    `);
+    const comEmail = Number((emailResult.rows[0] as any)?.count) || 0;
+    
+    // Pessoas com Telefone
+    const telResult = await db.execute(sql`
+      SELECT COUNT(DISTINCT p.id) as count FROM pessoa p
+      INNER JOIN pessoa_contato pc ON pc.pessoa_id = p.id AND pc.tipo IN ('telefone', 'celular', 'whatsapp')
+      WHERE p.deleted_at IS NULL
+    `);
+    const comTelefone = Number((telResult.rows[0] as any)?.count) || 0;
+    
+    // Pessoas com Endereço
+    const endResult = await db.execute(sql`
+      SELECT COUNT(DISTINCT p.id) as count FROM pessoa p
+      INNER JOIN pessoa_endereco pe ON pe.pessoa_id = p.id
+      WHERE p.deleted_at IS NULL
+    `);
+    const comEndereco = Number((endResult.rows[0] as any)?.count) || 0;
+    
+    // Pessoas com doações
+    const doacoesResult = await db.execute(sql`
+      SELECT 
+        COUNT(DISTINCT t.pessoa_id) as doadores,
+        COALESCE(SUM(CAST(t.valor_liquido AS NUMERIC)), 0) as total_arrecadado,
+        COUNT(t.id) as total_doacoes
+      FROM titulo t
+      WHERE t.deleted_at IS NULL AND t.tipo = 'receber'
+    `);
+    const comDoacoes = Number((doacoesResult.rows[0] as any)?.doadores) || 0;
+    const totalArrecadado = parseFloat((doacoesResult.rows[0] as any)?.total_arrecadado) || 0;
+    const totalDoacoes = Number((doacoesResult.rows[0] as any)?.total_doacoes) || 0;
+    
+    // Montar alertas
+    const alertas: { tipo: 'critico' | 'alerta' | 'info'; titulo: string; descricao: string; quantidade: number }[] = [];
+    
+    const semCpf = total - comCpf;
+    if (semCpf > 0) {
+      alertas.push({
+        tipo: 'critico',
+        titulo: `${semCpf} pessoas sem CPF/CNPJ`,
+        descricao: 'Impossível emitir recibos legais para doadores sem documento fiscal',
+        quantidade: semCpf,
+      });
+    }
+    
+    const semContato = total - Math.max(comEmail, comTelefone);
+    if (semContato > 0) {
+      alertas.push({
+        tipo: 'critico',
+        titulo: `${semContato} pessoas sem contato`,
+        descricao: 'Sem email ou telefone é impossível comunicar-se com esses cadastros',
+        quantidade: semContato,
+      });
+    }
+    
+    const semDoacoes = total - comDoacoes;
+    if (semDoacoes > 0) {
+      alertas.push({
+        tipo: 'alerta',
+        titulo: `${semDoacoes} pessoas nunca doaram`,
+        descricao: 'Cadastros que nunca realizaram contribuições',
+        quantidade: semDoacoes,
+      });
+    }
+    
+    return {
+      total,
+      comCpf,
+      percentualCpf: Math.round((comCpf / total) * 100),
+      comEmail,
+      percentualEmail: Math.round((comEmail / total) * 100),
+      comTelefone,
+      percentualTelefone: Math.round((comTelefone / total) * 100),
+      comEndereco,
+      percentualEndereco: Math.round((comEndereco / total) * 100),
+      comDoacoes,
+      percentualDoacoes: Math.round((comDoacoes / total) * 100),
+      semDoacoes: total - comDoacoes,
+      totalArrecadado,
+      mediaPorDoacao: totalDoacoes > 0 ? totalArrecadado / totalDoacoes : 0,
+      alertas,
+    };
+  }),
+
   duplicates: publicProcedure.query(async () => {
     const db = await getDb();
     // Find duplicates by normalized name (uppercase, trimmed)

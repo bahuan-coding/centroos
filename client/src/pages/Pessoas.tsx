@@ -33,18 +33,20 @@ function formatDate(date: string | null): string {
   return new Date(date).toLocaleDateString('pt-BR');
 }
 
-function formatMonthLabel(mes: string): string {
+function formatMonthLabel(mes: string | null | undefined): string {
+  if (!mes) return '-';
+  
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   
   // Handle both formats: 'MM/YYYY' (from backend) and 'YYYY-MM'
   if (mes.includes('/')) {
     const [month, year] = mes.split('/');
     const monthIdx = parseInt(month) - 1;
-    return monthIdx >= 0 && monthIdx < 12 ? `${months[monthIdx]}/${year.slice(2)}` : mes;
+    return monthIdx >= 0 && monthIdx < 12 ? `${months[monthIdx]}/${year.slice(-2)}` : mes;
   } else if (mes.includes('-')) {
     const [year, month] = mes.split('-');
     const monthIdx = parseInt(month) - 1;
-    return monthIdx >= 0 && monthIdx < 12 ? `${months[monthIdx]}/${year.slice(2)}` : mes;
+    return monthIdx >= 0 && monthIdx < 12 ? `${months[monthIdx]}/${year.slice(-2)}` : mes;
   }
   return mes;
 }

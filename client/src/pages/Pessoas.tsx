@@ -103,8 +103,9 @@ function PessoaDrawer({ pessoa, onClose }: { pessoa: any; onClose: () => void })
   const { data: historico, isLoading } = trpc.pessoas.historico.useQuery(pessoa.id);
   const gender = detectGender(pessoa.nome);
   
-  const maxValor = historico?.porMes?.length 
-    ? Math.max(...historico.porMes.map(m => m.total)) 
+  const validPorMes = historico?.porMes?.filter(m => m.total > 0) || [];
+  const maxValor = validPorMes.length 
+    ? Math.max(...validPorMes.map(m => m.total)) 
     : 0;
 
   return (

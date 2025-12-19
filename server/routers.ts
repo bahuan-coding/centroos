@@ -1200,7 +1200,7 @@ const pessoasRouter = router({
     
     const porMes = await db.execute(sql`
       SELECT TO_CHAR(data_competencia, 'MM/YYYY') as mes, 
-             SUM(CAST(valor_liquido AS NUMERIC)) as total
+             COALESCE(SUM(CAST(valor_liquido AS NUMERIC)), 0) as total
       FROM titulo 
       WHERE pessoa_id = ${pessoaId} AND deleted_at IS NULL AND tipo = 'receber'
       GROUP BY TO_CHAR(data_competencia, 'MM/YYYY'), DATE_TRUNC('month', data_competencia)
@@ -1221,7 +1221,7 @@ const pessoasRouter = router({
     
     return {
       stats: { totalDoacoes: total, valorTotal, mediaDoacao: total > 0 ? valorTotal / total : 0 },
-      porMes: porMes.rows.reverse().map((r: any) => ({ mes: r.mes, total: parseFloat(r.total) })),
+      porMes: porMes.rows.reverse().map((r: any) => ({ mes: r.mes, total: parseFloat(r.total) || 0 })),
       doacoes: doacoes.rows.map((r: any) => ({
         id: r.id, valor: parseFloat(r.valor_liquido), dataCompetencia: r.data_competencia,
         descricao: r.descricao, natureza: r.natureza

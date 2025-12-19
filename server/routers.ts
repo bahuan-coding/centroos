@@ -2009,6 +2009,145 @@ const contasFinanceirasRouter = router({
 
     return { total: count.count, saldoTotal };
   }),
+
+  // Auditoria completa das contas financeiras
+  auditoria: publicProcedure.query(async () => {
+    const db = await getDb();
+    const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
+
+    const problemas: string[] = [];
+    let totalEntradasGeral = 0;
+    let totalSaidasGeral = 0;
+
+    const contasAuditadas = await Promise.all(contas.map(async (conta) => {
+      // Buscar todas as baixas desta conta com detalhes
+      const baixasDetalhe = await db.execute(sql`
+        SELECT 
+          tb.id, tb.titulo_id, tb.valor_pago, tb.data_pagamento,
+          t.tipo as titulo_tipo, t.descricao, t.valor_liquido as titulo_valor
+        FROM titulo_baixa tb
+        LEFT JOIN titulo t ON tb.titulo_id = t.id
+        WHERE tb.conta_financeira_id = ${conta.id}
+        ORDER BY tb.data_pagamento DESC
+      `);
+
+      let entradas = 0;
+      let saidas = 0;
+      let qtdEntradas = 0;
+      let qtdSaidas = 0;
+      const baixasSemTitulo: any[] = [];
+      const baixasValorInvalido: any[] = [];
+
+      for (const b of baixasDetalhe.rows as any[]) {
+        const valor = parseFloat(b.valor_pago) || 0;
+        
+        // Verificar baixa sem titulo
+        if (!b.titulo_tipo) {
+          baixasSemTitulo.push(b);
+          problemas.push(`Conta ${conta.nome}: Baixa ${b.id} sem título associado`);
+        }
+        
+        // Verificar valor invalido
+        if (valor <= 0) {
+          baixasValorInvalido.push(b);
+          problemas.push(`Conta ${conta.nome}: Baixa ${b.id} com valor inválido: ${valor}`);
+        }
+
+        if (b.titulo_tipo === 'receber') {
+          entradas += valor;
+          qtdEntradas++;
+        } else if (b.titulo_tipo === 'pagar') {
+          saidas += valor;
+          qtdSaidas++;
+        }
+      }
+
+      const saldoInicial = parseFloat(conta.saldoInicial as string) || 0;
+      const saldoCalculado = saldoInicial + entradas - saidas;
+
+      totalEntradasGeral += entradas;
+      totalSaidasGeral += saidas;
+
+      return {
+        id: conta.id,
+        nome: conta.nome,
+        tipo: conta.tipo,
+        banco: conta.bancoNome || conta.bancoCodigo,
+        saldoInicial,
+        entradas,
+        saidas,
+        saldoCalculado,
+        qtdEntradas,
+        qtdSaidas,
+        qtdBaixasTotal: baixasDetalhe.rows.length,
+        baixasSemTitulo: baixasSemTitulo.length,
+        baixasValorInvalido: baixasValorInvalido.length,
+        detalhesBaixas: (baixasDetalhe.rows as any[]).slice(0, 10).map((b: any) => ({
+          id: b.id,
+          tituloId: b.titulo_id,
+          valorPago: parseFloat(b.valor_pago),
+          tipo: b.titulo_tipo,
+          data: b.data_pagamento,
+          descricao: b.descricao,
+        })),
+      };
+    }));
+
+    const saldoTotalCalculado = contasAuditadas.reduce((acc, c) => acc + c.saldoCalculado, 0);
+
+    return {
+      contas: contasAuditadas,
+      resumo: {
+        qtdContas: contas.length,
+        saldoTotalCalculado,
+        totalEntradas: totalEntradasGeral,
+        totalSaidas: totalSaidasGeral,
+        qtdProblemas: problemas.length,
+        problemas: problemas.slice(0, 20),
+      },
+    };
+  }),
+
+  // Recalcular saldos baseado nos dados crus
+  recalcular: publicProcedure.mutation(async () => {
+    const db = await getDb();
+    const contas = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
+
+    const resultados = [];
+
+    for (const conta of contas) {
+      // Calcular entradas e saídas a partir das baixas
+      const [totais] = await db.select({
+        entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN tb.valor_pago::numeric ELSE 0 END), 0)`,
+        saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN tb.valor_pago::numeric ELSE 0 END), 0)`,
+      })
+        .from(schema.tituloBaixa)
+        .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id))
+        .where(eq(schema.tituloBaixa.contaFinanceiraId, conta.id));
+
+      const saldoInicial = parseFloat(conta.saldoInicial as string) || 0;
+      const entradas = Number(totais.entradas) || 0;
+      const saidas = Number(totais.saidas) || 0;
+      const saldoRecalculado = saldoInicial + entradas - saidas;
+
+      resultados.push({
+        id: conta.id,
+        nome: conta.nome,
+        saldoInicial,
+        entradas,
+        saidas,
+        saldoRecalculado,
+      });
+    }
+
+    const saldoTotal = resultados.reduce((acc, r) => acc + r.saldoRecalculado, 0);
+
+    return {
+      contas: resultados,
+      saldoTotal,
+      recalculadoEm: new Date().toISOString(),
+    };
+  }),
 });
 
 // ==================== PERÍODOS CONTÁBEIS ROUTER (NOVO SCHEMA) ====================

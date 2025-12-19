@@ -1,7 +1,10 @@
-import { Building2, Wallet, ArrowUpRight, ArrowDownRight, CreditCard, Landmark, PiggyBank } from 'lucide-react';
+import { useState } from 'react';
+import { Building2, Wallet, ArrowUpRight, ArrowDownRight, CreditCard, Landmark, PiggyBank, ClipboardCheck, RefreshCw, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
 
@@ -30,8 +33,11 @@ function getContaColor(tipo: string) {
 }
 
 export default function ContasFinanceiras() {
+  const [showAuditoria, setShowAuditoria] = useState(false);
   const { data: contas = [], isLoading } = trpc.contasFinanceiras.list.useQuery();
   const { data: stats } = trpc.contasFinanceiras.stats.useQuery();
+  const { data: auditoria, isLoading: loadingAuditoria, refetch: refetchAuditoria } = trpc.contasFinanceiras.auditoria.useQuery(undefined, { enabled: showAuditoria });
+  const recalcularMutation = trpc.contasFinanceiras.recalcular.useMutation();
 
   const saldoTotal = contas.reduce((acc: number, c: any) => acc + c.saldoAtual, 0);
 
@@ -60,7 +66,16 @@ export default function ContasFinanceiras() {
               <p className="text-emerald-100 text-xs sm:text-sm">Saldo Total Consolidado</p>
               <p className="text-3xl sm:text-4xl font-bold mt-1">{formatCurrency(saldoTotal)}</p>
             </div>
-            <div className="text-left sm:text-right">
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => setShowAuditoria(true)}
+                className="bg-white/20 hover:bg-white/30 text-white border-0"
+              >
+                <ClipboardCheck className="h-4 w-4 mr-2" />
+                Auditar
+              </Button>
               <p className="text-emerald-100 text-xs sm:text-sm">{stats?.total || 0} contas ativas</p>
             </div>
           </div>
@@ -141,6 +156,139 @@ export default function ContasFinanceiras() {
           </CardContent>
         </Card>
       )}
+
+      {/* Modal de Auditoria */}
+      <Dialog open={showAuditoria} onOpenChange={setShowAuditoria}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardCheck className="h-5 w-5 text-blue-600" />
+              Auditoria de Contas Financeiras
+            </DialogTitle>
+          </DialogHeader>
+
+          {loadingAuditoria ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : auditoria ? (
+            <div className="space-y-6">
+              {/* Resumo */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-blue-600">{auditoria.resumo.qtdContas}</p>
+                    <p className="text-xs text-muted-foreground">Contas</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-emerald-600">{formatCurrency(auditoria.resumo.totalEntradas)}</p>
+                    <p className="text-xs text-muted-foreground">Total Entradas</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-red-600">{formatCurrency(auditoria.resumo.totalSaidas)}</p>
+                    <p className="text-xs text-muted-foreground">Total Saídas</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className={cn("text-2xl font-bold", auditoria.resumo.saldoTotalCalculado >= 0 ? "text-emerald-600" : "text-red-600")}>
+                      {formatCurrency(auditoria.resumo.saldoTotalCalculado)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Saldo Total</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Alertas */}
+              {auditoria.resumo.qtdProblemas > 0 && (
+                <Card className="border-amber-200 bg-amber-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
+                      <AlertTriangle className="h-4 w-4" />
+                      {auditoria.resumo.qtdProblemas} Problema(s) Encontrado(s)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="text-xs space-y-1 text-amber-800">
+                      {auditoria.resumo.problemas.map((p: string, i: number) => (
+                        <li key={i}>• {p}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
+              {auditoria.resumo.qtdProblemas === 0 && (
+                <Card className="border-emerald-200 bg-emerald-50">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                    <span className="text-emerald-700 font-medium">Nenhum problema encontrado nas contas</span>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Detalhes por Conta */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm">Detalhes por Conta</h3>
+                {auditoria.contas.map((conta: any) => (
+                  <Card key={conta.id}>
+                    <CardHeader className="py-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm">{conta.nome}</CardTitle>
+                        <Badge variant="outline" className="text-xs">{conta.tipo}</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="py-2">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                        <div>
+                          <p className="text-muted-foreground">Saldo Inicial</p>
+                          <p className="font-semibold">{formatCurrency(conta.saldoInicial)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Entradas ({conta.qtdEntradas})</p>
+                          <p className="font-semibold text-green-600">{formatCurrency(conta.entradas)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Saídas ({conta.qtdSaidas})</p>
+                          <p className="font-semibold text-red-600">{formatCurrency(conta.saidas)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Saldo Calculado</p>
+                          <p className={cn("font-semibold", conta.saldoCalculado >= 0 ? "text-emerald-600" : "text-red-600")}>
+                            {formatCurrency(conta.saldoCalculado)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Total Baixas</p>
+                          <p className="font-semibold">{conta.qtdBaixasTotal}</p>
+                        </div>
+                      </div>
+                      {conta.baixasSemTitulo > 0 && (
+                        <p className="text-xs text-amber-600 mt-2">⚠️ {conta.baixasSemTitulo} baixa(s) sem título</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Ações */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => refetchAuditoria()}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Recarregar
+                </Button>
+                <Button onClick={() => setShowAuditoria(false)}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

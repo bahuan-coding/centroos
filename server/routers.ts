@@ -1208,8 +1208,12 @@ const pessoasRouter = router({
     // Agrupar por mes no JavaScript
     const porMesMap = new Map<string, number>();
     for (const row of allTitulos.rows as any[]) {
-      const date = new Date(row.data_competencia);
-      const mes = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+      // Extrair mes/ano diretamente da string de data (formato YYYY-MM-DD ou Date object)
+      const dataStr = String(row.data_competencia);
+      const match = dataStr.match(/(\d{4})-(\d{2})/);
+      if (!match) continue;
+      const [, year, month] = match;
+      const mes = `${month}/${year}`;
       const valor = parseFloat(row.valor_liquido) || 0;
       porMesMap.set(mes, (porMesMap.get(mes) || 0) + valor);
     }

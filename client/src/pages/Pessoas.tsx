@@ -215,8 +215,8 @@ function PessoaDrawer({ pessoa, onClose }: { pessoa: any; onClose: () => void })
               <div>
                 <h3 className="text-sm font-semibold text-muted-foreground mb-3">💝 Histórico de Doações</h3>
                 {historico?.doacoes && historico.doacoes.length > 0 ? (
-                  <div className="relative space-y-0">
-                    <div className="absolute left-[11px] top-3 bottom-3 w-0.5 bg-gradient-to-b from-violet-200 via-slate-200 to-transparent" />
+                  <div className="relative space-y-0 overflow-hidden">
+                    <div className="absolute left-[11px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-violet-200 via-slate-200 to-transparent" />
                     {historico.doacoes.map((doacao, idx) => (
                       <div 
                         key={doacao.id} 

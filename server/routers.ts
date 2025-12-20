@@ -128,6 +128,186 @@ const accountsRouter = router({
       .from(schema.accounts).where(eq(schema.accounts.parentId, input));
     return result.count > 0;
   }),
+
+  // ========== PLANO DE CONTAS VIVO ==========
+  planoContasStats: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    // Totais por tipo
+    const byType = await db.select({
+      tipo: schema.planoContas.tipo,
+      total: sql<number>`count(*)`,
+      analiticas: sql<number>`sum(case when ${schema.planoContas.classificacao} = 'analitica' then 1 else 0 end)`,
+      sinteticas: sql<number>`sum(case when ${schema.planoContas.classificacao} = 'sintetica' then 1 else 0 end)`,
+    }).from(schema.planoContas)
+      .where(isNull(schema.planoContas.deletedAt))
+      .groupBy(schema.planoContas.tipo);
+
+    // Total geral
+    const [totals] = await db.select({
+      total: sql<number>`count(*)`,
+      analiticas: sql<number>`sum(case when ${schema.planoContas.classificacao} = 'analitica' then 1 else 0 end)`,
+      sinteticas: sql<number>`sum(case when ${schema.planoContas.classificacao} = 'sintetica' then 1 else 0 end)`,
+    }).from(schema.planoContas).where(isNull(schema.planoContas.deletedAt));
+
+    // Títulos por conta (movimento)
+    const movimentosPorTipo = await db.select({
+      tipo: schema.planoContas.tipo,
+      qtdTitulos: sql<number>`count(distinct ${schema.titulo.id})`,
+      valorTotal: sql<number>`coalesce(sum(${schema.titulo.valorLiquido}), 0)`,
+    }).from(schema.planoContas)
+      .leftJoin(schema.titulo, eq(schema.titulo.contaContabilId, schema.planoContas.id))
+      .where(isNull(schema.planoContas.deletedAt))
+      .groupBy(schema.planoContas.tipo);
+
+    // Equação patrimonial
+    const [ativos] = await db.select({
+      saldo: sql<number>`coalesce(sum(${schema.titulo.valorLiquido}), 0)`,
+    }).from(schema.planoContas)
+      .leftJoin(schema.titulo, eq(schema.titulo.contaContabilId, schema.planoContas.id))
+      .where(and(isNull(schema.planoContas.deletedAt), eq(schema.planoContas.tipo, 'ativo')));
+
+    const [passivos] = await db.select({
+      saldo: sql<number>`coalesce(sum(${schema.titulo.valorLiquido}), 0)`,
+    }).from(schema.planoContas)
+      .leftJoin(schema.titulo, eq(schema.titulo.contaContabilId, schema.planoContas.id))
+      .where(and(isNull(schema.planoContas.deletedAt), eq(schema.planoContas.tipo, 'passivo')));
+
+    const [patrimonio] = await db.select({
+      saldo: sql<number>`coalesce(sum(${schema.titulo.valorLiquido}), 0)`,
+    }).from(schema.planoContas)
+      .leftJoin(schema.titulo, eq(schema.titulo.contaContabilId, schema.planoContas.id))
+      .where(and(isNull(schema.planoContas.deletedAt), eq(schema.planoContas.tipo, 'patrimonio_social')));
+
+    return {
+      totals: {
+        total: Number(totals.total) || 0,
+        analiticas: Number(totals.analiticas) || 0,
+        sinteticas: Number(totals.sinteticas) || 0,
+      },
+      byType: byType.map(t => ({
+        tipo: t.tipo,
+        total: Number(t.total) || 0,
+        analiticas: Number(t.analiticas) || 0,
+        sinteticas: Number(t.sinteticas) || 0,
+      })),
+      movimentos: movimentosPorTipo.map(m => ({
+        tipo: m.tipo,
+        qtdTitulos: Number(m.qtdTitulos) || 0,
+        valorTotal: Number(m.valorTotal) || 0,
+      })),
+      equacaoPatrimonial: {
+        ativos: Number(ativos.saldo) || 0,
+        passivos: Number(passivos.saldo) || 0,
+        patrimonio: Number(patrimonio.saldo) || 0,
+        balanceado: Math.abs((Number(ativos.saldo) || 0) - (Number(passivos.saldo) || 0) - (Number(patrimonio.saldo) || 0)) < 0.01,
+      },
+    };
+  }),
+
+  planoContasTree: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    // Buscar todas as contas com movimento
+    const contas = await db.select({
+      id: schema.planoContas.id,
+      codigo: schema.planoContas.codigo,
+      nome: schema.planoContas.nome,
+      tipo: schema.planoContas.tipo,
+      naturezaSaldo: schema.planoContas.naturezaSaldo,
+      classificacao: schema.planoContas.classificacao,
+      nivel: schema.planoContas.nivel,
+      contaPaiId: schema.planoContas.contaPaiId,
+      aceitaLancamento: schema.planoContas.aceitaLancamento,
+      ativo: schema.planoContas.ativo,
+      qtdTitulos: sql<number>`count(distinct ${schema.titulo.id})`,
+      valorTotal: sql<number>`coalesce(sum(${schema.titulo.valorLiquido}), 0)`,
+    }).from(schema.planoContas)
+      .leftJoin(schema.titulo, eq(schema.titulo.contaContabilId, schema.planoContas.id))
+      .where(isNull(schema.planoContas.deletedAt))
+      .groupBy(schema.planoContas.id)
+      .orderBy(asc(schema.planoContas.codigo));
+
+    return contas.map(c => ({
+      ...c,
+      qtdTitulos: Number(c.qtdTitulos) || 0,
+      valorTotal: Number(c.valorTotal) || 0,
+    }));
+  }),
+
+  planoContasInsights: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    // Contas mais movimentadas (top 5)
+    const maisMovimentadas = await db.select({
+      id: schema.planoContas.id,
+      codigo: schema.planoContas.codigo,
+      nome: schema.planoContas.nome,
+      tipo: schema.planoContas.tipo,
+      qtdTitulos: sql<number>`count(distinct ${schema.titulo.id})`,
+      valorTotal: sql<number>`coalesce(sum(${schema.titulo.valorLiquido}), 0)`,
+    }).from(schema.planoContas)
+      .innerJoin(schema.titulo, eq(schema.titulo.contaContabilId, schema.planoContas.id))
+      .where(and(
+        isNull(schema.planoContas.deletedAt),
+        eq(schema.planoContas.classificacao, 'analitica')
+      ))
+      .groupBy(schema.planoContas.id)
+      .orderBy(desc(sql`count(distinct ${schema.titulo.id})`))
+      .limit(5);
+
+    // Contas analíticas sem movimento
+    const semMovimento = await db.select({
+      id: schema.planoContas.id,
+      codigo: schema.planoContas.codigo,
+      nome: schema.planoContas.nome,
+      tipo: schema.planoContas.tipo,
+    }).from(schema.planoContas)
+      .leftJoin(schema.titulo, eq(schema.titulo.contaContabilId, schema.planoContas.id))
+      .where(and(
+        isNull(schema.planoContas.deletedAt),
+        eq(schema.planoContas.classificacao, 'analitica'),
+        isNull(schema.titulo.id)
+      ))
+      .groupBy(schema.planoContas.id)
+      .orderBy(asc(schema.planoContas.codigo));
+
+    // ITG 2002 compliance check
+    const compliance = {
+      temAtivo: false,
+      temPassivo: false,
+      temPatrimonio: false,
+      temReceita: false,
+      temDespesa: false,
+      estruturaCompleta: false,
+    };
+    
+    const tipos = await db.select({ tipo: schema.planoContas.tipo })
+      .from(schema.planoContas)
+      .where(and(isNull(schema.planoContas.deletedAt), eq(schema.planoContas.nivel, 0)))
+      .groupBy(schema.planoContas.tipo);
+    
+    tipos.forEach(t => {
+      if (t.tipo === 'ativo') compliance.temAtivo = true;
+      if (t.tipo === 'passivo') compliance.temPassivo = true;
+      if (t.tipo === 'patrimonio_social') compliance.temPatrimonio = true;
+      if (t.tipo === 'receita') compliance.temReceita = true;
+      if (t.tipo === 'despesa') compliance.temDespesa = true;
+    });
+    
+    compliance.estruturaCompleta = compliance.temAtivo && compliance.temPassivo && 
+      compliance.temPatrimonio && compliance.temReceita && compliance.temDespesa;
+
+    return {
+      maisMovimentadas: maisMovimentadas.map(m => ({
+        ...m,
+        qtdTitulos: Number(m.qtdTitulos) || 0,
+        valorTotal: Number(m.valorTotal) || 0,
+      })),
+      semMovimento,
+      compliance,
+    };
+  }),
 });
 
 // ==================== PERIODS ROUTER ====================

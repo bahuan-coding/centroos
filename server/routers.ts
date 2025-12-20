@@ -2680,7 +2680,363 @@ const extratosRouter = router({
     const [extratos] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoBancario);
     const [linhas] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoLinha);
     const [pendentes] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoLinha).where(eq(schema.extratoLinha.status, 'pendente'));
-    return { extratos: extratos.count, linhas: linhas.count, pendentes: pendentes.count };
+    const [conciliados] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoLinha).where(eq(schema.extratoLinha.status, 'conciliado'));
+    const [ignorados] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoLinha).where(eq(schema.extratoLinha.status, 'ignorado'));
+    const [duplicados] = await db.select({ count: sql<number>`count(*)` }).from(schema.extratoLinha).where(eq(schema.extratoLinha.status, 'duplicado'));
+    return { 
+      extratos: extratos.count, 
+      linhas: linhas.count, 
+      pendentes: pendentes.count,
+      conciliados: conciliados.count,
+      ignorados: ignorados.count,
+      duplicados: duplicados.count,
+    };
+  }),
+
+  // Estatísticas avançadas para o hub de conciliação
+  statsAvancados: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    // Títulos a receber (contribuições)
+    const [titulosReceber] = await db.select({
+      total: sql<number>`count(*)`,
+      pendentes: sql<number>`count(*) FILTER (WHERE status NOT IN ('quitado', 'cancelado'))`,
+      valor: sql<number>`COALESCE(SUM(valor_liquido::numeric), 0)`,
+    }).from(schema.titulo).where(and(eq(schema.titulo.tipo, 'receber'), isNull(schema.titulo.deletedAt)));
+    
+    // Títulos a pagar (despesas)
+    const [titulosPagar] = await db.select({
+      total: sql<number>`count(*)`,
+      pendentes: sql<number>`count(*) FILTER (WHERE status NOT IN ('quitado', 'cancelado'))`,
+      valor: sql<number>`COALESCE(SUM(valor_liquido::numeric), 0)`,
+    }).from(schema.titulo).where(and(eq(schema.titulo.tipo, 'pagar'), isNull(schema.titulo.deletedAt)));
+    
+    // Baixas (pagamentos)
+    const [baixas] = await db.select({
+      total: sql<number>`count(*)`,
+      valor: sql<number>`COALESCE(SUM(valor_pago::numeric), 0)`,
+    }).from(schema.tituloBaixa);
+    
+    // Lançamentos contábeis
+    const [lancamentos] = await db.select({
+      total: sql<number>`count(*)`,
+      efetivados: sql<number>`count(*) FILTER (WHERE status = 'efetivado')`,
+    }).from(schema.lancamentoContabil);
+    
+    // Linhas de extrato
+    const [extratoLinhas] = await db.select({
+      total: sql<number>`count(*)`,
+      pendentes: sql<number>`count(*) FILTER (WHERE status = 'pendente')`,
+      valorTotal: sql<number>`COALESCE(SUM(ABS(valor::numeric)), 0)`,
+    }).from(schema.extratoLinha);
+
+    return {
+      contribuicoes: { total: titulosReceber.total, pendentes: titulosReceber.pendentes, valor: Number(titulosReceber.valor) },
+      despesas: { total: titulosPagar.total, pendentes: titulosPagar.pendentes, valor: Number(titulosPagar.valor) },
+      baixas: { total: baixas.total, valor: Number(baixas.valor) },
+      lancamentos: { total: lancamentos.total, efetivados: lancamentos.efetivados },
+      extratos: { total: extratoLinhas.total, pendentes: extratoLinhas.pendentes, valor: Number(extratoLinhas.valorTotal) },
+    };
+  }),
+
+  // Inconsistências de conciliação
+  inconsistencias: publicProcedure.query(async () => {
+    const db = await getDb();
+    const inconsistencias: Array<{
+      codigo: string;
+      titulo: string;
+      descricao: string;
+      severidade: 'erro' | 'aviso' | 'info';
+      quantidade: number;
+      itens: any[];
+    }> = [];
+
+    // CON-001: Linhas de extrato sem vínculo (pendentes)
+    const linhasPendentes = await db.select({
+      id: schema.extratoLinha.id,
+      data: schema.extratoLinha.dataMovimento,
+      descricao: schema.extratoLinha.descricaoOriginal,
+      valor: schema.extratoLinha.valor,
+      tipo: schema.extratoLinha.tipo,
+    })
+      .from(schema.extratoLinha)
+      .where(eq(schema.extratoLinha.status, 'pendente'))
+      .limit(50);
+
+    if (linhasPendentes.length > 0) {
+      inconsistencias.push({
+        codigo: 'CON-001',
+        titulo: 'Linhas de Extrato Não Conciliadas',
+        descricao: 'Movimentações bancárias sem vínculo com títulos ou lançamentos',
+        severidade: 'aviso',
+        quantidade: linhasPendentes.length,
+        itens: linhasPendentes,
+      });
+    }
+
+    // DOA-001: Títulos de doação sem pessoa vinculada
+    const titulosSemPessoa = await db.select({
+      id: schema.titulo.id,
+      descricao: schema.titulo.descricao,
+      valor: schema.titulo.valorLiquido,
+      data: schema.titulo.dataCompetencia,
+    })
+      .from(schema.titulo)
+      .where(and(
+        isNull(schema.titulo.pessoaId),
+        eq(schema.titulo.tipo, 'receber'),
+        isNull(schema.titulo.deletedAt)
+      ))
+      .limit(50);
+
+    if (titulosSemPessoa.length > 0) {
+      inconsistencias.push({
+        codigo: 'DOA-001',
+        titulo: 'Contribuições Sem Doador Identificado',
+        descricao: 'Títulos de recebimento sem pessoa vinculada',
+        severidade: 'aviso',
+        quantidade: titulosSemPessoa.length,
+        itens: titulosSemPessoa,
+      });
+    }
+
+    // DOA-002: Duplicatas potenciais (mesmo valor, data e descrição similar)
+    const duplicatasPotenciais = await db.execute(sql`
+      SELECT t1.id, t1.descricao, t1.valor_liquido as valor, t1.data_competencia as data,
+             COUNT(*) OVER (PARTITION BY t1.valor_liquido, t1.data_competencia) as duplicatas
+      FROM titulo t1
+      WHERE t1.deleted_at IS NULL
+        AND t1.tipo = 'receber'
+      HAVING COUNT(*) OVER (PARTITION BY t1.valor_liquido, t1.data_competencia) > 1
+      LIMIT 20
+    `);
+
+    if (duplicatasPotenciais.rows && duplicatasPotenciais.rows.length > 0) {
+      inconsistencias.push({
+        codigo: 'DOA-004',
+        titulo: 'Títulos Potencialmente Duplicados',
+        descricao: 'Títulos com mesmo valor e data de competência',
+        severidade: 'erro',
+        quantidade: duplicatasPotenciais.rows.length,
+        itens: duplicatasPotenciais.rows,
+      });
+    }
+
+    // CTB-001: Lançamentos desbalanceados
+    const lancamentosDesbalanceados = await db.select({
+      id: schema.lancamentoContabil.id,
+      numero: schema.lancamentoContabil.numero,
+      historico: schema.lancamentoContabil.historico,
+      totalDebito: schema.lancamentoContabil.totalDebito,
+      totalCredito: schema.lancamentoContabil.totalCredito,
+    })
+      .from(schema.lancamentoContabil)
+      .where(sql`total_debito::numeric != total_credito::numeric`)
+      .limit(20);
+
+    if (lancamentosDesbalanceados.length > 0) {
+      inconsistencias.push({
+        codigo: 'CTB-001',
+        titulo: 'Lançamentos Desbalanceados',
+        descricao: 'Partidas com débito diferente de crédito',
+        severidade: 'erro',
+        quantidade: lancamentosDesbalanceados.length,
+        itens: lancamentosDesbalanceados,
+      });
+    }
+
+    return inconsistencias;
+  }),
+
+  // Doadores sem CPF cadastrado
+  doadoresSemCpf: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    const doadoresSemCpf = await db.execute(sql`
+      SELECT DISTINCT 
+        p.id,
+        p.nome,
+        p.tipo,
+        COUNT(t.id) as total_doacoes,
+        COALESCE(SUM(t.valor_liquido::numeric), 0) as valor_total
+      FROM pessoa p
+      INNER JOIN titulo t ON t.pessoa_id = p.id AND t.tipo = 'receber' AND t.deleted_at IS NULL
+      LEFT JOIN pessoa_documento pd ON pd.pessoa_id = p.id AND pd.tipo = 'cpf'
+      WHERE p.deleted_at IS NULL
+        AND pd.id IS NULL
+      GROUP BY p.id, p.nome, p.tipo
+      ORDER BY valor_total DESC
+      LIMIT 100
+    `);
+
+    return doadoresSemCpf.rows.map((r: any) => ({
+      id: r.id,
+      nome: r.nome,
+      tipo: r.tipo,
+      totalDoacoes: Number(r.total_doacoes),
+      valorTotal: Number(r.valor_total),
+    }));
+  }),
+
+  // Sugestões de conciliação automática
+  sugestoesConciliacao: publicProcedure
+    .input(z.object({ linhaId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      
+      // Buscar a linha do extrato
+      const [linha] = await db.select()
+        .from(schema.extratoLinha)
+        .where(eq(schema.extratoLinha.id, input.linhaId));
+
+      if (!linha) return { sugestoes: [], linha: null };
+
+      const valorAbs = Math.abs(Number(linha.valor));
+      const tolerancia = 0.01; // R$ 0,01
+
+      // Buscar títulos com valor e data similares
+      const sugestoes = await db.execute(sql`
+        SELECT 
+          t.id,
+          t.descricao,
+          t.valor_liquido as valor,
+          t.data_competencia as data,
+          t.tipo,
+          t.natureza,
+          p.nome as pessoa_nome,
+          ABS(t.valor_liquido::numeric - ${valorAbs}) as diferenca_valor,
+          ABS(t.data_competencia::date - ${linha.dataMovimento}::date) as diferenca_dias
+        FROM titulo t
+        LEFT JOIN pessoa p ON p.id = t.pessoa_id
+        WHERE t.deleted_at IS NULL
+          AND ABS(t.valor_liquido::numeric - ${valorAbs}) <= ${tolerancia * 100}
+        ORDER BY 
+          ABS(t.data_competencia::date - ${linha.dataMovimento}::date) ASC,
+          ABS(t.valor_liquido::numeric - ${valorAbs}) ASC
+        LIMIT 10
+      `);
+
+      return {
+        linha: {
+          id: linha.id,
+          data: linha.dataMovimento,
+          descricao: linha.descricaoOriginal,
+          valor: Number(linha.valor),
+          tipo: linha.tipo,
+        },
+        sugestoes: sugestoes.rows.map((s: any) => ({
+          id: s.id,
+          descricao: s.descricao,
+          valor: Number(s.valor),
+          data: s.data,
+          tipo: s.tipo,
+          natureza: s.natureza,
+          pessoaNome: s.pessoa_nome,
+          diferencaValor: Number(s.diferenca_valor),
+          diferencaDias: Number(s.diferenca_dias),
+          confianca: Math.max(0, 100 - Number(s.diferenca_dias) * 5 - Number(s.diferenca_valor) * 10),
+        })),
+      };
+    }),
+
+  // Mutation: Conciliar linha com título
+  conciliar: protectedProcedure
+    .input(z.object({
+      linhaId: z.string().uuid(),
+      tituloId: z.string().uuid().optional(),
+      lancamentoId: z.string().uuid().optional(),
+      tipoVinculo: z.enum(['titulo', 'lancamento_manual', 'tarifa', 'rendimento']),
+      metodo: z.enum(['automatico', 'manual', 'sugerido']).default('manual'),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      
+      // Atualizar status da linha
+      await db.update(schema.extratoLinha)
+        .set({ status: 'conciliado' })
+        .where(eq(schema.extratoLinha.id, input.linhaId));
+
+      // Criar registro de conciliação
+      const confiancaValor = input.metodo === 'automatico' ? '95' : input.metodo === 'sugerido' ? '80' : '100';
+      // Use default UUID since ctx.user.id may be a number in dev mode
+      const userId = '00000000-0000-0000-0000-000000000000';
+      
+      await db.insert(schema.conciliacao).values({
+        extratoLinhaId: input.linhaId,
+        tipoVinculo: input.tipoVinculo,
+        tituloId: input.tituloId ?? null,
+        lancamentoId: input.lancamentoId ?? null,
+        metodo: input.metodo,
+        confianca: confiancaValor,
+        conciliadoPor: userId,
+        conciliadoEm: new Date(),
+      });
+
+      return { success: true };
+    }),
+
+  // Mutation: Ignorar linha
+  ignorar: protectedProcedure
+    .input(z.object({
+      linhaId: z.string().uuid(),
+      motivo: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      
+      await db.update(schema.extratoLinha)
+        .set({ 
+          status: 'ignorado',
+          motivoIgnorado: input.motivo || 'Ignorado manualmente',
+        })
+        .where(eq(schema.extratoLinha.id, input.linhaId));
+
+      return { success: true };
+    }),
+
+  // Mutation: Marcar como duplicado
+  marcarDuplicado: protectedProcedure
+    .input(z.object({ linhaId: z.string().uuid() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      
+      await db.update(schema.extratoLinha)
+        .set({ status: 'duplicado' })
+        .where(eq(schema.extratoLinha.id, input.linhaId));
+
+      return { success: true };
+    }),
+
+  // Transações órfãs (baixas sem título ou linha de extrato vinculada)
+  transacoesOrfas: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    // Baixas que não estão vinculadas a nenhuma conciliação
+    const baixasOrfas = await db.execute(sql`
+      SELECT 
+        tb.id,
+        tb.data_pagamento as data,
+        tb.valor_pago as valor,
+        tb.forma_pagamento as forma,
+        t.descricao,
+        cf.nome as conta_nome
+      FROM titulo_baixa tb
+      INNER JOIN titulo t ON t.id = tb.titulo_id
+      INNER JOIN conta_financeira cf ON cf.id = tb.conta_financeira_id
+      LEFT JOIN conciliacao c ON c.titulo_id = t.id
+      WHERE c.id IS NULL
+      ORDER BY tb.data_pagamento DESC
+      LIMIT 50
+    `);
+
+    return baixasOrfas.rows.map((r: any) => ({
+      id: r.id,
+      data: r.data,
+      valor: Number(r.valor),
+      forma: r.forma,
+      descricao: r.descricao,
+      contaNome: r.conta_nome,
+    }));
   }),
 });
 

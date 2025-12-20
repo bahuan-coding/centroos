@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { LayoutDashboard, FolderTree, FileText, Calendar, Upload, BarChart3, Settings, Menu, Users, Building2, ArrowLeftRight, LogOut } from 'lucide-react';
+import { LayoutDashboard, FolderTree, FileText, Calendar, Upload, BarChart3, Settings, Menu, Users, Building2, ArrowLeftRight, LogOut, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -10,7 +10,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/pessoas', label: 'Pessoas', icon: Users },
   { href: '/contas', label: 'Contas Financeiras', icon: Building2 },
-  { href: '/titulos', label: 'Lançamentos', icon: FileText },
+  { href: '/titulos', label: 'Fluxo de Caixa', icon: TrendingUp },
   { href: '/accounts', label: 'Plano de Contas', icon: FolderTree },
   { href: '/periods', label: 'Períodos', icon: Calendar },
   { href: '/conciliacao', label: 'Conciliação', icon: ArrowLeftRight },

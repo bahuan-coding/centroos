@@ -2439,6 +2439,122 @@ const titulosRouter = router({
       saldo: Number(r.receitas) - Number(r.despesas),
     }));
   }),
+
+  // ==================== FLUXO DE CAIXA ====================
+  fluxoCaixa: publicProcedure.query(async () => {
+    const db = await getDb();
+    const hoje = new Date();
+    const hojeStr = hoje.toISOString().split('T')[0];
+    
+    // Datas de projeção
+    const d30 = new Date(hoje); d30.setDate(d30.getDate() + 30);
+    const d60 = new Date(hoje); d60.setDate(d60.getDate() + 60);
+    const d90 = new Date(hoje); d90.setDate(d90.getDate() + 90);
+    
+    // Projeção 30/60/90 dias - títulos não quitados/cancelados
+    const projecaoQuery = await db.execute(sql`
+      SELECT 
+        SUM(CASE WHEN tipo = 'receber' AND data_vencimento <= ${d30.toISOString().split('T')[0]} THEN valor_liquido::numeric ELSE 0 END) as receber_30d,
+        SUM(CASE WHEN tipo = 'pagar' AND data_vencimento <= ${d30.toISOString().split('T')[0]} THEN valor_liquido::numeric ELSE 0 END) as pagar_30d,
+        SUM(CASE WHEN tipo = 'receber' AND data_vencimento <= ${d60.toISOString().split('T')[0]} THEN valor_liquido::numeric ELSE 0 END) as receber_60d,
+        SUM(CASE WHEN tipo = 'pagar' AND data_vencimento <= ${d60.toISOString().split('T')[0]} THEN valor_liquido::numeric ELSE 0 END) as pagar_60d,
+        SUM(CASE WHEN tipo = 'receber' AND data_vencimento <= ${d90.toISOString().split('T')[0]} THEN valor_liquido::numeric ELSE 0 END) as receber_90d,
+        SUM(CASE WHEN tipo = 'pagar' AND data_vencimento <= ${d90.toISOString().split('T')[0]} THEN valor_liquido::numeric ELSE 0 END) as pagar_90d
+      FROM titulo
+      WHERE deleted_at IS NULL 
+        AND status NOT IN ('quitado', 'cancelado')
+        AND data_vencimento >= ${hojeStr}
+    `);
+    const proj = projecaoQuery.rows[0] as any || {};
+    
+    // Aging - títulos vencidos por faixa
+    const agingQuery = await db.execute(sql`
+      SELECT 
+        COUNT(*) FILTER (WHERE data_vencimento >= ${hojeStr}::date - INTERVAL '7 days') as vencidos_1_7,
+        SUM(valor_liquido::numeric) FILTER (WHERE data_vencimento >= ${hojeStr}::date - INTERVAL '7 days') as valor_1_7,
+        COUNT(*) FILTER (WHERE data_vencimento < ${hojeStr}::date - INTERVAL '7 days' AND data_vencimento >= ${hojeStr}::date - INTERVAL '15 days') as vencidos_8_15,
+        SUM(valor_liquido::numeric) FILTER (WHERE data_vencimento < ${hojeStr}::date - INTERVAL '7 days' AND data_vencimento >= ${hojeStr}::date - INTERVAL '15 days') as valor_8_15,
+        COUNT(*) FILTER (WHERE data_vencimento < ${hojeStr}::date - INTERVAL '15 days' AND data_vencimento >= ${hojeStr}::date - INTERVAL '30 days') as vencidos_16_30,
+        SUM(valor_liquido::numeric) FILTER (WHERE data_vencimento < ${hojeStr}::date - INTERVAL '15 days' AND data_vencimento >= ${hojeStr}::date - INTERVAL '30 days') as valor_16_30,
+        COUNT(*) FILTER (WHERE data_vencimento < ${hojeStr}::date - INTERVAL '30 days') as vencidos_30_plus,
+        SUM(valor_liquido::numeric) FILTER (WHERE data_vencimento < ${hojeStr}::date - INTERVAL '30 days') as valor_30_plus
+      FROM titulo
+      WHERE deleted_at IS NULL 
+        AND status NOT IN ('quitado', 'cancelado')
+        AND data_vencimento < ${hojeStr}
+    `);
+    const aging = agingQuery.rows[0] as any || {};
+    
+    // Próximos vencimentos (14 dias)
+    const d14 = new Date(hoje); d14.setDate(d14.getDate() + 14);
+    const proximosQuery = await db.execute(sql`
+      SELECT t.id, t.descricao, t.tipo, t.status, t.valor_liquido, t.data_vencimento,
+             p.nome as pessoa_nome
+      FROM titulo t
+      LEFT JOIN pessoa p ON t.pessoa_id = p.id
+      WHERE t.deleted_at IS NULL 
+        AND t.status NOT IN ('quitado', 'cancelado')
+        AND t.data_vencimento >= ${hojeStr}
+        AND t.data_vencimento <= ${d14.toISOString().split('T')[0]}
+      ORDER BY t.data_vencimento ASC
+      LIMIT 50
+    `);
+    
+    // Totais vencidos
+    const [vencidosTotal] = await db.select({
+      count: sql<number>`count(*)`,
+      valor: sql<number>`COALESCE(SUM(valor_liquido::numeric), 0)`,
+    }).from(schema.titulo)
+      .where(and(
+        isNull(schema.titulo.deletedAt),
+        sql`status NOT IN ('quitado', 'cancelado')`,
+        sql`data_vencimento < ${hojeStr}`
+      ));
+    
+    // Projeção diária para gráfico (próximos 30 dias)
+    const projecaoDiariaQuery = await db.execute(sql`
+      SELECT 
+        data_vencimento as data,
+        SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END) as entradas,
+        SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END) as saidas
+      FROM titulo
+      WHERE deleted_at IS NULL 
+        AND status NOT IN ('quitado', 'cancelado')
+        AND data_vencimento >= ${hojeStr}
+        AND data_vencimento <= ${d30.toISOString().split('T')[0]}
+      GROUP BY data_vencimento
+      ORDER BY data_vencimento
+    `);
+
+    return {
+      projecao: {
+        d30: { receber: Number(proj.receber_30d) || 0, pagar: Number(proj.pagar_30d) || 0, saldo: (Number(proj.receber_30d) || 0) - (Number(proj.pagar_30d) || 0) },
+        d60: { receber: Number(proj.receber_60d) || 0, pagar: Number(proj.pagar_60d) || 0, saldo: (Number(proj.receber_60d) || 0) - (Number(proj.pagar_60d) || 0) },
+        d90: { receber: Number(proj.receber_90d) || 0, pagar: Number(proj.pagar_90d) || 0, saldo: (Number(proj.receber_90d) || 0) - (Number(proj.pagar_90d) || 0) },
+      },
+      aging: [
+        { faixa: '1-7 dias', count: Number(aging.vencidos_1_7) || 0, valor: Number(aging.valor_1_7) || 0 },
+        { faixa: '8-15 dias', count: Number(aging.vencidos_8_15) || 0, valor: Number(aging.valor_8_15) || 0 },
+        { faixa: '16-30 dias', count: Number(aging.vencidos_16_30) || 0, valor: Number(aging.valor_16_30) || 0 },
+        { faixa: '30+ dias', count: Number(aging.vencidos_30_plus) || 0, valor: Number(aging.valor_30_plus) || 0 },
+      ],
+      vencidos: { count: vencidosTotal.count, valor: Number(vencidosTotal.valor) },
+      proximosVencimentos: (proximosQuery.rows as any[]).map(t => ({
+        id: t.id,
+        descricao: t.descricao,
+        tipo: t.tipo,
+        status: t.status,
+        valor: Number(t.valor_liquido),
+        dataVencimento: t.data_vencimento,
+        pessoaNome: t.pessoa_nome,
+      })),
+      projecaoDiaria: (projecaoDiariaQuery.rows as any[]).map(d => ({
+        data: d.data,
+        entradas: Number(d.entradas),
+        saidas: Number(d.saidas),
+      })),
+    };
+  }),
 });
 
 // ==================== CONTAS FINANCEIRAS ROUTER ====================

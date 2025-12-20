@@ -245,9 +245,9 @@ export default function Dashboard() {
             )}
             <Link href="/titulos">
               <Button size="sm" className="glass-hover shadow-sm min-h-[44px] px-4">
-                <FileText className="mr-2 h-4 w-4" />
-                <span className="hidden xs:inline">Novo Lançamento</span>
-                <span className="xs:hidden">Novo</span>
+                <TrendingUp className="mr-2 h-4 w-4" />
+                <span className="hidden xs:inline">Fluxo de Caixa</span>
+                <span className="xs:hidden">Fluxo</span>
               </Button>
             </Link>
           </div>

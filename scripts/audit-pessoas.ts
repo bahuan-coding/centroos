@@ -1,3 +1,14 @@
+/**
+ * @deprecated Este script foi substituído pelo audit-runner.ts unificado.
+ * Use: npx tsx scripts/audit-runner.ts --ano 2025 --todos --modulos pessoas
+ * 
+ * Script de Auditoria de Pessoas vs Doações (LEGADO)
+ * Cruza dados de associados e não-associados com contribuições
+ */
+
+console.warn('⚠️  AVISO: Este script está DEPRECADO. Use: npx tsx scripts/audit-runner.ts --ano 2025 --modulos pessoas');
+console.warn('');
+
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';

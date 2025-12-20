@@ -1,7 +1,13 @@
 /**
- * Auditoria: Compara títulos no banco com valores esperados do rawdata
+ * @deprecated Este script foi substituído pelo audit-runner.ts unificado.
+ * Use: npx tsx scripts/audit-runner.ts --ano 2025 --todos --modulos doacoes
+ * 
+ * Auditoria: Compara títulos no banco com valores esperados do rawdata (LEGADO)
  * Executar: npx tsx scripts/audit-db-vs-rawdata.ts
  */
+
+console.warn('⚠️  AVISO: Este script está DEPRECADO. Use: npx tsx scripts/audit-runner.ts --ano 2025 --todos');
+console.warn('');
 
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';

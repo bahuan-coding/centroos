@@ -1,9 +1,15 @@
 /**
- * Script de Auditoria de Dados Brutos (RawData)
+ * @deprecated Este script foi substituído pelo audit-runner.ts unificado.
+ * Use: npx tsx scripts/audit-runner.ts --ano 2025 --todos --modulos doacoes
+ * 
+ * Script de Auditoria de Dados Brutos (RawData) (LEGADO)
  * Processa as planilhas de contribuições e gera relatório consolidado
  * 
  * Executar: npx tsx scripts/audit-rawdata.ts
  */
+
+console.warn('⚠️  AVISO: Este script está DEPRECADO. Use: npx tsx scripts/audit-runner.ts --ano 2025 --todos');
+console.warn('');
 
 import * as fs from 'fs';
 import * as path from 'path';

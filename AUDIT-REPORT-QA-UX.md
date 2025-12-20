@@ -477,3 +477,4 @@ Gráfico Chart.js possui legendas pequenas em mobile (font size 11px).
 
 
 
+

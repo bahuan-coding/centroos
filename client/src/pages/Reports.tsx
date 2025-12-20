@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileBarChart, FileCheck, FileSpreadsheet, Download, Loader2, TrendingUp, Building2 } from 'lucide-react';
+import { FileBarChart, FileCheck, FileSpreadsheet, Download, Loader2, TrendingUp, Building2, Shield, Terminal, Copy } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -45,6 +45,14 @@ const reports = [
     icon: Building2,
     color: 'text-indigo-600 bg-indigo-100',
   },
+  {
+    id: 'audit_contabil',
+    title: 'Auditoria Contábil',
+    description: 'Validação completa: rawdata, duplicatas, ITG 2002, NFC, SEFAZ',
+    icon: Shield,
+    color: 'text-rose-600 bg-rose-100',
+    isCli: true,
+  },
 ];
 
 function downloadPDF(base64: string, filename: string) {
@@ -65,6 +73,7 @@ function downloadPDF(base64: string, filename: string) {
 
 export default function Reports() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [auditDialogOpen, setAuditDialogOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [periodId, setPeriodId] = useState<string>('');
 
@@ -78,9 +87,18 @@ export default function Reports() {
   const isPending = financialMutation.isPending || nfcMutation.isPending || balanceteMutation.isPending || dreMutation.isPending || balancoMutation.isPending;
 
   const openDialog = (reportId: string) => {
+    if (reportId === 'audit_contabil') {
+      setAuditDialogOpen(true);
+      return;
+    }
     setSelectedReport(reportId);
     setPeriodId(periods[0]?.id.toString() || '');
     setDialogOpen(true);
+  };
+
+  const copyCommand = (cmd: string) => {
+    navigator.clipboard.writeText(cmd);
+    toast.success('Comando copiado!');
   };
 
   const handleGenerate = async () => {
@@ -196,6 +214,95 @@ export default function Reports() {
             <Button onClick={handleGenerate} disabled={isPending || !periodId}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Gerar PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Auditoria Contábil (CLI) */}
+      <Dialog open={auditDialogOpen} onOpenChange={setAuditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg text-rose-600 bg-rose-100">
+                <Shield className="h-4 w-4" />
+              </div>
+              Auditoria Contábil
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              A auditoria contábil executa validações completas comparando rawdata com o banco de dados.
+              Execute os comandos abaixo no terminal:
+            </p>
+            
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Auditoria completa (todos os meses)</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 bg-muted px-3 py-2 rounded-md text-sm font-mono">
+                    npx tsx scripts/audit-runner.ts --ano 2025 --todos
+                  </code>
+                  <Button size="icon" variant="outline" onClick={() => copyCommand('npx tsx scripts/audit-runner.ts --ano 2025 --todos')}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground">Auditoria de um mês específico</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 bg-muted px-3 py-2 rounded-md text-sm font-mono">
+                    npx tsx scripts/audit-runner.ts --ano 2025 --mes novembro
+                  </code>
+                  <Button size="icon" variant="outline" onClick={() => copyCommand('npx tsx scripts/audit-runner.ts --ano 2025 --mes novembro')}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground">Gerar relatório em Markdown</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 bg-muted px-3 py-2 rounded-md text-sm font-mono">
+                    npx tsx scripts/audit-runner.ts --ano 2025 --todos --formato md --output audit.md
+                  </code>
+                  <Button size="icon" variant="outline" onClick={() => copyCommand('npx tsx scripts/audit-runner.ts --ano 2025 --todos --formato md --output audit.md')}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground">Ver ajuda completa</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 bg-muted px-3 py-2 rounded-md text-sm font-mono">
+                    npx tsx scripts/audit-runner.ts --help
+                  </code>
+                  <Button size="icon" variant="outline" onClick={() => copyCommand('npx tsx scripts/audit-runner.ts --help')}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-3 text-sm">
+              <div className="flex items-center gap-2 font-medium mb-2">
+                <Terminal className="h-4 w-4" />
+                Módulos disponíveis
+              </div>
+              <ul className="text-muted-foreground space-y-1 text-xs">
+                <li><strong>pessoas:</strong> Duplicatas, CPF/CNPJ, contatos</li>
+                <li><strong>doacoes:</strong> Rawdata, títulos, contribuições</li>
+                <li><strong>contabil:</strong> Partidas dobradas, períodos</li>
+                <li><strong>fiscal:</strong> ITG 2002, NFC 70/30, SEFAZ</li>
+                <li><strong>conciliacao:</strong> Extratos vs títulos</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAuditDialogOpen(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

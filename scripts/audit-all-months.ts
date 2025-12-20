@@ -1,11 +1,17 @@
 /**
- * Script de Auditoria Completa - Todos os Meses
+ * @deprecated Este script foi substituído pelo audit-runner.ts unificado.
+ * Use: npx tsx scripts/audit-runner.ts --ano 2025 --todos --modulos doacoes
+ * 
+ * Script de Auditoria Completa - Todos os Meses (LEGADO)
  * 
  * Valida a integridade dos dados de contribuições em todos os meses,
  * cruzando os dados do rawdata com o banco de dados.
  * 
  * Executar: npx tsx scripts/audit-all-months.ts
  */
+
+console.warn('⚠️  AVISO: Este script está DEPRECADO. Use: npx tsx scripts/audit-runner.ts --ano 2025 --todos');
+console.warn('');
 
 import { neon } from '@netlify/neon';
 import { drizzle } from 'drizzle-orm/neon-http';

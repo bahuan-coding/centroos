@@ -27,12 +27,16 @@ import type {
 import { getMesNumero, getMesNome, normalizarNome, MESES } from './types';
 import { Reporter } from './reporter';
 
+// Parser unificado de rawdata
+import { parseAndClassify, type LancamentoClassificado } from '../parsers/rawdata-parser';
+
 // Importar validadores
 import { ValidadorPessoas } from './validators/pessoas';
 import { ValidadorDoacoes } from './validators/doacoes';
 import { ValidadorContabil } from './validators/contabil';
 import { ValidadorFiscal } from './validators/fiscal';
 import { ValidadorConciliacao } from './validators/conciliacao';
+import { ValidadorRawdata } from './validators/rawdata';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -345,7 +349,9 @@ export class AuditEngine {
       if (fs.existsSync(arquivo)) {
         try {
           const conteudo = fs.readFileSync(arquivo, 'utf-8');
-          const dados = this.parseRawdataCSV(conteudo);
+          // Usa parser unificado
+          const lancamentos = parseAndClassify(conteudo);
+          const dados = this.converterParaDadosRawdata(lancamentos);
           const chave = `${mesNome}-${this.parametros.ano}`;
           this.contexto.rawdata.set(chave, dados);
         } catch (error) {
@@ -355,115 +361,25 @@ export class AuditEngine {
     }
   }
   
-  private parseRawdataCSV(content: string): DadosRawdata[] {
-    const lines = content.trim().split('\n');
-    const dados: DadosRawdata[] = [];
-    
-    for (let i = 5; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line.trim()) continue;
-      
-      const cols = this.parseCSVLine(line);
-      const dataStr = cols[0]?.trim();
-      
-      if (!dataStr || dataStr.toLowerCase().includes('saldo')) continue;
-      
-      const data = this.parseData(dataStr);
-      if (!data) continue;
-      
-      const valorCaixa = this.parseValor(cols[5]);
-      const valorBB = this.parseValor(cols[6]);
-      const valorBBRF = this.parseValor(cols[7]);
-      const valorCEF = this.parseValor(cols[8]);
-      
-      let valorTotal = 0;
-      if (valorBB !== 0) valorTotal = valorBB;
-      else if (valorCEF !== 0) valorTotal = valorCEF;
-      else if (valorBBRF !== 0) valorTotal = valorBBRF;
-      else if (valorCaixa !== 0) valorTotal = valorCaixa;
-      
-      const descricao = (cols[4] || '').toLowerCase();
-      let tipo = 'despesa';
-      let natureza = 'outros';
-      
-      if (descricao.includes('contribuição associado')) {
-        tipo = 'contribuicao_associado';
-        natureza = 'contribuicao';
-      } else if (descricao.includes('contribuição não associado')) {
-        tipo = 'contribuicao_nao_associado';
-        natureza = 'doacao';
-      } else if (descricao.includes('bb rende fácil') || descricao.includes('bb renda')) {
-        tipo = 'transferencia_interna';
-        natureza = 'transferencia';
-      } else if (descricao.includes('rendimento')) {
-        tipo = 'rendimento';
-        natureza = 'receita_financeira';
-      } else if (descricao.includes('tarifa')) {
-        tipo = 'tarifa';
-        natureza = 'taxa';
-      }
-      
-      dados.push({
-        lineNumber: i + 1,
-        data,
-        documento: cols[1]?.trim() || '',
-        cnpj: cols[2]?.trim() || '',
-        fornecedor: cols[3]?.trim() || '',
-        descricao: cols[4]?.trim() || '',
-        valorCaixa,
-        valorBB,
-        valorBBRF,
-        valorCEF,
-        valorTotal,
-        tipo,
-        natureza,
-      });
-    }
-    
-    return dados;
-  }
-  
-  private parseCSVLine(line: string): string[] {
-    const result: string[] = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        result.push(current);
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    result.push(current);
-    
-    return result;
-  }
-  
-  private parseData(dataStr: string): Date | null {
-    const parts = dataStr.split('/');
-    if (parts.length !== 3) return null;
-    
-    const [month, day, year] = parts.map(p => parseInt(p));
-    if (isNaN(month) || isNaN(day) || isNaN(year)) return null;
-    
-    const correctedYear = year < 2020 ? 2025 : year;
-    return new Date(correctedYear, month - 1, day);
-  }
-  
-  private parseValor(v: string): number {
-    if (!v || v.trim() === '') return 0;
-    let clean = v.replace(/"/g, '').replace(/\s/g, '').replace(',', '.');
-    if (clean.includes('.') && clean.split('.').length > 2) {
-      const parts = clean.split('.');
-      const decimal = parts.pop();
-      clean = parts.join('') + '.' + decimal;
-    }
-    return parseFloat(clean) || 0;
+  /**
+   * Converte LancamentoClassificado do parser unificado para DadosRawdata
+   */
+  private converterParaDadosRawdata(lancamentos: LancamentoClassificado[]): DadosRawdata[] {
+    return lancamentos.map(l => ({
+      lineNumber: l.lineNumber,
+      data: l.data,
+      documento: l.documento,
+      cnpj: l.cnpj,
+      fornecedor: l.fornecedor,
+      descricao: l.descricao,
+      valorCaixa: l.valorCaixa,
+      valorBB: l.valorBB,
+      valorBBRF: l.valorBBRF,
+      valorCEF: l.valorCEF,
+      valorTotal: l.valorTotal,
+      tipo: l.tipo,
+      natureza: l.natureza,
+    }));
   }
   
   private construirIndices(): void {
@@ -523,35 +439,38 @@ export class AuditEngine {
     for (const modulo of modulos) {
       console.log(`🔍 Executando validador: ${modulo}`);
       
-      let validador;
+      let validadores: any[] = [];
       switch (modulo) {
         case 'pessoas':
-          validador = new ValidadorPessoas();
+          validadores = [new ValidadorPessoas()];
           break;
         case 'doacoes':
-          validador = new ValidadorDoacoes();
+          // Inclui validador de rawdata junto com doações
+          validadores = [new ValidadorDoacoes(), new ValidadorRawdata()];
           break;
         case 'contabil':
-          validador = new ValidadorContabil();
+          validadores = [new ValidadorContabil()];
           break;
         case 'fiscal':
-          validador = new ValidadorFiscal();
+          validadores = [new ValidadorFiscal()];
           break;
         case 'conciliacao':
-          validador = new ValidadorConciliacao();
+          validadores = [new ValidadorConciliacao()];
           break;
         default:
           continue;
       }
       
-      const resultadosModulo = await validador.executar(this.contexto);
-      resultados.push(...resultadosModulo);
-      
-      const erros = resultadosModulo.filter(r => r.severidade === 'erro').length;
-      const avisos = resultadosModulo.filter(r => r.severidade === 'aviso').length;
-      const infos = resultadosModulo.filter(r => r.severidade === 'info').length;
-      
-      console.log(`   ✓ ${resultadosModulo.length} validações (${erros} erros, ${avisos} avisos, ${infos} infos)`);
+      for (const validador of validadores) {
+        const resultadosModulo = await validador.executar(this.contexto);
+        resultados.push(...resultadosModulo);
+        
+        const erros = resultadosModulo.filter((r: ResultadoValidacao) => r.severidade === 'erro').length;
+        const avisos = resultadosModulo.filter((r: ResultadoValidacao) => r.severidade === 'aviso').length;
+        const infos = resultadosModulo.filter((r: ResultadoValidacao) => r.severidade === 'info').length;
+        
+        console.log(`   ✓ ${resultadosModulo.length} validações (${erros} erros, ${avisos} avisos, ${infos} infos)`);
+      }
     }
     
     console.log('');

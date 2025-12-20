@@ -1,295 +1,374 @@
-import { useState } from 'react';
-import { Building2, Wallet, ArrowUpRight, ArrowDownRight, CreditCard, Landmark, PiggyBank, ClipboardCheck, RefreshCw, AlertTriangle, CheckCircle2, X } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState, useMemo } from 'react';
+import { Plus, Building2, Wallet, PiggyBank, TrendingUp, CreditCard, MoreHorizontal, Edit2, Power, Eye, RefreshCw, Loader2, FileSpreadsheet } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/ui/page-header';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { trpc } from '@/lib/trpc';
+import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState, EMPTY_STATES } from '@/components/ui/empty-state';
+import { ContaFinanceiraForm, InativarContaModal } from '@/components/caixa';
 import { cn } from '@/lib/utils';
+import { trpc } from '@/lib/trpc';
+import { toast } from 'sonner';
+import { useLocation } from 'wouter';
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+// Types
+type TipoConta = 'caixa' | 'conta_corrente' | 'poupanca' | 'aplicacao' | 'cartao';
+
+interface ContaFinanceira {
+  id: string;
+  tipo: TipoConta;
+  nome: string;
+  bancoNome?: string;
+  bancoCodigo?: string;
+  agencia?: string;
+  contaNumero?: string;
+  saldo: number;
+  ativo: boolean;
+  ultimaMovimentacao?: string;
 }
 
-function getContaIcon(tipo: string) {
-  switch (tipo) {
-    case 'caixa': return <Wallet className="h-8 w-8" />;
-    case 'conta_corrente': return <Landmark className="h-8 w-8" />;
-    case 'poupanca': return <PiggyBank className="h-8 w-8" />;
-    case 'aplicacao': return <CreditCard className="h-8 w-8" />;
-    default: return <Building2 className="h-8 w-8" />;
-  }
-}
+// Constants
+const TIPO_CONFIG: Record<TipoConta, { label: string; icon: typeof Wallet; color: string }> = {
+  caixa: { label: 'Caixa', icon: Wallet, color: 'from-amber-500 to-orange-600' },
+  conta_corrente: { label: 'Conta Corrente', icon: Building2, color: 'from-blue-500 to-indigo-600' },
+  poupanca: { label: 'Poupança', icon: PiggyBank, color: 'from-emerald-500 to-teal-600' },
+  aplicacao: { label: 'Aplicação', icon: TrendingUp, color: 'from-purple-500 to-violet-600' },
+  cartao: { label: 'Cartão', icon: CreditCard, color: 'from-rose-500 to-pink-600' },
+};
 
-function getContaColor(tipo: string) {
-  switch (tipo) {
-    case 'caixa': return 'text-amber-600 bg-amber-100';
-    case 'conta_corrente': return 'text-blue-600 bg-blue-100';
-    case 'poupanca': return 'text-green-600 bg-green-100';
-    case 'aplicacao': return 'text-purple-600 bg-purple-100';
-    default: return 'text-slate-600 bg-slate-100';
-  }
+
+function ContaCard({ conta, onEdit, onView, onInativar }: { conta: ContaFinanceira; onEdit: () => void; onView: () => void; onInativar: () => void }) {
+  const config = TIPO_CONFIG[conta.tipo];
+  const Icon = config.icon;
+
+  return (
+    <Card className={cn(
+      'relative overflow-hidden transition-all hover:shadow-lg group',
+      !conta.ativo && 'opacity-60'
+    )}>
+      {/* Gradient Header */}
+      <div className={cn('h-2 bg-gradient-to-r', config.color)} />
+      
+      <CardContent className="pt-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className={cn('p-2.5 rounded-xl bg-gradient-to-br text-white', config.color)}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold">{conta.nome}</h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <Badge variant="outline" className="text-[10px]">{config.label}</Badge>
+                {!conta.ativo && <Badge variant="secondary" className="text-[10px]">Inativa</Badge>}
+              </div>
+            </div>
+          </div>
+          
+          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Bank Info */}
+        {conta.bancoNome && (
+          <div className="mt-3 p-2 rounded-lg bg-muted/50 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">{conta.bancoNome}</span>
+              <span className="font-mono">{conta.bancoCodigo}</span>
+            </div>
+            {(conta.agencia || conta.contaNumero) && (
+              <div className="flex gap-4 mt-1 font-mono text-muted-foreground">
+                {conta.agencia && <span>Ag: {conta.agencia}</span>}
+                {conta.contaNumero && <span>Cc: {conta.contaNumero}</span>}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Balance */}
+        <div className="mt-4 pt-3 border-t">
+          <p className="text-xs text-muted-foreground mb-1">Saldo Atual</p>
+          <p className={cn(
+            'text-2xl font-bold font-mono',
+            conta.saldo >= 0 ? 'text-foreground' : 'text-rose-600'
+          )}>
+            R$ {conta.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </p>
+          {conta.ultimaMovimentacao && (
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Última movimentação: {new Date(conta.ultimaMovimentacao).toLocaleDateString('pt-BR')}
+            </p>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button size="sm" variant="outline" className="flex-1" onClick={onView}>
+            <FileSpreadsheet className="h-4 w-4 mr-1" />
+            Extratos
+          </Button>
+          <Button size="sm" variant="outline" className="flex-1" onClick={onEdit}>
+            <Edit2 className="h-4 w-4 mr-1" />
+            Editar
+          </Button>
+          {conta.ativo && (
+            <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-rose-600" onClick={onInativar}>
+              <Power className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function ContasFinanceiras() {
-  const [showAuditoria, setShowAuditoria] = useState(false);
-  const { data: contas = [], isLoading } = trpc.contasFinanceiras.list.useQuery();
-  const { data: stats } = trpc.contasFinanceiras.stats.useQuery();
-  const { data: auditoria, isLoading: loadingAuditoria, refetch: refetchAuditoria } = trpc.contasFinanceiras.auditoria.useQuery(undefined, { enabled: showAuditoria });
-  const recalcularMutation = trpc.contasFinanceiras.recalcular.useMutation();
+  const [, navigate] = useLocation();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingConta, setEditingConta] = useState<ContaFinanceira | null>(null);
+  const [showInativas, setShowInativas] = useState(false);
+  const [inativarModalOpen, setInativarModalOpen] = useState(false);
+  const [contaParaInativar, setContaParaInativar] = useState<ContaFinanceira | null>(null);
 
-  const saldoTotal = contas.reduce((acc: number, c: any) => acc + c.saldoAtual, 0);
+  const { data: contasData, isLoading } = trpc.contasFinanceiras.list.useQuery();
+  const utils = trpc.useUtils();
+  
+  const inativarMutation = trpc.contasFinanceiras.update.useMutation({
+    onSuccess: () => {
+      utils.contasFinanceiras.invalidate();
+      toast.success('Conta inativada com sucesso');
+      setInativarModalOpen(false);
+      setContaParaInativar(null);
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Erro ao inativar conta');
+    },
+  });
+  
+  const contas: ContaFinanceira[] = useMemo(() => {
+    if (!contasData) return [];
+    return contasData.map((c: any) => ({
+      id: c.id,
+      tipo: c.tipo as TipoConta,
+      nome: c.nome,
+      bancoNome: c.bancoNome,
+      bancoCodigo: c.bancoCodigo,
+      agencia: c.agencia,
+      contaNumero: c.contaNumero,
+      saldo: c.saldoAtual || 0,
+      ativo: c.ativo,
+      ultimaMovimentacao: undefined,
+    }));
+  }, [contasData]);
 
+  // Stats
+  const saldoTotal = contas.filter(c => c.ativo).reduce((sum, c) => sum + c.saldo, 0);
+  const totalContas = contas.filter(c => c.ativo).length;
+  const contasAtivas = contas.filter(c => c.ativo);
+  const contasInativas = contas.filter(c => !c.ativo);
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  const handleNew = () => {
+    setEditingConta(null);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (conta: ContaFinanceira) => {
+    setEditingConta(conta);
+    setDialogOpen(true);
+  };
+
+  const handleView = (conta: ContaFinanceira) => {
+    navigate(`/extratos?conta=${conta.id}`);
+  };
+
+  const handleInativar = (conta: ContaFinanceira) => {
+    setContaParaInativar(conta);
+    setInativarModalOpen(true);
+  };
+
+  const handleConfirmInativar = () => {
+    if (contaParaInativar) {
+      inativarMutation.mutate({
+        id: contaParaInativar.id,
+        ativo: false,
+      });
+    }
+  };
+
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <PageHeader
         title="Contas Financeiras"
-        description="Gestão de caixa e contas bancárias"
-        icon={<Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-600 shrink-0" />}
+        description="Gerencie caixa, contas bancárias e aplicações"
+        icon={<Building2 className="h-8 w-8 text-primary" />}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Sincronizar
+            </Button>
+            <Button onClick={handleNew}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Conta
+            </Button>
+          </div>
+        }
       />
 
-      {/* Saldo Total */}
-      <Card className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0">
-        <CardContent className="py-6 sm:py-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <p className="text-emerald-100 text-xs sm:text-sm">Saldo Total Consolidado</p>
-              <p className="text-3xl sm:text-4xl font-bold mt-1">{formatCurrency(saldoTotal)}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="secondary" 
-                size="sm"
-                onClick={() => setShowAuditoria(true)}
-                className="bg-white/20 hover:bg-white/30 text-white border-0"
-              >
-                <ClipboardCheck className="h-4 w-4 mr-2" />
-                Auditar
-              </Button>
-              <p className="text-emerald-100 text-xs sm:text-sm">{stats?.total || 0} contas ativas</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Lista de Contas */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {contas.map((conta: any) => {
-          const colorClass = getContaColor(conta.tipo);
-          return (
-            <Card key={conta.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3 sm:pb-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                    <div className={cn('p-2 sm:p-3 rounded-xl shrink-0', colorClass)}>
-                      {getContaIcon(conta.tipo)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-base sm:text-lg truncate">{conta.nome}</CardTitle>
-                      <CardDescription className="capitalize text-xs sm:text-sm">{conta.tipo.replace('_', ' ')}</CardDescription>
-                    </div>
-                  </div>
-                  <Badge variant={conta.ativo ? 'default' : 'secondary'} className="text-xs shrink-0">
-                    {conta.ativo ? 'Ativa' : 'Inativa'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 sm:space-y-4">
-                {/* Saldo */}
-                <div className="flex items-center justify-between py-2 sm:py-3 border-y">
-                  <span className="text-sm sm:text-base text-muted-foreground">Saldo Atual</span>
-                  <span className={cn(
-                    'text-xl sm:text-2xl font-bold',
-                    conta.saldoAtual >= 0 ? 'text-emerald-600' : 'text-red-600'
-                  )}>
-                    {formatCurrency(conta.saldoAtual)}
-                  </span>
-                </div>
-
-                {/* Movimentação */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div className="flex items-center gap-2">
-                    <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">Entradas</p>
-                      <p className="font-semibold text-green-600 text-xs sm:text-base truncate">{formatCurrency(conta.entradas)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ArrowDownRight className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">Saídas</p>
-                      <p className="font-semibold text-red-600 text-xs sm:text-base truncate">{formatCurrency(conta.saidas)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dados Bancários */}
-                {conta.bancoNome && (
-                  <div className="pt-2 sm:pt-3 border-t space-y-1 text-xs sm:text-sm">
-                    <p><span className="text-muted-foreground">Banco:</span> {conta.bancoNome}</p>
-                    {conta.agencia && <p><span className="text-muted-foreground">Agência:</span> {conta.agencia}</p>}
-                    {conta.contaNumero && <p><span className="text-muted-foreground">Conta:</span> {conta.contaNumero}</p>}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {contas.length === 0 && (
-        <Card>
-          <CardContent className="py-8 sm:py-12 text-center px-4">
-            <Building2 className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
-            <p className="text-sm sm:text-base text-muted-foreground">Nenhuma conta financeira cadastrada</p>
+      {/* Summary Cards */}
+      <div className="grid sm:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+          <CardContent className="pt-5">
+            <p className="text-sm text-white/70">Saldo Total Disponível</p>
+            <p className="text-3xl font-bold font-mono mt-1">
+              R$ {saldoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-white/60 mt-2">
+              Em {totalContas} conta{totalContas !== 1 ? 's' : ''} ativa{totalContas !== 1 ? 's' : ''}
+            </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-emerald-500/10">
+                <TrendingUp className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Bancos + Aplicações</p>
+                <p className="text-xl font-bold font-mono">
+                  R$ {contasAtivas.filter(c => c.tipo !== 'caixa').reduce((s, c) => s + c.saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-amber-500/10">
+                <Wallet className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Caixa Físico</p>
+                <p className="text-xl font-bold font-mono">
+                  R$ {contasAtivas.filter(c => c.tipo === 'caixa').reduce((s, c) => s + c.saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Contas Grid */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Contas Ativas</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {contasAtivas.length === 0 ? (
+            <div className="col-span-full">
+              <EmptyState
+                icon={<Building2 className="h-8 w-8" />}
+                title={EMPTY_STATES.contas.title}
+                description={EMPTY_STATES.contas.description}
+                action={
+                  <Button onClick={handleNew}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar Primeira Conta
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            contasAtivas.map((conta) => (
+              <ContaCard
+                key={conta.id}
+                conta={conta}
+                onEdit={() => handleEdit(conta)}
+                onView={() => handleView(conta)}
+                onInativar={() => handleInativar(conta)}
+              />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Inactive Accounts */}
+      {contasInativas.length > 0 && (
+        <div>
+          <button
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+            onClick={() => setShowInativas(!showInativas)}
+          >
+            <Power className="h-4 w-4" />
+            {showInativas ? 'Ocultar' : 'Mostrar'} contas inativas ({contasInativas.length})
+          </button>
+          
+          {showInativas && (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {contasInativas.map((conta) => (
+                <ContaCard
+                  key={conta.id}
+                  conta={conta}
+                  onEdit={() => handleEdit(conta)}
+                  onView={() => handleView(conta)}
+                  onInativar={() => {}}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Modal de Auditoria */}
-      <Dialog open={showAuditoria} onOpenChange={setShowAuditoria}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      {/* Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ClipboardCheck className="h-5 w-5 text-blue-600" />
-              Auditoria de Contas Financeiras
-            </DialogTitle>
+            <DialogTitle>{editingConta ? 'Editar Conta' : 'Nova Conta Financeira'}</DialogTitle>
           </DialogHeader>
-
-          {loadingAuditoria ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
-          ) : auditoria ? (
-            <div className="space-y-6">
-              {/* Resumo */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-blue-600">{auditoria.resumo.qtdContas}</p>
-                    <p className="text-xs text-muted-foreground">Contas</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-emerald-600">{formatCurrency(auditoria.resumo.totalEntradas)}</p>
-                    <p className="text-xs text-muted-foreground">Total Entradas</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-red-600">{formatCurrency(auditoria.resumo.totalSaidas)}</p>
-                    <p className="text-xs text-muted-foreground">Total Saídas</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className={cn("text-2xl font-bold", auditoria.resumo.saldoTotalCalculado >= 0 ? "text-emerald-600" : "text-red-600")}>
-                      {formatCurrency(auditoria.resumo.saldoTotalCalculado)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Saldo Total</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Alertas */}
-              {auditoria.resumo.qtdProblemas > 0 && (
-                <Card className="border-amber-200 bg-amber-50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
-                      <AlertTriangle className="h-4 w-4" />
-                      {auditoria.resumo.qtdProblemas} Problema(s) Encontrado(s)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="text-xs space-y-1 text-amber-800">
-                      {auditoria.resumo.problemas.map((p: string, i: number) => (
-                        <li key={i}>• {p}</li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
-
-              {auditoria.resumo.qtdProblemas === 0 && (
-                <Card className="border-emerald-200 bg-emerald-50">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                    <span className="text-emerald-700 font-medium">Nenhum problema encontrado nas contas</span>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Detalhes por Conta */}
-              <div className="space-y-3">
-                <h3 className="font-semibold text-sm">Detalhes por Conta</h3>
-                {auditoria.contas.map((conta: any) => (
-                  <Card key={conta.id}>
-                    <CardHeader className="py-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm">{conta.nome}</CardTitle>
-                        <Badge variant="outline" className="text-xs">{conta.tipo}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="py-2">
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
-                        <div>
-                          <p className="text-muted-foreground">Saldo Inicial</p>
-                          <p className="font-semibold">{formatCurrency(conta.saldoInicial)}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Entradas ({conta.qtdEntradas})</p>
-                          <p className="font-semibold text-green-600">{formatCurrency(conta.entradas)}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Saídas ({conta.qtdSaidas})</p>
-                          <p className="font-semibold text-red-600">{formatCurrency(conta.saidas)}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Saldo Calculado</p>
-                          <p className={cn("font-semibold", conta.saldoCalculado >= 0 ? "text-emerald-600" : "text-red-600")}>
-                            {formatCurrency(conta.saldoCalculado)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Total Baixas</p>
-                          <p className="font-semibold">{conta.qtdBaixasTotal}</p>
-                        </div>
-                      </div>
-                      {conta.baixasSemTitulo > 0 && (
-                        <p className="text-xs text-amber-600 mt-2">⚠️ {conta.baixasSemTitulo} baixa(s) sem título</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Ações */}
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => refetchAuditoria()}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Recarregar
-                </Button>
-                <Button onClick={() => setShowAuditoria(false)}>
-                  Fechar
-                </Button>
-              </div>
-            </div>
-          ) : null}
+          <ContaFinanceiraForm
+            contaId={editingConta?.id}
+            initialData={editingConta ? {
+              tipo: editingConta.tipo,
+              nome: editingConta.nome,
+              bancoCodigo: editingConta.bancoCodigo,
+              bancoNome: editingConta.bancoNome,
+              agencia: editingConta.agencia,
+              contaNumero: editingConta.contaNumero,
+            } : undefined}
+            mode={editingConta ? 'edit' : 'create'}
+            onSuccess={() => setDialogOpen(false)}
+            onCancel={() => setDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
+
+      {/* Inativar Modal */}
+      <InativarContaModal
+        open={inativarModalOpen}
+        onOpenChange={setInativarModalOpen}
+        conta={contaParaInativar ? {
+          id: contaParaInativar.id,
+          nome: contaParaInativar.nome,
+          saldo: contaParaInativar.saldo,
+          extratosPendentes: 0, // TODO: get from API
+        } : null}
+        onConfirm={handleConfirmInativar}
+        isLoading={inativarMutation.isPending}
+      />
     </div>
   );
 }
-

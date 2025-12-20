@@ -28,10 +28,35 @@ export const documentoTipoEnum = pgEnum('documento_tipo', ['cpf', 'cnpj', 'rg', 
 export const contatoTipoEnum = pgEnum('contato_tipo', ['email', 'telefone', 'celular', 'whatsapp']);
 export const enderecoTipoEnum = pgEnum('endereco_tipo', ['residencial', 'comercial', 'correspondencia']);
 export const associadoStatusEnum = pgEnum('associado_status', ['ativo', 'suspenso', 'desligado', 'falecido']);
-export const associadoCategoriaEnum = pgEnum('associado_categoria', ['trabalhador', 'frequentador', 'benemerito', 'honorario']);
+// Categorias de Associado - Específicas para Centro Espírita
+export const associadoCategoriaEnum = pgEnum('associado_categoria', [
+  'trabalhador',      // Trabalhador geral da casa
+  'frequentador',     // Frequentador regular
+  'benemerito',       // Benemérito por contribuições
+  'honorario',        // Título honorífico
+  'medium',           // Médium em desenvolvimento/atuante
+  'passista',         // Aplicador de passes
+  'orientador_estudo', // Orientador de estudos doutrinários
+  'evangelizador',    // Evangelizador infantojuvenil
+  'moceiro',          // Participante da Mocidade Espírita
+  'assistido',        // Pessoa que recebe atendimento fraterno
+]);
 export const periodicidadeEnum = pgEnum('periodicidade', ['mensal', 'trimestral', 'semestral', 'anual']);
 export const tratamentoTipoEnum = pgEnum('tratamento_tipo', ['marketing', 'comunicacao', 'compartilhamento', 'dados_sensiveis']);
 export const baseLegalEnum = pgEnum('base_legal', ['consentimento', 'legitimo_interesse', 'obrigacao_legal', 'execucao_contrato']);
+
+// Tipos de Mediunidade - Terminologia Espírita (Kardec)
+export const mediunidadeTipoEnum = pgEnum('mediunidade_tipo', [
+  'passista',         // Aplicador de passes
+  'psicofonia',       // Comunicação verbal de espíritos
+  'psicografia',      // Escrita mediúnica
+  'videncia',         // Visão de espíritos
+  'audiencia',        // Audição de espíritos
+  'intuicao',         // Intuição mediúnica
+  'cura',             // Mediunidade de cura
+  'desdobramento',    // Desdobramento espiritual
+  'incorporacao',     // Incorporação
+]);
 
 // Papéis funcionais - Lei 10.406/2002 (Código Civil) e Lei 9.790/1999 (OSCIP)
 export const pessoaPapelTipoEnum = pgEnum('pessoa_papel_tipo', ['captador_doacao', 'administrador_financeiro', 'diretor', 'conselheiro', 'voluntario']);
@@ -104,6 +129,12 @@ export const pessoa = pgTable(
     nomeFantasia: varchar('nome_fantasia', { length: 255 }),
     ativo: boolean('ativo').notNull().default(true),
     observacoes: text('observacoes'),
+    // Campos de Mediunidade - Específicos para Centro Espírita
+    dataInicioDesenvolvimento: date('data_inicio_desenvolvimento'),
+    tiposMediunidade: text('tipos_mediunidade').array(),
+    observacoesMediunidade: text('observacoes_mediunidade'),
+    grupoEstudoId: uuid('grupo_estudo_id'),
+    // Campos LGPD e técnicos
     dadosSensiveisCriptografados: jsonb('dados_sensiveis_criptografados'),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -237,6 +268,31 @@ export const consentimentoLgpd = pgTable(
   (table) => ({
     pessoaIdx: index('idx_consentimento_pessoa').on(table.pessoaId),
     tipoIdx: index('idx_consentimento_tipo').on(table.tipoTratamento),
+  })
+);
+
+// Grupos de Estudo - Centro Espírita (Estudos Doutrinários)
+export const grupoEstudo = pgTable(
+  'grupo_estudo',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    nome: varchar('nome', { length: 100 }).notNull(),
+    descricao: text('descricao'),
+    diaSemana: integer('dia_semana'), // 0=Dom, 1=Seg, ..., 6=Sab
+    horario: varchar('horario', { length: 10 }), // "19:30"
+    sala: varchar('sala', { length: 50 }),
+    orientadorId: uuid('orientador_id').references(() => pessoa.id),
+    obraEstudo: varchar('obra_estudo', { length: 200 }), // Ex: "O Livro dos Espíritos"
+    ativo: boolean('ativo').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    createdBy: uuid('created_by'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedBy: uuid('updated_by'),
+  },
+  (table) => ({
+    nomeIdx: index('idx_grupo_estudo_nome').on(table.nome),
+    ativoIdx: index('idx_grupo_estudo_ativo').on(table.ativo),
+    orientadorIdx: index('idx_grupo_estudo_orientador').on(table.orientadorId),
   })
 );
 
@@ -743,7 +799,7 @@ export const fundoAlocacao = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     fundoId: uuid('fundo_id').notNull().references(() => fundo.id),
-    lancamentoLinhaId: uuid('lancamento_linha_id').notNull().references(() => lancamentoLinha.id),
+    lancamentoLinhaId: uuid('lancamento_linha_id').references(() => lancamentoLinha.id),
     valor: numeric('valor', { precision: 14, scale: 2 }).notNull(),
     dataAlocacao: date('data_alocacao').notNull(),
     origemDescricao: text('origem_descricao'),
@@ -763,7 +819,7 @@ export const fundoConsumo = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     fundoId: uuid('fundo_id').notNull().references(() => fundo.id),
-    lancamentoLinhaId: uuid('lancamento_linha_id').notNull().references(() => lancamentoLinha.id),
+    lancamentoLinhaId: uuid('lancamento_linha_id').references(() => lancamentoLinha.id),
     tituloId: uuid('titulo_id').references(() => titulo.id),
     valor: numeric('valor', { precision: 14, scale: 2 }).notNull(),
     dataConsumo: date('data_consumo').notNull(),
@@ -841,6 +897,26 @@ export const bemDepreciacao = pgTable(
     bemPeriodoUnique: uniqueIndex('idx_depreciacao_bem_periodo').on(table.bemId, table.periodoId),
     bemIdx: index('idx_depreciacao_bem').on(table.bemId),
     periodoIdx: index('idx_depreciacao_periodo').on(table.periodoId),
+  })
+);
+
+export const bemTransferencia = pgTable(
+  'bem_transferencia',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    bemId: uuid('bem_id').notNull().references(() => bemPatrimonial.id),
+    dataTransferencia: timestamp('data_transferencia', { withTimezone: true }).notNull().defaultNow(),
+    localizacaoAnterior: varchar('localizacao_anterior', { length: 200 }),
+    localizacaoNova: varchar('localizacao_nova', { length: 200 }),
+    responsavelAnteriorId: uuid('responsavel_anterior_id'),
+    responsavelNovoId: uuid('responsavel_novo_id'),
+    motivo: text('motivo').notNull(),
+    createdBy: uuid('created_by'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    bemIdx: index('idx_transferencia_bem').on(table.bemId),
+    dataIdx: index('idx_transferencia_data').on(table.dataTransferencia),
   })
 );
 
@@ -1030,6 +1106,8 @@ export type AssociadoHistorico = typeof associadoHistorico.$inferSelect;
 export type InsertAssociadoHistorico = typeof associadoHistorico.$inferInsert;
 export type ConsentimentoLgpd = typeof consentimentoLgpd.$inferSelect;
 export type InsertConsentimentoLgpd = typeof consentimentoLgpd.$inferInsert;
+export type GrupoEstudo = typeof grupoEstudo.$inferSelect;
+export type InsertGrupoEstudo = typeof grupoEstudo.$inferInsert;
 export type PessoaPapel = typeof pessoaPapel.$inferSelect;
 export type InsertPessoaPapel = typeof pessoaPapel.$inferInsert;
 export type CaptadorDoacao = typeof captadorDoacao.$inferSelect;
@@ -1086,6 +1164,8 @@ export type BemPatrimonial = typeof bemPatrimonial.$inferSelect;
 export type InsertBemPatrimonial = typeof bemPatrimonial.$inferInsert;
 export type BemDepreciacao = typeof bemDepreciacao.$inferSelect;
 export type InsertBemDepreciacao = typeof bemDepreciacao.$inferInsert;
+export type BemTransferencia = typeof bemTransferencia.$inferSelect;
+export type InsertBemTransferencia = typeof bemTransferencia.$inferInsert;
 
 // Módulo G
 export type Usuario = typeof usuario.$inferSelect;

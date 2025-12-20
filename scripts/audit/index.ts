@@ -25,4 +25,5 @@ export { ValidadorDoacoes } from './validators/doacoes';
 export { ValidadorContabil } from './validators/contabil';
 export { ValidadorFiscal } from './validators/fiscal';
 export { ValidadorConciliacao } from './validators/conciliacao';
+export { ValidadorRawdata } from './validators/rawdata';
 

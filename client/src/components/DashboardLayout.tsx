@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { LayoutDashboard, FolderTree, FileText, Calendar, Upload, BarChart3, Settings, Menu, Users, Building2, ArrowLeftRight, LogOut, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, FolderTree, FileText, Calendar, Upload, BarChart3, Settings, Menu, Users, Building2, ArrowLeftRight, LogOut, TrendingUp, Receipt, BookOpen, Layers, Boxes, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -10,12 +10,17 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/pessoas', label: 'Pessoas', icon: Users },
   { href: '/contas', label: 'Contas Financeiras', icon: Building2 },
+  { href: '/pagar-receber', label: 'Pagar/Receber', icon: Receipt },
   { href: '/titulos', label: 'Fluxo de Caixa', icon: TrendingUp },
+  { href: '/contabilidade', label: 'Contabilidade', icon: BookOpen },
   { href: '/accounts', label: 'Plano de Contas', icon: FolderTree },
+  { href: '/patrimonio', label: 'Patrimônio', icon: Boxes },
+  { href: '/projetos-fundos', label: 'Projetos e Fundos', icon: Layers },
   { href: '/periods', label: 'Períodos', icon: Calendar },
   { href: '/conciliacao', label: 'Conciliação', icon: ArrowLeftRight },
   { href: '/import', label: 'Importar Extrato', icon: Upload },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
+  { href: '/governanca', label: 'Governança', icon: Shield },
   { href: '/settings', label: 'Configurações', icon: Settings },
 ];
 

@@ -239,14 +239,15 @@ export default function Dashboard() {
           
           <div className="flex items-center gap-3">
             {kpis?.mesAtual && (
-              <Badge variant="secondary" className="text-sm px-3 py-1.5">
+              <Badge variant="secondary" className="hidden sm:inline-flex text-sm px-3 py-1.5">
                 Período: {kpis.mesAtual.split('-').reverse().join('/')}
               </Badge>
             )}
             <Link href="/titulos">
-              <Button size="sm" className="glass-hover shadow-sm">
+              <Button size="sm" className="glass-hover shadow-sm min-h-[44px] px-4">
                 <FileText className="mr-2 h-4 w-4" />
-                Novo Lançamento
+                <span className="hidden xs:inline">Novo Lançamento</span>
+                <span className="xs:hidden">Novo</span>
               </Button>
             </Link>
           </div>

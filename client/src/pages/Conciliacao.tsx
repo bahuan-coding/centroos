@@ -116,12 +116,13 @@ function ConciliacaoDrawer({ linha, onClose }: { linha: any; onClose: () => void
   return (
     <div className="fixed inset-0 z-40 flex justify-end pt-16">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-xl bg-background shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto rounded-tl-2xl">
+      <div className="relative w-full sm:max-w-xl bg-background shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto sm:rounded-tl-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-6 z-10 rounded-tl-2xl">
+        <div className="sticky top-0 bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-4 sm:p-6 z-10 sm:rounded-tl-2xl">
           <button 
             onClick={onClose} 
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/20 transition-colors"
+            className="absolute top-3 right-3 p-3 rounded-full hover:bg-white/20 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Fechar"
           >
             <X className="h-5 w-5" />
           </button>
@@ -670,25 +671,25 @@ export default function Conciliacao() {
       {/* Tabs de Conteúdo */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="extratos" className="gap-2">
+          <TabsTrigger value="extratos" className="gap-2" aria-label="Extratos Bancários" title="Extratos Bancários">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Extratos</span>
             {stats?.pendentes ? (
               <Badge className="bg-amber-100 text-amber-700 text-[10px] ml-1">{stats.pendentes}</Badge>
             ) : null}
           </TabsTrigger>
-          <TabsTrigger value="inconsistencias" className="gap-2">
+          <TabsTrigger value="inconsistencias" className="gap-2" aria-label="Inconsistências" title="Inconsistências">
             <AlertTriangle className="h-4 w-4" />
             <span className="hidden sm:inline">Inconsistências</span>
             {totalInconsistencias > 0 && (
               <Badge className="bg-red-100 text-red-700 text-[10px] ml-1">{totalInconsistencias}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="doadores" className="gap-2">
+          <TabsTrigger value="doadores" className="gap-2" aria-label="Doadores sem CPF" title="Doadores sem CPF">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Sem CPF</span>
           </TabsTrigger>
-          <TabsTrigger value="orfas" className="gap-2">
+          <TabsTrigger value="orfas" className="gap-2" aria-label="Transações Órfãs" title="Transações Órfãs">
             <Link2 className="h-4 w-4" />
             <span className="hidden sm:inline">Órfãs</span>
           </TabsTrigger>
@@ -849,7 +850,7 @@ export default function Conciliacao() {
                         return (
                           <button
                             onClick={() => linha.status === 'pendente' && setSelectedLinha(linha)}
-                            className="w-full text-left"
+                            className="w-full text-left min-h-[44px] py-2"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0 flex-1">

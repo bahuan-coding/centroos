@@ -157,8 +157,8 @@ const accountsRouter = router({
 
     // Calcular entradas e saídas das baixas
     const [baixasTotais] = await db.select({
-      entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN tb.valor_pago::numeric ELSE 0 END), 0)`,
-      saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN tb.valor_pago::numeric ELSE 0 END), 0)`,
+      entradas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'receber' THEN ${schema.tituloBaixa.valorPago}::numeric ELSE 0 END), 0)`,
+      saidas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'pagar' THEN ${schema.tituloBaixa.valorPago}::numeric ELSE 0 END), 0)`,
     }).from(schema.tituloBaixa)
       .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id));
 
@@ -250,8 +250,8 @@ const accountsRouter = router({
     // Saldo das contas financeiras
     const contasFinanceiras = await db.select().from(schema.contaFinanceira).where(eq(schema.contaFinanceira.ativo, true));
     const [baixasTotais] = await db.select({
-      entradas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'receber' THEN tb.valor_pago::numeric ELSE 0 END), 0)`,
-      saidas: sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'pagar' THEN tb.valor_pago::numeric ELSE 0 END), 0)`,
+      entradas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'receber' THEN ${schema.tituloBaixa.valorPago}::numeric ELSE 0 END), 0)`,
+      saidas: sql<number>`COALESCE(SUM(CASE WHEN ${schema.titulo.tipo} = 'pagar' THEN ${schema.tituloBaixa.valorPago}::numeric ELSE 0 END), 0)`,
     }).from(schema.tituloBaixa)
       .leftJoin(schema.titulo, eq(schema.tituloBaixa.tituloId, schema.titulo.id));
 

@@ -21,6 +21,7 @@ import Patrimonio from './pages/Patrimonio';
 import ModuloE from './pages/ModuloE';
 import Governanca from './pages/Governanca';
 import Login from './pages/Login';
+import NotFound from './pages/NotFound';
 import { isAuthenticated } from './lib/auth';
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -65,6 +66,7 @@ export default function App() {
               <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
               <Route path="/patrimonio" component={() => <ProtectedRoute component={Patrimonio} />} />
               <Route path="/projetos-fundos" component={() => <ProtectedRoute component={ModuloE} />} />
+              <Route path="/:rest*" component={NotFound} />
             </Switch>
           </DashboardLayout>
         </Route>

@@ -100,15 +100,39 @@ export async function detectDuplicates(
     .from(schema.entries)
     .where(eq(schema.entries.periodId, periodId));
 
+  // Build a lookup index for faster matching
+  const dateIndex = new Map<string, typeof existing>();
+  for (const entry of existing) {
+    const dateKey = new Date(entry.transactionDate).toISOString().split('T')[0];
+    if (!dateIndex.has(dateKey)) dateIndex.set(dateKey, []);
+    dateIndex.get(dateKey)!.push(entry);
+  }
+
   for (let i = 0; i < transactions.length; i++) {
     const tx = transactions[i];
+    const txDateKey = tx.date.toISOString().split('T')[0];
 
-    for (const entry of existing) {
-      const dateMatch = Math.abs(new Date(entry.transactionDate).getTime() - tx.date.getTime()) < 86400000;
+    // Note: FITID matching could be added when entries table has fitId column
+    // For now, we rely on date/amount/description matching
+
+    // Check entries on the same day or adjacent days
+    const dayBefore = new Date(tx.date);
+    dayBefore.setDate(dayBefore.getDate() - 1);
+    const dayAfter = new Date(tx.date);
+    dayAfter.setDate(dayAfter.getDate() + 1);
+
+    const candidates = [
+      ...(dateIndex.get(txDateKey) || []),
+      ...(dateIndex.get(dayBefore.toISOString().split('T')[0]) || []),
+      ...(dateIndex.get(dayAfter.toISOString().split('T')[0]) || []),
+    ];
+
+    for (const entry of candidates) {
       const amountMatch = entry.amountCents === tx.amountCents;
-      const descSim = similarity(entry.description, tx.description);
+      if (!amountMatch) continue;
 
-      if (dateMatch && amountMatch && descSim > 0.7) {
+      const descSim = similarity(entry.description, tx.description);
+      if (descSim > 0.7) {
         duplicates.add(i);
         break;
       }

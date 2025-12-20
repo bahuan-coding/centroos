@@ -1236,6 +1236,8 @@ const bankImportsRouter = router({
           totalCount: classifiedTxs.length,
           duplicateCount: duplicateIndexes.size,
           classifiedCount: classifiedTxs.filter(t => t.suggestedAccountId).length,
+          bank: parsed.bank,
+          account: parsed.account,
         };
       } catch (error: any) {
         await db.update(schema.bankImports).set({

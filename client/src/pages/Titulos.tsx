@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { FileText, Search, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -40,10 +41,20 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Titulos() {
+  const [location] = useLocation();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [tipoFiltro, setTipoFiltro] = useState<'pagar' | 'receber' | ''>('');
   const [mesFiltro, setMesFiltro] = useState<string>('');
+  
+  // Read mes from URL query params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mesParam = params.get('mes');
+    if (mesParam && /^\d{4}-\d{2}$/.test(mesParam)) {
+      setMesFiltro(mesParam);
+    }
+  }, []);
 
   const { data, isLoading } = trpc.titulos.list.useQuery({
     tipo: tipoFiltro || undefined,

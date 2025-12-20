@@ -477,6 +477,263 @@ const periodsRouter = router({
       
       return { success: true };
     }),
+
+  // ==================== ENHANCED PERIODS ENDPOINTS ====================
+  listWithStats: publicProcedure.query(async () => {
+    const db = await getDb();
+    
+    const periods = await db.select().from(schema.periods).orderBy(desc(schema.periods.year), desc(schema.periods.month));
+    
+    // Get stats for each period from titulos (data_competencia matching month/year)
+    const periodsWithStats = await Promise.all(periods.map(async (p) => {
+      const inicio = `${p.year}-${String(p.month).padStart(2, '0')}-01`;
+      const ultimoDia = new Date(p.year, p.month, 0).getDate();
+      const fim = `${p.year}-${String(p.month).padStart(2, '0')}-${ultimoDia}`;
+      
+      const [stats] = await db.select({
+        receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+        despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+        qtdLancamentos: sql<number>`COUNT(*)`,
+        quitados: sql<number>`COUNT(CASE WHEN status = 'quitado' THEN 1 END)`,
+      }).from(schema.titulo)
+        .where(and(
+          isNull(schema.titulo.deletedAt),
+          sql`data_competencia >= ${inicio} AND data_competencia <= ${fim}`
+        ));
+      
+      const receitas = Number(stats?.receitas) || 0;
+      const despesas = Number(stats?.despesas) || 0;
+      const qtdLancamentos = Number(stats?.qtdLancamentos) || 0;
+      const quitados = Number(stats?.quitados) || 0;
+      
+      return {
+        ...p,
+        receitas,
+        despesas,
+        resultado: receitas - despesas,
+        qtdLancamentos,
+        percentConciliado: qtdLancamentos > 0 ? Math.round((quitados / qtdLancamentos) * 100) : 0,
+      };
+    }));
+    
+    // Calculate yearly totals
+    const anoAtual = new Date().getFullYear();
+    const periodosAno = periodsWithStats.filter(p => p.year === anoAtual);
+    
+    const receitasAno = periodosAno.reduce((acc, p) => acc + p.receitas, 0);
+    const despesasAno = periodosAno.reduce((acc, p) => acc + p.despesas, 0);
+    const resultadoAno = receitasAno - despesasAno;
+    
+    // Generate global insights
+    const insights: { tipo: 'info' | 'warning' | 'success' | 'danger'; mensagem: string }[] = [];
+    
+    // Check for deficit months
+    const mesesDeficit = periodosAno.filter(p => p.resultado < 0);
+    if (mesesDeficit.length > 0) {
+      insights.push({ 
+        tipo: 'warning', 
+        mensagem: `${mesesDeficit.length} mês(es) com déficit em ${anoAtual}` 
+      });
+    }
+    
+    // Trend analysis (compare last 3 months)
+    if (periodsWithStats.length >= 3) {
+      const ultimos3 = periodsWithStats.slice(0, 3);
+      const tendenciaReceitas = ultimos3[0].receitas - ultimos3[2].receitas;
+      if (tendenciaReceitas > 0) {
+        insights.push({ tipo: 'success', mensagem: 'Receitas em tendência de alta nos últimos 3 meses' });
+      } else if (tendenciaReceitas < 0) {
+        insights.push({ tipo: 'warning', mensagem: 'Receitas em queda nos últimos 3 meses' });
+      }
+    }
+    
+    // Best performing month
+    if (periodosAno.length > 0) {
+      const melhorMes = periodosAno.reduce((best, p) => p.resultado > best.resultado ? p : best, periodosAno[0]);
+      if (melhorMes.resultado > 0) {
+        const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        insights.push({ 
+          tipo: 'info', 
+          mensagem: `Melhor resultado: ${meses[melhorMes.month - 1]} com superávit de R$ ${melhorMes.resultado.toLocaleString('pt-BR')}` 
+        });
+      }
+    }
+    
+    // Yearly result
+    if (resultadoAno >= 0) {
+      insights.push({ tipo: 'success', mensagem: `Exercício ${anoAtual} com superávit acumulado` });
+    } else {
+      insights.push({ tipo: 'danger', mensagem: `Exercício ${anoAtual} com déficit acumulado` });
+    }
+    
+    return {
+      periods: periodsWithStats,
+      totals: {
+        receitasAno,
+        despesasAno,
+        resultadoAno,
+        periodosAbertos: periods.filter(p => p.status === 'open').length,
+        periodosFechados: periods.filter(p => p.status === 'closed').length,
+      },
+      insights,
+    };
+  }),
+
+  detail: publicProcedure.input(z.number()).query(async ({ input: periodId }) => {
+    const db = await getDb();
+    
+    const [period] = await db.select().from(schema.periods).where(eq(schema.periods.id, periodId));
+    if (!period) throw new TRPCError({ code: 'NOT_FOUND', message: 'Período não encontrado' });
+    
+    const inicio = `${period.year}-${String(period.month).padStart(2, '0')}-01`;
+    const ultimoDia = new Date(period.year, period.month, 0).getDate();
+    const fim = `${period.year}-${String(period.month).padStart(2, '0')}-${ultimoDia}`;
+    
+    // Composição de receitas por natureza
+    const composicaoReceitas = await db.select({
+      natureza: schema.titulo.natureza,
+      valor: sql<number>`COALESCE(SUM(valor_liquido::numeric), 0)`,
+      quantidade: sql<number>`COUNT(*)`,
+    }).from(schema.titulo)
+      .where(and(
+        isNull(schema.titulo.deletedAt),
+        eq(schema.titulo.tipo, 'receber'),
+        sql`data_competencia >= ${inicio} AND data_competencia <= ${fim}`
+      ))
+      .groupBy(schema.titulo.natureza)
+      .orderBy(sql`SUM(valor_liquido::numeric) DESC`);
+    
+    // Composição de despesas por natureza
+    const composicaoDespesas = await db.select({
+      natureza: schema.titulo.natureza,
+      valor: sql<number>`COALESCE(SUM(valor_liquido::numeric), 0)`,
+      quantidade: sql<number>`COUNT(*)`,
+    }).from(schema.titulo)
+      .where(and(
+        isNull(schema.titulo.deletedAt),
+        eq(schema.titulo.tipo, 'pagar'),
+        sql`data_competencia >= ${inicio} AND data_competencia <= ${fim}`
+      ))
+      .groupBy(schema.titulo.natureza)
+      .orderBy(sql`SUM(valor_liquido::numeric) DESC`);
+    
+    // Top 5 receitas
+    const topReceitas = await db.select({
+      id: schema.titulo.id,
+      descricao: schema.titulo.descricao,
+      valor: sql<number>`valor_liquido::numeric`,
+      pessoaNome: schema.pessoa.nome,
+    }).from(schema.titulo)
+      .leftJoin(schema.pessoa, eq(schema.titulo.pessoaId, schema.pessoa.id))
+      .where(and(
+        isNull(schema.titulo.deletedAt),
+        eq(schema.titulo.tipo, 'receber'),
+        sql`data_competencia >= ${inicio} AND data_competencia <= ${fim}`
+      ))
+      .orderBy(sql`valor_liquido::numeric DESC`)
+      .limit(5);
+    
+    // Top 5 despesas
+    const topDespesas = await db.select({
+      id: schema.titulo.id,
+      descricao: schema.titulo.descricao,
+      valor: sql<number>`valor_liquido::numeric`,
+      pessoaNome: schema.pessoa.nome,
+    }).from(schema.titulo)
+      .leftJoin(schema.pessoa, eq(schema.titulo.pessoaId, schema.pessoa.id))
+      .where(and(
+        isNull(schema.titulo.deletedAt),
+        eq(schema.titulo.tipo, 'pagar'),
+        sql`data_competencia >= ${inicio} AND data_competencia <= ${fim}`
+      ))
+      .orderBy(sql`valor_liquido::numeric DESC`)
+      .limit(5);
+    
+    // Totals for current period
+    const totalReceitas = composicaoReceitas.reduce((acc, r) => acc + Number(r.valor), 0);
+    const totalDespesas = composicaoDespesas.reduce((acc, r) => acc + Number(r.valor), 0);
+    
+    // Comparativo com período anterior
+    const mesAnterior = period.month === 1 ? 12 : period.month - 1;
+    const anoAnterior = period.month === 1 ? period.year - 1 : period.year;
+    const inicioAnt = `${anoAnterior}-${String(mesAnterior).padStart(2, '0')}-01`;
+    const ultimoDiaAnt = new Date(anoAnterior, mesAnterior, 0).getDate();
+    const fimAnt = `${anoAnterior}-${String(mesAnterior).padStart(2, '0')}-${ultimoDiaAnt}`;
+    
+    const [statsAnt] = await db.select({
+      receitas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'receber' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+      despesas: sql<number>`COALESCE(SUM(CASE WHEN tipo = 'pagar' THEN valor_liquido::numeric ELSE 0 END), 0)`,
+    }).from(schema.titulo)
+      .where(and(
+        isNull(schema.titulo.deletedAt),
+        sql`data_competencia >= ${inicioAnt} AND data_competencia <= ${fimAnt}`
+      ));
+    
+    const receitasAnt = Number(statsAnt?.receitas) || 0;
+    const despesasAnt = Number(statsAnt?.despesas) || 0;
+    const resultadoAnt = receitasAnt - despesasAnt;
+    
+    const calcVar = (atual: number, anterior: number) => 
+      anterior > 0 ? ((atual - anterior) / anterior) * 100 : (atual > 0 ? 100 : 0);
+    
+    // Generate insights
+    const insights: { tipo: 'info' | 'warning' | 'success' | 'danger'; mensagem: string }[] = [];
+    
+    const receitasVar = calcVar(totalReceitas, receitasAnt);
+    const despesasVar = calcVar(totalDespesas, despesasAnt);
+    const resultado = totalReceitas - totalDespesas;
+    
+    if (receitasVar < -20) {
+      insights.push({ tipo: 'warning', mensagem: `Receitas caíram ${Math.abs(receitasVar).toFixed(0)}% vs mês anterior` });
+    } else if (receitasVar > 20) {
+      insights.push({ tipo: 'success', mensagem: `Receitas cresceram ${receitasVar.toFixed(0)}% vs mês anterior` });
+    }
+    
+    if (despesasVar > 30) {
+      insights.push({ tipo: 'danger', mensagem: `Despesas aumentaram ${despesasVar.toFixed(0)}% vs mês anterior` });
+    } else if (despesasVar < -20) {
+      insights.push({ tipo: 'success', mensagem: `Despesas reduziram ${Math.abs(despesasVar).toFixed(0)}%` });
+    }
+    
+    if (resultado < 0) {
+      insights.push({ tipo: 'danger', mensagem: `Período com déficit de R$ ${Math.abs(resultado).toLocaleString('pt-BR')}` });
+    } else if (resultado > 0) {
+      insights.push({ tipo: 'success', mensagem: `Superávit de R$ ${resultado.toLocaleString('pt-BR')}` });
+    }
+    
+    // Concentração de receitas (se top 1 > 50%)
+    if (topReceitas.length > 0 && totalReceitas > 0) {
+      const topPercent = (Number(topReceitas[0].valor) / totalReceitas) * 100;
+      if (topPercent > 50) {
+        insights.push({ tipo: 'warning', mensagem: `Alta concentração: ${topPercent.toFixed(0)}% das receitas vêm de uma única fonte` });
+      }
+    }
+    
+    return {
+      period,
+      totals: { receitas: totalReceitas, despesas: totalDespesas, resultado },
+      composicaoReceitas: composicaoReceitas.map(r => ({
+        natureza: r.natureza,
+        valor: Number(r.valor),
+        percentual: totalReceitas > 0 ? (Number(r.valor) / totalReceitas) * 100 : 0,
+      })),
+      composicaoDespesas: composicaoDespesas.map(r => ({
+        natureza: r.natureza,
+        valor: Number(r.valor),
+        percentual: totalDespesas > 0 ? (Number(r.valor) / totalDespesas) * 100 : 0,
+      })),
+      topReceitas: topReceitas.map(r => ({ ...r, valor: Number(r.valor) })),
+      topDespesas: topDespesas.map(r => ({ ...r, valor: Number(r.valor) })),
+      comparativo: {
+        receitasVar,
+        despesasVar,
+        resultadoVar: calcVar(resultado, resultadoAnt),
+        receitasAnt,
+        despesasAnt,
+      },
+      insights,
+    };
+  }),
 });
 
 // ==================== ENTRIES ROUTER ====================

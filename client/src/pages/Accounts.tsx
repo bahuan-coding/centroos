@@ -306,10 +306,16 @@ export default function Accounts() {
   const utils = trpc.useUtils();
   
   // Queries
-  const { data: stats, isLoading: loadingStats } = trpc.accounts.planoContasStats.useQuery();
+  const { data: stats, isLoading: loadingStats, error: statsError } = trpc.accounts.planoContasStats.useQuery();
   const { data: tree = [], isLoading: loadingTree } = trpc.accounts.planoContasTree.useQuery();
   const { data: insights } = trpc.accounts.planoContasInsights.useQuery();
   const { data: accounts = [] } = trpc.accounts.list.useQuery();
+
+  // #region agent log
+  React.useEffect(() => {
+    fetch('http://127.0.0.1:7244/ingest/b5981482-2724-43c9-87b5-9879decba750',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Accounts.tsx:315',message:'Stats query result',data:{stats,loadingStats,hasError:!!statsError,errorMsg:statsError?.message,ativos:stats?.equacaoPatrimonial?.ativos,passivos:stats?.equacaoPatrimonial?.passivos},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H2-H3'})}).catch(()=>{});
+  }, [stats, loadingStats, statsError]);
+  // #endregion
 
   const createMutation = trpc.accounts.create.useMutation({ 
     onSuccess: () => { 
@@ -477,6 +483,17 @@ export default function Accounts() {
           </div>
         }
       />
+
+      {/* #region agent log - DEBUG VISUAL */}
+      {process.env.NODE_ENV !== 'production' || true ? (
+        <div className="bg-yellow-100 text-yellow-900 p-2 rounded text-xs font-mono mb-4">
+          <strong>DEBUG:</strong> loading={String(loadingStats)} | 
+          ativos={stats?.equacaoPatrimonial?.ativos ?? 'null'} | 
+          totals={stats?.totals?.total ?? 'null'} |
+          error={statsError?.message ?? 'none'}
+        </div>
+      ) : null}
+      {/* #endregion */}
 
       {/* ========== KPIs CONTÁBEIS ========== */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

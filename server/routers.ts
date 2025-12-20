@@ -193,7 +193,8 @@ const accountsRouter = router({
       { tipo: 'despesa', qtdTitulos: Number(despesas.qtd) || 0, valorTotal: totalDespesas },
     ];
 
-    return {
+    // #region agent log
+    const result = {
       totals: {
         total: Number(totals.total) || 0,
         analiticas: Number(totals.analiticas) || 0,
@@ -213,6 +214,9 @@ const accountsRouter = router({
         balanceado: true,
       },
     };
+    fetch('http://127.0.0.1:7244/ingest/b5981482-2724-43c9-87b5-9879decba750',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'routers.ts:planoContasStats',message:'Returning stats',data:{saldoInicialTotal,entradas,saidas,saldoAtual,totalReceitas,totalDespesas,result},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-backend'})}).catch(()=>{});
+    return result;
+    // #endregion
   }),
 
   planoContasTree: publicProcedure.query(async () => {

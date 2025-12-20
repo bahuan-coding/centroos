@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, ChevronRight, ChevronDown, Edit2, Search, FolderTree, ChevronsUpDown, TrendingUp, TrendingDown, Activity, CheckCircle2, AlertCircle, Layers, BarChart3, PieChart, Zap, Eye, Scale } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -312,8 +312,8 @@ export default function Accounts() {
   const { data: accounts = [] } = trpc.accounts.list.useQuery();
 
   // #region agent log
-  React.useEffect(() => {
-    fetch('http://127.0.0.1:7244/ingest/b5981482-2724-43c9-87b5-9879decba750',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Accounts.tsx:315',message:'Stats query result',data:{stats,loadingStats,hasError:!!statsError,errorMsg:statsError?.message,ativos:stats?.equacaoPatrimonial?.ativos,passivos:stats?.equacaoPatrimonial?.passivos},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H2-H3'})}).catch(()=>{});
+  useEffect(() => {
+    console.log('[DEBUG] Stats:', { stats, loadingStats, statsError });
   }, [stats, loadingStats, statsError]);
   // #endregion
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, ChevronRight, ChevronDown, Edit2, Search, FolderTree, ChevronsUpDown, TrendingUp, TrendingDown, Activity, CheckCircle2, AlertCircle, Layers, BarChart3, PieChart, Zap, Eye, Scale } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -306,16 +306,11 @@ export default function Accounts() {
   const utils = trpc.useUtils();
   
   // Queries
-  const { data: stats, isLoading: loadingStats, error: statsError } = trpc.accounts.planoContasStats.useQuery();
+  const { data: stats, isLoading: loadingStats } = trpc.accounts.planoContasStats.useQuery();
   const { data: tree = [], isLoading: loadingTree } = trpc.accounts.planoContasTree.useQuery();
   const { data: insights } = trpc.accounts.planoContasInsights.useQuery();
   const { data: accounts = [] } = trpc.accounts.list.useQuery();
 
-  // #region agent log
-  useEffect(() => {
-    console.log('[DEBUG] Stats:', { stats, loadingStats, statsError });
-  }, [stats, loadingStats, statsError]);
-  // #endregion
 
   const createMutation = trpc.accounts.create.useMutation({ 
     onSuccess: () => { 
@@ -483,17 +478,6 @@ export default function Accounts() {
           </div>
         }
       />
-
-      {/* #region agent log - DEBUG VISUAL */}
-      {process.env.NODE_ENV !== 'production' || true ? (
-        <div className="bg-yellow-100 text-yellow-900 p-2 rounded text-xs font-mono mb-4">
-          <strong>DEBUG:</strong> loading={String(loadingStats)} | 
-          ativos={stats?.equacaoPatrimonial?.ativos ?? 'null'} | 
-          totals={stats?.totals?.total ?? 'null'} |
-          error={statsError?.message ?? 'none'}
-        </div>
-      ) : null}
-      {/* #endregion */}
 
       {/* ========== KPIs CONTÁBEIS ========== */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

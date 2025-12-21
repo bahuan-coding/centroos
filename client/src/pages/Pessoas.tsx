@@ -284,6 +284,8 @@ export default function Pessoas() {
   });
 
   const { data: stats } = trpc.pessoas.stats.useQuery();
+  const { data: healthStats } = trpc.pessoas.healthStats.useQuery();
+  const { data: inconsistencias } = trpc.pessoas.inconsistencias.useQuery();
 
   if (isError) {
     return (
@@ -293,8 +295,6 @@ export default function Pessoas() {
       </div>
     );
   }
-  const { data: healthStats } = trpc.pessoas.healthStats.useQuery();
-  const { data: inconsistencias } = trpc.pessoas.inconsistencias.useQuery();
 
   const pessoas = data?.pessoas || [];
   const totalPages = data?.pages || 1;

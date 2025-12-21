@@ -4603,7 +4603,7 @@ const lancamentosContabeisRouter = router({
         status: input.efetivar ? 'efetivado' : 'rascunho',
         totalDebito: String(totalDebitos),
         totalCredito: String(totalCreditos),
-        createdBy: ctx.user?.id,
+        createdBy: ctx.user?.visitorId || null,
       }).returning({ id: schema.lancamentoContabil.id, numero: schema.lancamentoContabil.numero });
       
       // Criar linhas
@@ -4680,7 +4680,7 @@ const lancamentosContabeisRouter = router({
         estornoDeId: lancamento.id,
         totalDebito: lancamento.totalCredito,
         totalCredito: lancamento.totalDebito,
-        createdBy: ctx.user?.id,
+        createdBy: ctx.user?.visitorId || null,
       }).returning({ id: schema.lancamentoContabil.id, numero: schema.lancamentoContabil.numero });
       
       // Criar linhas invertidas
@@ -7166,7 +7166,7 @@ const usuariosRouter = router({
       }
 
       // Desativar usuário e encerrar papéis
-      await db.update(schema.usuario).set({ ativo: false, updatedAt: new Date(), updatedBy: ctx.user?.id }).where(eq(schema.usuario.id, input.id));
+      await db.update(schema.usuario).set({ ativo: false, updatedAt: new Date(), updatedBy: ctx.user?.visitorId || null }).where(eq(schema.usuario.id, input.id));
       await db.update(schema.usuarioPapel).set({ dataFim: new Date().toISOString().split('T')[0] }).where(and(eq(schema.usuarioPapel.usuarioId, input.id), isNull(schema.usuarioPapel.dataFim)));
 
       const visitorId = await getVisitorId(ctx.user?.email || null);
@@ -7642,7 +7642,7 @@ const aprovacoesRouter = router({
         dataDecisao: new Date(),
         observacao: input.observacao,
         updatedAt: new Date(),
-        updatedBy: ctx.user?.id,
+        updatedBy: ctx.user?.visitorId || null,
       }).where(eq(schema.aprovacao.id, input.id));
 
       // Atualizar status da entidade
@@ -8119,7 +8119,7 @@ const patrimonioRouter = router({
       const [result] = await db.insert(schema.bemPatrimonial).values({
         ...input,
         status: 'em_uso',
-        createdBy: ctx.user?.id,
+        createdBy: ctx.user?.visitorId || null,
       }).returning();
       
       return result;
@@ -8141,7 +8141,7 @@ const patrimonioRouter = router({
       if (!bem) throw new TRPCError({ code: 'NOT_FOUND', message: 'Bem não encontrado' });
       
       await db.update(schema.bemPatrimonial)
-        .set({ ...data, updatedBy: ctx.user?.id, updatedAt: new Date() })
+        .set({ ...data, updatedBy: ctx.user?.visitorId || null, updatedAt: new Date() })
         .where(eq(schema.bemPatrimonial.id, id));
       
       return { success: true };
@@ -8172,10 +8172,10 @@ const patrimonioRouter = router({
         responsavelAnteriorId: bem.responsavelId,
         responsavelNovoId: novoResponsavelId || bem.responsavelId,
         motivo,
-        createdBy: ctx.user?.id,
+        createdBy: ctx.user?.visitorId || null,
       });
       
-      const updateData: any = { updatedBy: ctx.user?.id, updatedAt: new Date() };
+      const updateData: any = { updatedBy: ctx.user?.visitorId || null, updatedAt: new Date() };
       if (novaLocalizacao) updateData.localizacao = novaLocalizacao;
       if (novoResponsavelId) updateData.responsavelId = novoResponsavelId;
       
@@ -8211,7 +8211,7 @@ const patrimonioRouter = router({
         dataBaixa,
         motivoBaixa,
         valorBaixa: valorBaixa?.toString(),
-        updatedBy: ctx.user?.id,
+        updatedBy: ctx.user?.visitorId || null,
         updatedAt: new Date(),
       }).where(eq(schema.bemPatrimonial.id, id));
       

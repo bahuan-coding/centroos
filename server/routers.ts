@@ -983,7 +983,7 @@ const entriesRouter = router({
         ...input,
         transactionDate: txDate.toISOString().split('T')[0],
         isNfc: input.isNfc ? 1 : 0,
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning({ id: schema.entries.id });
       
       await db.insert(schema.auditLog).values({
@@ -1270,7 +1270,7 @@ const rulesRouter = router({
       const db = await getDb();
       const [result] = await db.insert(schema.classificationRules).values({
         ...input,
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning({ id: schema.classificationRules.id });
       return { id: result.id };
     }),
@@ -1433,7 +1433,7 @@ const bankImportsRouter = router({
           bankImportId: input.importId,
           isNfc: txInput.isNfc ? 1 : 0,
           nfcCategory: txInput.nfcCategory,
-          createdBy: ctx.user.id,
+          createdBy: ctx.user.visitorId || null,
         });
         
         created++;
@@ -1872,7 +1872,7 @@ const pessoasRouter = router({
         nome: input.nome.trim(),
         tipo: input.tipo,
         observacoes: input.observacoes || null,
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning({ id: schema.pessoa.id });
       
       if (input.cpfCnpj) {
@@ -1941,8 +1941,8 @@ const pessoasRouter = router({
         tiposMediunidade: input.tiposMediunidade?.length ? input.tiposMediunidade : null,
         grupoEstudoId: input.grupoEstudoId || null,
         observacoesMediunidade: input.observacoesMediunidade?.trim() || null,
-        createdBy: ctx.user.id,
-        updatedBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
+        updatedBy: ctx.user.visitorId || null,
       }).returning({ id: schema.pessoa.id });
       
       // Inserir documentos
@@ -2059,7 +2059,7 @@ const pessoasRouter = router({
       const [newPessoa] = await db.insert(schema.pessoa).values({
         nome: input.nome.trim(),
         tipo: input.tipo,
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning({ id: schema.pessoa.id });
       
       // Se CPF fornecido, cria documento
@@ -2331,7 +2331,7 @@ const pessoasRouter = router({
           observacoesMediunidade: input.observacoesMediunidade || null,
           grupoEstudoId: input.grupoEstudoId || null,
           updatedAt: new Date(),
-          updatedBy: ctx.user.id,
+          updatedBy: ctx.user.visitorId || null,
         })
         .where(eq(schema.pessoa.id, input.id));
       
@@ -2355,7 +2355,7 @@ const pessoasRouter = router({
           ativo: false,
           deletedAt: new Date(),
           updatedAt: new Date(),
-          updatedBy: ctx.user.id,
+          updatedBy: ctx.user.visitorId || null,
           observacoes: input.motivo 
             ? `${existing.observacoes || ''}\n[INATIVADO ${new Date().toISOString().split('T')[0]}]: ${input.motivo}`.trim()
             : existing.observacoes,
@@ -2376,7 +2376,7 @@ const pessoasRouter = router({
           ativo: true,
           deletedAt: null,
           updatedAt: new Date(),
-          updatedBy: ctx.user.id,
+          updatedBy: ctx.user.visitorId || null,
         })
         .where(eq(schema.pessoa.id, input));
       
@@ -2611,7 +2611,7 @@ const pessoasRouter = router({
         isento: input.isento,
         motivoIsencao: input.isento ? (input.motivoIsencao || null) : null,
         updatedAt: new Date(),
-        updatedBy: ctx.user.id,
+        updatedBy: ctx.user.visitorId || null,
       };
       
       if (existing) {
@@ -2633,7 +2633,7 @@ const pessoasRouter = router({
       } else {
         const [newAssoc] = await db.insert(schema.associado).values({
           ...data,
-          createdBy: ctx.user.id,
+          createdBy: ctx.user.visitorId || null,
         }).returning();
         return { id: newAssoc.id, created: true };
       }
@@ -2713,8 +2713,8 @@ const pessoasRouter = router({
           consentido: input.consentido,
           dataConsentimento: new Date(),
           evidencia: input.evidencia || null,
-          createdBy: ctx.user.id,
-          updatedBy: ctx.user.id,
+          createdBy: ctx.user.visitorId || null,
+          updatedBy: ctx.user.visitorId || null,
         })
         .returning();
       
@@ -2736,7 +2736,7 @@ const pessoasRouter = router({
           evidencia: input.evidencia || null,
           dataRevogacao: input.consentido ? null : new Date(),
           updatedAt: new Date(),
-          updatedBy: ctx.user.id,
+          updatedBy: ctx.user.visitorId || null,
         })
         .where(eq(schema.consentimentoLgpd.id, input.id));
       
@@ -2753,7 +2753,7 @@ const pessoasRouter = router({
           consentido: false,
           dataRevogacao: new Date(),
           updatedAt: new Date(),
-          updatedBy: ctx.user.id,
+          updatedBy: ctx.user.visitorId || null,
         })
         .where(eq(schema.consentimentoLgpd.id, input));
       
@@ -2863,7 +2863,7 @@ const pessoasRouter = router({
             nomeFantasia: input.nomeFantasia?.trim() || null,
             observacoes: input.observacoes?.trim() || null,
             updatedAt: new Date(),
-            updatedBy: ctx.user.id,
+            updatedBy: ctx.user.visitorId || null,
           })
           .where(eq(schema.pessoa.id, input.id));
         
@@ -2876,8 +2876,8 @@ const pessoasRouter = router({
           nomeFantasia: input.nomeFantasia?.trim() || null,
           observacoes: input.observacoes?.trim() || null,
           ativo: true,
-          createdBy: ctx.user.id,
-          updatedBy: ctx.user.id,
+          createdBy: ctx.user.visitorId || null,
+          updatedBy: ctx.user.visitorId || null,
         }).returning();
         
         return { id: newPessoa.id, created: true };
@@ -6116,7 +6116,7 @@ const gruposEstudoRouter = router({
       const db = await getDb();
       const [grupo] = await db.insert(schema.grupoEstudo).values({
         ...input,
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning();
       return grupo;
     }),
@@ -6137,7 +6137,7 @@ const gruposEstudoRouter = router({
       const db = await getDb();
       const { id, ...data } = input;
       await db.update(schema.grupoEstudo)
-        .set({ ...data, updatedAt: new Date(), updatedBy: ctx.user.id })
+        .set({ ...data, updatedAt: new Date(), updatedBy: ctx.user.visitorId || null })
         .where(eq(schema.grupoEstudo.id, id));
       return { success: true };
     }),
@@ -6234,7 +6234,7 @@ const centroCustoRouter = router({
       
       const [centro] = await db.insert(schema.centroCusto).values({
         ...input,
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning();
       
       return centro;
@@ -6253,7 +6253,7 @@ const centroCustoRouter = router({
       const { id, ...data } = input;
       
       await db.update(schema.centroCusto)
-        .set({ ...data, updatedAt: new Date(), updatedBy: ctx.user.id })
+        .set({ ...data, updatedAt: new Date(), updatedBy: ctx.user.visitorId || null })
         .where(eq(schema.centroCusto.id, id));
       
       return { success: true };
@@ -6283,7 +6283,7 @@ const centroCustoRouter = router({
       }
       
       await db.update(schema.centroCusto)
-        .set({ ativo: false, updatedAt: new Date(), updatedBy: ctx.user.id })
+        .set({ ativo: false, updatedAt: new Date(), updatedBy: ctx.user.visitorId || null })
         .where(eq(schema.centroCusto.id, input));
       
       return { success: true };
@@ -6418,7 +6418,7 @@ const projetoRouter = router({
       const [projeto] = await db.insert(schema.projeto).values({
         ...input,
         orcamentoPrevisto: input.orcamentoPrevisto?.toString(),
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning();
       
       return projeto;
@@ -6441,7 +6441,7 @@ const projetoRouter = router({
       const db = await getDb();
       const { id, orcamentoPrevisto, ...data } = input;
       
-      const updateData: any = { ...data, updatedAt: new Date(), updatedBy: ctx.user.id };
+      const updateData: any = { ...data, updatedAt: new Date(), updatedBy: ctx.user.visitorId || null };
       if (orcamentoPrevisto !== undefined) {
         updateData.orcamentoPrevisto = orcamentoPrevisto.toString();
       }
@@ -6464,7 +6464,7 @@ const projetoRouter = router({
         status: 'concluido',
         dataFimReal: input.dataFimReal,
         updatedAt: new Date(),
-        updatedBy: ctx.user.id,
+        updatedBy: ctx.user.visitorId || null,
       }).where(eq(schema.projeto.id, input.id));
       
       return { success: true };
@@ -6481,7 +6481,7 @@ const projetoRouter = router({
       await db.update(schema.projeto).set({
         status: 'cancelado',
         updatedAt: new Date(),
-        updatedBy: ctx.user.id,
+        updatedBy: ctx.user.visitorId || null,
       }).where(eq(schema.projeto.id, input.id));
       
       return { success: true };
@@ -6575,7 +6575,7 @@ const fundoRouter = router({
         ...fundoData,
         metaValor: metaValor?.toString(),
         saldoAtual: saldoInicial.toString(),
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning();
       
       // Inserir regras
@@ -6587,7 +6587,7 @@ const fundoRouter = router({
             parametroTexto: r.parametroTexto,
             parametroNumerico: r.parametroNumerico?.toString(),
             parametroLista: r.parametroLista,
-            createdBy: ctx.user.id,
+            createdBy: ctx.user.visitorId || null,
           }))
         );
       }
@@ -6621,7 +6621,7 @@ const fundoRouter = router({
         }
       }
       
-      const updateData: any = { ...data, updatedAt: new Date(), updatedBy: ctx.user.id };
+      const updateData: any = { ...data, updatedAt: new Date(), updatedBy: ctx.user.visitorId || null };
       if (metaValor !== undefined) updateData.metaValor = metaValor.toString();
       if (tipo !== undefined) updateData.tipo = tipo;
       
@@ -6636,7 +6636,7 @@ const fundoRouter = router({
       const db = await getDb();
       
       await db.update(schema.fundo)
-        .set({ ativo: false, updatedAt: new Date(), updatedBy: ctx.user.id })
+        .set({ ativo: false, updatedAt: new Date(), updatedBy: ctx.user.visitorId || null })
         .where(eq(schema.fundo.id, input));
       
       return { success: true };
@@ -6668,7 +6668,7 @@ const fundoRegraRouter = router({
       const [regra] = await db.insert(schema.fundoRegra).values({
         ...input,
         parametroNumerico: input.parametroNumerico?.toString(),
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning();
       
       return regra;
@@ -6686,7 +6686,7 @@ const fundoRegraRouter = router({
       const db = await getDb();
       const { id, parametroNumerico, ...data } = input;
       
-      const updateData: any = { ...data, updatedAt: new Date(), updatedBy: ctx.user.id };
+      const updateData: any = { ...data, updatedAt: new Date(), updatedBy: ctx.user.visitorId || null };
       if (parametroNumerico !== undefined) updateData.parametroNumerico = parametroNumerico.toString();
       
       await db.update(schema.fundoRegra).set(updateData).where(eq(schema.fundoRegra.id, id));
@@ -6699,7 +6699,7 @@ const fundoRegraRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       await db.update(schema.fundoRegra)
-        .set({ ativo: false, updatedAt: new Date(), updatedBy: ctx.user.id })
+        .set({ ativo: false, updatedAt: new Date(), updatedBy: ctx.user.visitorId || null })
         .where(eq(schema.fundoRegra.id, input));
       return { success: true };
     }),
@@ -6759,7 +6759,7 @@ const fundoAlocacaoRouter = router({
         dataAlocacao: input.dataAlocacao,
         origemDescricao: input.origemDescricao,
         lancamentoLinhaId: input.lancamentoLinhaId || null as any,
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning();
       
       // Atualizar saldo do fundo
@@ -6881,7 +6881,7 @@ const fundoConsumoRouter = router({
         justificativa: input.justificativa,
         tituloId: input.tituloId,
         lancamentoLinhaId: input.lancamentoLinhaId || null as any,
-        createdBy: ctx.user.id,
+        createdBy: ctx.user.visitorId || null,
       }).returning();
       
       // Se não precisa de aprovação, aprovar automaticamente e baixar saldo

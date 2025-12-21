@@ -198,15 +198,8 @@ export function ContaWizardProvider({
       });
     }
     
-    // Vínculo contábil não configurado
-    if (!form.contaContabilId || form.contaContabilId === 'none') {
-      w.push({
-        campo: 'contaContabil',
-        mensagem: 'Vínculo contábil não configurado (recomendado para contabilidade formal)',
-        tipo: 'info',
-        step: steps.findIndex(s => s.id === 'revisao'),
-      });
-    }
+    // Vínculo contábil desabilitado por enquanto (aguardando integração com plano de contas)
+    // Não exibir warning pois a feature não está disponível ainda
     
     return w;
   }, [form, steps]);
@@ -340,7 +333,9 @@ export function ContaWizardProvider({
         pixChave: form.pixChave || undefined,
         saldoInicial: form.saldoInicial,
         dataSaldoInicial: form.dataSaldoInicial,
-        contaContabilId: form.contaContabilId || undefined,
+        // TODO: integrar com API de plano de contas para obter UUIDs válidos
+        // contaContabilId: form.contaContabilId (requer UUID válido)
+        contaContabilId: undefined,
       };
       
       if (mode === 'edit' && contaId) {
@@ -349,7 +344,8 @@ export function ContaWizardProvider({
           nome: payload.nome,
           pixTipo: payload.pixTipo as any,
           pixChave: payload.pixChave,
-          contaContabilId: payload.contaContabilId,
+          // contaContabilId: requires UUID from API
+          contaContabilId: undefined,
         });
         // Clear draft on success
         localStorage.removeItem('conta_financeira_draft');

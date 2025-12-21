@@ -1,5 +1,4 @@
 import { Check, Wallet, Building2, PiggyBank, TrendingUp, CreditCard, BookOpen, AlertCircle } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LabelWithHelp } from '@/components/ui/tooltip-help';
 import { FormField } from '@/components/ui/form-section';
 import { useContaWizard, TipoConta } from '../ContaWizardProvider';
@@ -23,7 +22,7 @@ const TIPO_CONTA_LABELS: Record<TipoConta, string> = {
 };
 
 export function StepRevisao() {
-  const { form, updateField, fieldRefs } = useContaWizard();
+  const { form } = useContaWizard();
   
   const selectedBanco = getBancoByCodigo(form.bancoCodigo);
   const TipoIcon = TIPO_CONTA_ICONS[form.tipo];
@@ -141,25 +140,15 @@ export function StepRevisao() {
             label="Conta Contábil"
             help="Conta do ativo circulante (grupo 1.1) para lançamentos automáticos de movimentação"
           />
-          <Select
-            value={form.contaContabilId || 'none'}
-            onValueChange={(v) => updateField('contaContabilId', v === 'none' ? '' : v)}
-          >
-            <SelectTrigger 
-              id="contaContabil" 
-              ref={(el) => { fieldRefs.current['contaContabil'] = el; }}
-              className="h-12"
-            >
-              <SelectValue placeholder="Selecione a conta contábil..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Nenhuma (configurar depois)</SelectItem>
-              <SelectItem value="1.1.1.01">1.1.1.01 - Caixa</SelectItem>
-              <SelectItem value="1.1.1.02">1.1.1.02 - Bancos Conta Movimento</SelectItem>
-              <SelectItem value="1.1.1.03">1.1.1.03 - Bancos Conta Poupança</SelectItem>
-              <SelectItem value="1.1.2.01">1.1.2.01 - Aplicações Financeiras</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="rounded-lg bg-zinc-100 border border-zinc-200 p-4">
+            <p className="text-sm text-zinc-600">
+              <span className="font-medium text-zinc-700">Em breve:</span> O vínculo contábil poderá ser configurado 
+              após a integração com o módulo de Plano de Contas.
+            </p>
+            <p className="text-xs text-zinc-500 mt-1">
+              Por enquanto, a conta será criada sem vínculo. Você poderá configurar depois em Editar Conta.
+            </p>
+          </div>
         </FormField>
       </div>
     </div>

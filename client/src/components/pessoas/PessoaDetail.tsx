@@ -100,6 +100,15 @@ export function PessoaDetail({ pessoaId, onClose, onUpdated }: PessoaDetailProps
     onError: (err) => toast.error(err.message),
   });
 
+  // Calculate status cadastro - must be before early returns!
+  const statusCadastro = useMemo(() => {
+    if (!pessoa) return 'rascunho';
+    if (!pessoa.nome || pessoa.nome === 'Rascunho' || pessoa.nome.length < 3) return 'rascunho';
+    const temCpfCnpj = pessoa.documentos?.some(d => d.tipo === 'cpf' || d.tipo === 'cnpj');
+    if (!temCpfCnpj) return 'pendencias';
+    return 'completo';
+  }, [pessoa]);
+
   // Check if we're in mobile context (inside fixed overlay) or desktop (inside card)
   const isMobileOverlay = typeof window !== 'undefined' && window.innerWidth < 1024;
 
@@ -145,14 +154,6 @@ export function PessoaDetail({ pessoaId, onClose, onUpdated }: PessoaDetailProps
 
   const gender = detectGender(pessoa.nome);
   const headerBg = gender === 'female' ? 'from-pink-500 to-rose-600' : gender === 'male' ? 'from-blue-500 to-indigo-600' : 'from-violet-600 to-indigo-700';
-
-  // Calculate status cadastro
-  const statusCadastro = useMemo(() => {
-    if (!pessoa.nome || pessoa.nome === 'Rascunho' || pessoa.nome.length < 3) return 'rascunho';
-    const temCpfCnpj = pessoa.documentos?.some(d => d.tipo === 'cpf' || d.tipo === 'cnpj');
-    if (!temCpfCnpj) return 'pendencias';
-    return 'completo';
-  }, [pessoa]);
 
   // Check if person has valid CPF for receipts
   const temCpfValido = pessoa.documentos?.some(d => d.tipo === 'cpf' && d.numero.length >= 11);

@@ -489,11 +489,11 @@ export function PessoaDetail({ pessoaId, onClose, onUpdated }: PessoaDetailProps
                           <div key={h.id} className="flex items-start gap-3 py-2 px-3 rounded bg-muted/30">
                             <div className="w-2 h-2 rounded-full bg-violet-500 mt-2 shrink-0" />
                             <div className="flex-1">
-                              <p className="text-sm">
-                                <span className="font-medium">{h.campoAlterado}</span>: {h.valorAnterior} → {h.valorNovo}
-                              </p>
+                            <p className="text-sm">
+                              <span className="font-medium">{h.campoAlterado}</span>: {h.valorAnterior || '-'} → {h.valorNovo || '-'}
+                            </p>
                               {h.motivo && <p className="text-xs text-muted-foreground">{h.motivo}</p>}
-                              <p className="text-xs text-muted-foreground mt-1">{formatDate(h.dataAlteracao as any)}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{formatDate(String(h.dataAlteracao))}</p>
                             </div>
                           </div>
                         ))}

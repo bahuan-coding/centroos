@@ -100,23 +100,17 @@ export function drawCoverPage(doc: jsPDF, meta: ReportMetadata): void {
   doc.setTextColor(...PDF_COLORS.primary);
   doc.text(formatPeriodLong(meta.periodMonth, meta.periodYear).toUpperCase(), centerX, 170, { align: 'center' });
 
-  // Badge de status
-  const badgeY = 200;
-  const badgeWidth = 70;
-  const badgeHeight = 20;
-  
+  // Badge de status (apenas rascunho)
   if (meta.isDraft) {
+    const badgeY = 200;
+    const badgeWidth = 80;
+    const badgeHeight = 20;
     doc.setFillColor(...PDF_COLORS.warningLight);
     doc.roundedRect(centerX - badgeWidth/2, badgeY, badgeWidth, badgeHeight, 3, 3, 'F');
     doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(...PDF_COLORS.warning);
     doc.text('RASCUNHO', centerX, badgeY + 13, { align: 'center' });
-  } else {
-    doc.setFillColor(...PDF_COLORS.successLight);
-    doc.roundedRect(centerX - badgeWidth/2, badgeY, badgeWidth, badgeHeight, 3, 3, 'F');
-    doc.setFontSize(11);
-    doc.setTextColor(...PDF_COLORS.success);
-    doc.text('OFICIAL', centerX, badgeY + 13, { align: 'center' });
   }
 
   // Informações de geração (rodapé da capa)
@@ -164,22 +158,29 @@ export function drawTableOfContents(doc: jsPDF, entries: TocEntry[], meta: Repor
 
   // Título da página
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
+  doc.setFontSize(20);
   doc.setTextColor(...PDF_COLORS.textPrimary);
   doc.text('Sumário', margin.left, y);
-  y += 15;
+  y += 8;
+
+  // Subtítulo
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...PDF_COLORS.textSecondary);
+  doc.text('Índice de Seções', margin.left, y);
+  y += 10;
 
   // Linha decorativa
   doc.setDrawColor(...PDF_COLORS.primary);
-  doc.setLineWidth(1);
-  doc.line(margin.left, y, margin.left + 40, y);
-  y += 15;
+  doc.setLineWidth(1.5);
+  doc.line(margin.left, y, margin.left + 50, y);
+  y += 18;
 
-  // Entradas do sumário
+  // Entradas do sumário com melhor espaçamento
   doc.setFontSize(11);
   
   for (const entry of entries) {
-    const indent = (entry.level || 0) * 10;
+    const indent = (entry.level || 0) * 12;
     const isSubitem = (entry.level || 0) > 0;
     
     doc.setFont('helvetica', isSubitem ? 'normal' : 'bold');
@@ -188,24 +189,25 @@ export function drawTableOfContents(doc: jsPDF, entries: TocEntry[], meta: Repor
     // Título
     doc.text(entry.title, margin.left + indent, y);
     
-    // Linha pontilhada
+    // Leader dots (pontos pequenos e espaçados)
     const titleWidth = doc.getTextWidth(entry.title);
     const pageNumWidth = doc.getTextWidth(String(entry.page));
-    const dotStart = margin.left + indent + titleWidth + 5;
-    const dotEnd = margin.left + contentWidth - pageNumWidth - 5;
+    const dotStart = margin.left + indent + titleWidth + 4;
+    const dotEnd = margin.left + contentWidth - pageNumWidth - 4;
     
-    doc.setDrawColor(...PDF_COLORS.border);
-    doc.setLineWidth(0.3);
-    doc.setLineDashPattern([1, 2], 0);
-    doc.line(dotStart, y, dotEnd, y);
-    doc.setLineDashPattern([], 0);
+    // Desenhar pontos individuais ao invés de linha tracejada
+    doc.setFillColor(...PDF_COLORS.textMuted);
+    const dotSpacing = 3;
+    for (let x = dotStart; x < dotEnd; x += dotSpacing) {
+      doc.circle(x, y - 1, 0.3, 'F');
+    }
     
-    // Número da página
+    // Número da página com destaque
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...PDF_COLORS.primary);
     doc.text(String(entry.page), margin.left + contentWidth, y, { align: 'right' });
     
-    y += 10;
+    y += isSubitem ? 10 : 12; // Mais espaço para itens principais
   }
 }
 
@@ -367,34 +369,57 @@ export function drawSectionTitle(doc: jsPDF, number: number, title: string, star
 // ============================================================================
 
 export function drawNotesBlock(doc: jsPDF, title: string, notes: string[], startY: number): number {
-  const { margin, contentWidth } = PDF_LAYOUT;
+  const { margin, contentWidth, spacing } = PDF_LAYOUT;
   let y = startY;
 
-  // Ícone + Título
-  doc.setFillColor(...PDF_COLORS.accentLight);
-  doc.roundedRect(margin.left, y - 3, 6, 6, 1, 1, 'F');
+  // Calcular altura do bloco
+  let notesHeight = 0;
+  for (const note of notes) {
+    const lines = doc.splitTextToSize(note, contentWidth - 18);
+    notesHeight += lines.length * 4.5 + 4;
+  }
+  const blockHeight = notesHeight + 20;
+
+  // Background do bloco com borda
+  doc.setFillColor(...PDF_COLORS.backgroundAlt);
+  doc.setDrawColor(...PDF_COLORS.border);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin.left, y, contentWidth, blockHeight, 2, 2, 'FD');
+
+  y += spacing.sm + 2;
+
+  // Ícone circular com "i"
+  doc.setFillColor(...PDF_COLORS.accent);
+  doc.circle(margin.left + 8, y + 2, 4, 'F');
   
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  doc.setTextColor(...PDF_COLORS.accent);
-  doc.text('i', margin.left + 3, y + 1, { align: 'center' });
+  doc.setTextColor(...PDF_COLORS.white);
+  doc.text('i', margin.left + 8, y + 4, { align: 'center' });
   
+  // Título
   doc.setTextColor(...PDF_COLORS.textPrimary);
-  doc.text(title, margin.left + 10, y);
-  y += 8;
+  doc.setFontSize(11);
+  doc.text(title, margin.left + 15, y + 4);
+  y += spacing.md + 4;
 
-  // Notas
+  // Notas com bullets elegantes
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(...PDF_COLORS.textSecondary);
 
   for (const note of notes) {
-    const lines = doc.splitTextToSize(note, contentWidth - 10);
-    doc.text(lines, margin.left + 5, y);
-    y += lines.length * 4 + 3;
+    // Bullet elegante (•)
+    doc.setTextColor(...PDF_COLORS.accent);
+    doc.text('•', margin.left + 8, y);
+    
+    doc.setTextColor(...PDF_COLORS.textSecondary);
+    const lines = doc.splitTextToSize(note, contentWidth - 18);
+    doc.text(lines, margin.left + 14, y);
+    y += lines.length * 4.5 + 4;
   }
 
-  return y + 3;
+  return y + spacing.sm;
 }
 
 // ============================================================================
@@ -591,7 +616,7 @@ export function drawPageHeader(doc: jsPDF, meta: ReportMetadata, skipFirstPage: 
 }
 
 // ============================================================================
-// RODAPÉ DE PÁGINA
+// RODAPÉ DE PÁGINA - 3 colunas em uma linha
 // ============================================================================
 
 export function drawPageFooter(doc: jsPDF, meta: ReportMetadata, skipFirstPage: boolean = true): void {
@@ -601,34 +626,43 @@ export function drawPageFooter(doc: jsPDF, meta: ReportMetadata, skipFirstPage: 
   for (let i = skipFirstPage ? 2 : 1; i <= pageCount; i++) {
     doc.setPage(i);
 
-    // Linha separadora
+    // Linha separadora fina
     doc.setDrawColor(...PDF_COLORS.border);
     doc.setLineWidth(0.3);
-    doc.line(margin.left, footer.y - 5, pageWidth - margin.right, footer.y - 5);
+    doc.line(margin.left, footer.y - 4, pageWidth - margin.right, footer.y - 4);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setTextColor(...PDF_COLORS.textMuted);
 
-    // Data de geração
-    doc.text(`Gerado em ${formatDateTime(meta.generatedAt)}`, margin.left, footer.y);
+    // ESQUERDA: Nome da instituição + Relatório
+    const leftText = `${meta.orgName} • Relatório Financeiro`;
+    doc.text(leftText, margin.left, footer.y);
 
-    // Hash do documento
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...PDF_COLORS.gold);
-    doc.text(`#${meta.documentHash}`, pageWidth / 2, footer.y, { align: 'center' });
-
-    // Número da página
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...PDF_COLORS.textMuted);
-    doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin.right, footer.y, { align: 'right' });
-
-    // Status (se rascunho)
+    // CENTRO: Data de geração + Hash
+    const centerText = meta.isDraft 
+      ? `Gerado em ${formatDateTime(meta.generatedAt)} • #${meta.documentHash} • RASCUNHO`
+      : `Gerado em ${formatDateTime(meta.generatedAt)} • #${meta.documentHash}`;
+    
     if (meta.isDraft) {
+      // Desenhar texto com cor diferente para "RASCUNHO"
+      const baseText = `Gerado em ${formatDateTime(meta.generatedAt)} • #${meta.documentHash} • `;
+      const baseWidth = doc.getTextWidth(baseText);
+      const totalWidth = doc.getTextWidth(centerText);
+      const startX = (pageWidth / 2) - (totalWidth / 2);
+      
+      doc.text(baseText, startX, footer.y);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...PDF_COLORS.warning);
-      doc.text('RASCUNHO', pageWidth / 2, footer.y + 6, { align: 'center' });
+      doc.text('RASCUNHO', startX + baseWidth, footer.y);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...PDF_COLORS.textMuted);
+    } else {
+      doc.text(centerText, pageWidth / 2, footer.y, { align: 'center' });
     }
+
+    // DIREITA: Paginação
+    doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin.right, footer.y, { align: 'right' });
   }
 }
 
@@ -703,5 +737,81 @@ export function checkPageBreak(doc: jsPDF, currentY: number, requiredSpace: numb
     return margin.top + 20; // Espaço para header
   }
   return currentY;
+}
+
+// ============================================================================
+// MINI CONCILIAÇÃO DO SALDO
+// ============================================================================
+
+export interface ReconciliationData {
+  saldoInicial: number;
+  receitas: number;
+  despesas: number;
+  saldoFinal: number;
+}
+
+export function drawMiniReconciliation(doc: jsPDF, data: ReconciliationData, startY: number): number {
+  const { margin, contentWidth, spacing } = PDF_LAYOUT;
+  let y = startY;
+
+  // Título
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(...PDF_COLORS.textPrimary);
+  doc.text('Conciliação do Saldo', margin.left, y);
+  y += 6;
+
+  // Linha decorativa
+  doc.setDrawColor(...PDF_COLORS.primary);
+  doc.setLineWidth(0.5);
+  doc.line(margin.left, y, margin.left + 35, y);
+  y += 8;
+
+  // Box container
+  const boxWidth = 120;
+  const boxHeight = 50;
+  
+  doc.setFillColor(...PDF_COLORS.backgroundAlt);
+  doc.setDrawColor(...PDF_COLORS.border);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin.left, y, boxWidth, boxHeight, 2, 2, 'FD');
+
+  // Itens da conciliação
+  doc.setFontSize(9);
+  let itemY = y + 10;
+  const valueX = margin.left + boxWidth - 10;
+
+  // Saldo Inicial
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...PDF_COLORS.textSecondary);
+  doc.text('Saldo Inicial', margin.left + 8, itemY);
+  doc.setTextColor(...PDF_COLORS.textPrimary);
+  doc.text(formatCurrency(data.saldoInicial), valueX, itemY, { align: 'right' });
+  itemY += 8;
+
+  // + Receitas
+  doc.setTextColor(...PDF_COLORS.success);
+  doc.text('+ Receitas', margin.left + 8, itemY);
+  doc.text(formatCurrency(data.receitas), valueX, itemY, { align: 'right' });
+  itemY += 8;
+
+  // - Despesas
+  doc.setTextColor(...PDF_COLORS.danger);
+  doc.text('– Despesas', margin.left + 8, itemY);
+  doc.text(formatCurrency(data.despesas), valueX, itemY, { align: 'right' });
+  itemY += 10;
+
+  // Linha separadora
+  doc.setDrawColor(...PDF_COLORS.border);
+  doc.setLineWidth(0.3);
+  doc.line(margin.left + 5, itemY - 4, margin.left + boxWidth - 5, itemY - 4);
+
+  // = Saldo Final
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...(data.saldoFinal >= 0 ? PDF_COLORS.success : PDF_COLORS.danger));
+  doc.text('= Saldo Final', margin.left + 8, itemY);
+  doc.text(formatCurrency(data.saldoFinal), valueX, itemY, { align: 'right' });
+
+  return y + boxHeight + spacing.md;
 }
 

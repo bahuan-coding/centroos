@@ -237,17 +237,14 @@ export function ReportWizard({
                     </span>
                   </div>
                   
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Status:</span>
-                    <span className={cn(
-                      'font-medium px-2 py-0.5 rounded text-xs',
-                      options.isDraft 
-                        ? 'bg-amber-100 text-amber-700' 
-                        : 'bg-green-100 text-green-700'
-                    )}>
-                      {options.isDraft ? 'Rascunho' : 'Oficial'}
-                    </span>
-                  </div>
+                  {options.isDraft && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Modo:</span>
+                      <span className="font-medium px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-700">
+                        Rascunho
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t pt-3 mt-3">

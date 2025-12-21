@@ -30,6 +30,7 @@ import {
   drawPageHeader,
   drawPageFooter,
   checkPageBreak,
+  drawMiniReconciliation,
 } from './pdf/components';
 
 declare module 'jspdf' {
@@ -105,6 +106,37 @@ async function getOrganization() {
     phone: '',
     email: '',
   };
+}
+
+// ============================================================================
+// NORMALIZAÇÃO DE CATEGORIAS
+// ============================================================================
+
+/**
+ * Normaliza nome de categoria para agrupamento correto:
+ * - Remove espaços extras
+ * - Remove plural simples (s final)
+ * - Lowercase para comparação
+ * - Capitaliza primeira letra para exibição
+ */
+function normalizeCategory(name: string): string {
+  return name
+    .trim()
+    .replace(/\s+/g, ' ')              // normalizar espaços múltiplos
+    .replace(/s\s*$/i, '')              // remover plural simples (s final)
+    .toLowerCase()
+    .replace(/^(\w)/, c => c.toUpperCase()); // capitalize
+}
+
+/**
+ * Cria chave de agrupamento para categoria
+ */
+function categoryKey(name: string): string {
+  return name
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/s\s*$/i, '')
+    .toLowerCase();
 }
 
 // ============================================================================
@@ -277,11 +309,12 @@ export async function generateFinancialReportPDF(
     documentHash,
   };
 
-  // Processar dados
+  // Processar dados com normalização de categorias
   let totalReceitas = 0;
   let totalDespesas = 0;
-  const receitasByCategoria: Record<string, { valor: number; count: number }> = {};
-  const despesasByCategoria: Record<string, { valor: number; items: { desc: string; valor: number }[] }> = {};
+  // Chave: categoria normalizada, Valor: { nome original para exibição, valor, count }
+  const receitasByCategoria: Record<string, { displayName: string; valor: number; count: number }> = {};
+  const despesasByCategoria: Record<string, { displayName: string; valor: number; items: { desc: string; valor: number }[] }> = {};
   let maiorReceita = { categoria: '', valor: 0 };
   let maiorDespesa = { categoria: '', valor: 0 };
 
@@ -290,32 +323,36 @@ export async function generateFinancialReportPDF(
     
     if (account.type === 'revenue') {
       totalReceitas += entry.amountCents;
-      const categoria = account.name;
-      if (!receitasByCategoria[categoria]) {
-        receitasByCategoria[categoria] = { valor: 0, count: 0 };
-      }
-      receitasByCategoria[categoria].valor += entry.amountCents;
-      receitasByCategoria[categoria].count += 1;
+      const key = categoryKey(account.name);
+      const displayName = normalizeCategory(account.name);
       
-      if (receitasByCategoria[categoria].valor > maiorReceita.valor) {
-        maiorReceita = { categoria, valor: receitasByCategoria[categoria].valor };
+      if (!receitasByCategoria[key]) {
+        receitasByCategoria[key] = { displayName, valor: 0, count: 0 };
+      }
+      receitasByCategoria[key].valor += entry.amountCents;
+      receitasByCategoria[key].count += 1;
+      
+      if (receitasByCategoria[key].valor > maiorReceita.valor) {
+        maiorReceita = { categoria: displayName, valor: receitasByCategoria[key].valor };
       }
     }
     
     if (account.type === 'expense' || account.type === 'fixed_asset') {
       totalDespesas += entry.amountCents;
-      const categoria = account.name;
-      if (!despesasByCategoria[categoria]) {
-        despesasByCategoria[categoria] = { valor: 0, items: [] };
+      const key = categoryKey(account.name);
+      const displayName = normalizeCategory(account.name);
+      
+      if (!despesasByCategoria[key]) {
+        despesasByCategoria[key] = { displayName, valor: 0, items: [] };
       }
-      despesasByCategoria[categoria].valor += entry.amountCents;
-      despesasByCategoria[categoria].items.push({
+      despesasByCategoria[key].valor += entry.amountCents;
+      despesasByCategoria[key].items.push({
         desc: entry.description,
         valor: entry.amountCents,
       });
       
-      if (despesasByCategoria[categoria].valor > maiorDespesa.valor) {
-        maiorDespesa = { categoria, valor: despesasByCategoria[categoria].valor };
+      if (despesasByCategoria[key].valor > maiorDespesa.valor) {
+        maiorDespesa = { categoria: displayName, valor: despesasByCategoria[key].valor };
       }
     }
   }
@@ -384,6 +421,16 @@ export async function generateFinancialReportPDF(
 
   y += 10;
 
+  // Mini conciliação do saldo
+  y = drawMiniReconciliation(doc, {
+    saldoInicial: 0, // TODO: buscar saldo inicial real se disponível
+    receitas: totalReceitas,
+    despesas: totalDespesas,
+    saldoFinal: resultado,
+  }, y);
+
+  y += 5;
+
   // Texto explicativo
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
@@ -399,11 +446,11 @@ export async function generateFinancialReportPDF(
   y = drawSectionTitle(doc, 2, 'Demonstrativo de Receitas', y);
   y += 5;
 
-  // Tabela de receitas por categoria
+  // Tabela de receitas por categoria (usar displayName normalizado)
   const receitasData = Object.entries(receitasByCategoria)
     .sort(([, a], [, b]) => b.valor - a.valor)
-    .map(([categoria, data]) => ({
-      categoria,
+    .map(([, data]) => ({
+      categoria: data.displayName,
       quantidade: data.count,
       valor: data.valor,
       percentual: totalReceitas > 0 ? ((data.valor / totalReceitas) * 100).toFixed(1) + '%' : '—',
@@ -451,11 +498,11 @@ export async function generateFinancialReportPDF(
   y = drawSectionTitle(doc, 3, 'Demonstrativo de Despesas', y);
   y += 5;
 
-  // Tabela de despesas por categoria (resumo)
+  // Tabela de despesas por categoria (resumo, usar displayName normalizado)
   const despesasData = Object.entries(despesasByCategoria)
     .sort(([, a], [, b]) => b.valor - a.valor)
-    .map(([categoria, data]) => ({
-      categoria,
+    .map(([, data]) => ({
+      categoria: data.displayName,
       quantidade: data.items.length,
       valor: data.valor,
       percentual: totalDespesas > 0 ? ((data.valor / totalDespesas) * 100).toFixed(1) + '%' : '—',
@@ -518,8 +565,8 @@ export async function generateFinancialReportPDF(
 
   const resumoData = [
     { descricao: 'Total de Receitas', valor: totalReceitas },
-    { descricao: 'Total de Despesas', valor: -totalDespesas },
-    { descricao: resultado >= 0 ? 'Superávit do Período' : 'Déficit do Período', valor: Math.abs(resultado) },
+    { descricao: '(–) Total de Despesas', valor: totalDespesas },
+    { descricao: resultado >= 0 ? '= Superávit do Período' : '= Déficit do Período', valor: Math.abs(resultado) },
   ];
 
   y = drawProfessionalTable(

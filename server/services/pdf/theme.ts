@@ -43,20 +43,20 @@ export const PDF_COLORS = {
 } as const;
 
 export const PDF_TYPOGRAPHY = {
-  // Tamanhos de fonte
-  title: 24,
-  subtitle: 16,
-  sectionTitle: 14,
-  body: 10,
-  small: 9,
-  caption: 8,
-  micro: 7,
+  // Tamanhos de fonte (ajustados para melhor hierarquia)
+  title: 26,        // H1 - Capa
+  subtitle: 18,     // H2 - Títulos de seção
+  sectionTitle: 14, // H3 - Subtítulos
+  body: 10,         // Corpo do texto
+  small: 9,         // Texto secundário
+  caption: 8,       // Legendas e notas
+  micro: 7,         // Rodapé e IDs
 
   // Line heights (multiplicador)
   lineHeight: {
-    tight: 1.2,
+    tight: 1.25,
     normal: 1.5,
-    relaxed: 1.75,
+    relaxed: 1.8,
   },
 } as const;
 
@@ -82,14 +82,14 @@ export const PDF_LAYOUT = {
     return this.pageHeight - this.margin.top - this.margin.bottom;
   },
 
-  // Espaçamentos
+  // Espaçamentos (ajustados para melhor respiro)
   spacing: {
-    xs: 2,
-    sm: 4,
-    md: 8,
-    lg: 12,
-    xl: 16,
-    xxl: 24,
+    xs: 3,
+    sm: 5,
+    md: 10,
+    lg: 15,
+    xl: 20,
+    xxl: 28,
   },
 
   // KPI Cards

@@ -1,48 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   TrendingUp, 
-  Wallet, 
+  Search, 
+  Plus, 
+  AlertTriangle, 
   ArrowUpRight, 
-  ArrowDownRight, 
-  Clock, 
-  AlertTriangle,
+  ArrowDownRight,
+  X,
+  Filter,
   Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Eye,
-  CreditCard,
-  Banknote,
-  XCircle,
-  Plus,
-  ChevronDown,
-  ChevronUp
+  Wallet,
+  Clock,
 } from 'lucide-react';
-import { Line } from 'react-chartjs-2';
-import { 
-  Chart as ChartJS, 
-  CategoryScale, 
-  LinearScale, 
-  PointElement,
-  LineElement,
-  Title, 
-  Tooltip, 
-  Legend,
-  Filler 
-} from 'chart.js';
-
-import { GlassCard, GlassCardHeader, GlassCardTitle, GlassCardDescription } from '@/components/ui/glass-card';
-import { StatCard, StatCardSkeleton } from '@/components/ui/stat-card';
-import { ChartContainer, ChartContainerSkeleton } from '@/components/ui/chart-container';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PageHeader, Pagination } from '@/components/ui/page-header';
+import { GlassCard } from '@/components/ui/glass-card';
+import { TitulosList, TituloDetail, TituloWizard, TituloBaixaModal } from '@/components/titulos';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { QueryError } from '@/components/ui/query-error';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+// ============================================================================
+// HELPERS
+// ============================================================================
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function formatCurrencyCompact(value: number): string {
@@ -51,426 +38,442 @@ function formatCurrencyCompact(value: number): string {
   return formatCurrency(value);
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '-';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('pt-BR');
+// ============================================================================
+// QUICK STATS
+// ============================================================================
+
+function QuickStats({ 
+  stats, 
+  filtroTipo, 
+  setFiltroTipo 
+}: { 
+  stats: any; 
+  filtroTipo: 'pagar' | 'receber' | undefined;
+  setFiltroTipo: (v: 'pagar' | 'receber' | undefined) => void;
+}) {
+  const total = (stats?.totalPagar || 0) + (stats?.totalReceber || 0);
+  
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      <button 
+        onClick={() => setFiltroTipo(undefined)}
+        className={cn(
+          'p-3 rounded-lg text-center transition-all',
+          filtroTipo === undefined 
+            ? 'bg-primary/10 ring-2 ring-primary' 
+            : 'bg-muted/50 hover:bg-muted'
+        )}
+      >
+        <span className="text-lg">📋</span>
+        <p className="text-lg font-bold">{total}</p>
+        <p className="text-[10px] text-muted-foreground">Total</p>
+      </button>
+      
+      <button 
+        onClick={() => setFiltroTipo(filtroTipo === 'receber' ? undefined : 'receber')}
+        className={cn(
+          'p-3 rounded-lg text-center transition-all',
+          filtroTipo === 'receber' 
+            ? 'bg-emerald-100 ring-2 ring-emerald-500' 
+            : 'bg-muted/50 hover:bg-muted'
+        )}
+      >
+        <span className="text-lg">📈</span>
+        <p className="text-lg font-bold text-emerald-600">{stats?.totalReceber || 0}</p>
+        <p className="text-[10px] text-muted-foreground">A Receber</p>
+      </button>
+      
+      <button 
+        onClick={() => setFiltroTipo(filtroTipo === 'pagar' ? undefined : 'pagar')}
+        className={cn(
+          'p-3 rounded-lg text-center transition-all',
+          filtroTipo === 'pagar' 
+            ? 'bg-rose-100 ring-2 ring-rose-500' 
+            : 'bg-muted/50 hover:bg-muted'
+        )}
+      >
+        <span className="text-lg">📉</span>
+        <p className="text-lg font-bold text-rose-600">{stats?.totalPagar || 0}</p>
+        <p className="text-[10px] text-muted-foreground">A Pagar</p>
+      </button>
+    </div>
+  );
 }
 
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return '-';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+// ============================================================================
+// FINANCIAL SUMMARY
+// ============================================================================
+
+function FinancialSummary({ stats }: { stats: any }) {
+  if (!stats) return null;
+  
+  const saldo = (stats?.valorReceber || 0) - (stats?.valorPagar || 0);
+  
+  return (
+    <div className="p-3 rounded-lg bg-slate-50 border space-y-2">
+      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+        <Wallet className="h-3 w-3" /> Resumo Financeiro
+      </p>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div>
+          <p className="text-sm font-bold text-emerald-600">
+            {formatCurrencyCompact(stats?.valorReceber || 0)}
+          </p>
+          <p className="text-[10px] text-muted-foreground">Receber</p>
+        </div>
+        <div>
+          <p className="text-sm font-bold text-rose-600">
+            {formatCurrencyCompact(stats?.valorPagar || 0)}
+          </p>
+          <p className="text-[10px] text-muted-foreground">Pagar</p>
+        </div>
+        <div>
+          <p className={cn(
+            'text-sm font-bold',
+            saldo >= 0 ? 'text-emerald-600' : 'text-rose-600'
+          )}>
+            {formatCurrencyCompact(saldo)}
+          </p>
+          <p className="text-[10px] text-muted-foreground">Saldo</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-// Cores do aging por severidade
-const agingColors = [
-  { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-800' },
-  { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-800' },
-  { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'bg-red-100 text-red-800' },
-  { bg: 'bg-rose-50', border: 'border-rose-300', text: 'text-rose-800', badge: 'bg-rose-200 text-rose-900' },
-];
+// ============================================================================
+// STATUS FILTER PILLS
+// ============================================================================
+
+function StatusFilters({ 
+  status, 
+  setStatus,
+  vencidosCount
+}: { 
+  status: string | undefined; 
+  setStatus: (v: string | undefined) => void;
+  vencidosCount: number;
+}) {
+  const statuses = [
+    { value: undefined, label: 'Todos', icon: Filter },
+    { value: 'aprovado', label: 'Pendentes', icon: Clock },
+    { value: 'quitado', label: 'Quitados', icon: ArrowUpRight },
+    { value: 'vencido', label: `Vencidos${vencidosCount > 0 ? ` (${vencidosCount})` : ''}`, icon: AlertTriangle, danger: vencidosCount > 0 },
+  ];
+
+  return (
+    <div className="flex gap-1 flex-wrap">
+      {statuses.map((s) => (
+        <button
+          key={s.value || 'all'}
+          onClick={() => setStatus(s.value)}
+          className={cn(
+            'px-2 py-1 text-[10px] font-medium rounded-full transition-all flex items-center gap-1',
+            status === s.value 
+              ? 'bg-primary text-primary-foreground' 
+              : s.danger 
+                ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                : 'bg-muted hover:bg-muted/80'
+          )}
+        >
+          <s.icon className="h-3 w-3" />
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// EMPTY SELECTION
+// ============================================================================
+
+function EmptySelection({ onNewTitulo }: { onNewTitulo: () => void }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center p-8">
+      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mb-6">
+        <TrendingUp className="h-12 w-12 text-emerald-500" />
+      </div>
+      <h3 className="text-xl font-semibold text-slate-800 mb-2">Selecione um título</h3>
+      <p className="text-sm text-muted-foreground max-w-sm mb-6">
+        Clique em um título na lista ao lado para ver detalhes, registrar pagamentos ou gerenciar baixas.
+      </p>
+      <Button onClick={onNewTitulo} className="bg-emerald-600 hover:bg-emerald-700">
+        <Plus className="h-4 w-4 mr-2" />
+        Novo Título
+      </Button>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
 export default function Titulos() {
-  const [expandedAging, setExpandedAging] = useState<string | null>(null);
-  
-  const { data: fluxo, isLoading, isError, error } = trpc.titulos.fluxoCaixa.useQuery(undefined, {
-    retry: 2,
+  // State
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [filtroTipo, setFiltroTipo] = useState<'pagar' | 'receber' | undefined>(undefined);
+  const [filtroStatus, setFiltroStatus] = useState<string | undefined>(undefined);
+  const [mesAno, setMesAno] = useState<string | undefined>(undefined);
+  const [selectedTituloId, setSelectedTituloId] = useState<string | null>(null);
+  const [showNovoModal, setShowNovoModal] = useState(false);
+  const [showBaixaModal, setShowBaixaModal] = useState(false);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
+  const [editingTituloId, setEditingTituloId] = useState<string | null>(null);
+
+  // Queries
+  const { data, isLoading, isError, error, refetch } = trpc.titulos.list.useQuery({
+    search: search || undefined,
+    tipo: filtroTipo,
+    status: filtroStatus as any,
+    mesAno,
+    page,
+    limit: 20,
   });
 
-  // Mostrar toast de erro
-  useEffect(() => {
-    if (isError && error) {
-      toast.error('Erro ao carregar fluxo de caixa', {
-        description: error.message || 'Verifique sua conexão e tente novamente',
-      });
-    }
-  }, [isError, error]);
+  const { data: fluxo } = trpc.titulos.fluxoCaixa.useQuery();
 
-  // Gráfico de projeção
-  const chartData = {
-    labels: fluxo?.projecaoDiaria.map(d => formatDateShort(d.data)) || [],
-    datasets: [
-      {
-        label: 'Entradas',
-        data: fluxo?.projecaoDiaria.map(d => d.entradas) || [],
-        borderColor: 'hsl(160 60% 45%)',
-        backgroundColor: 'hsla(160, 60%, 45%, 0.15)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointHoverRadius: 5,
-        pointBackgroundColor: 'hsl(160 60% 45%)',
-        pointBorderColor: 'white',
-        pointBorderWidth: 2,
-      },
-      {
-        label: 'Saídas',
-        data: fluxo?.projecaoDiaria.map(d => d.saidas) || [],
-        borderColor: 'hsl(0 84% 60%)',
-        backgroundColor: 'hsla(0, 84%, 60%, 0.15)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointHoverRadius: 5,
-        pointBackgroundColor: 'hsl(0 84% 60%)',
-        pointBorderColor: 'white',
-        pointBorderWidth: 2,
-      },
-    ],
+  // Stats derivados
+  const stats = {
+    totalPagar: data?.titulos?.filter(t => t.tipo === 'pagar').length || 0,
+    totalReceber: data?.titulos?.filter(t => t.tipo === 'receber').length || 0,
+    valorPagar: data?.titulos?.filter(t => t.tipo === 'pagar').reduce((acc, t) => acc + Number(t.valorLiquido), 0) || 0,
+    valorReceber: data?.titulos?.filter(t => t.tipo === 'receber').reduce((acc, t) => acc + Number(t.valorLiquido), 0) || 0,
   };
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { mode: 'index' as const, intersect: false },
-    plugins: {
-      legend: { 
-        display: true, 
-        position: 'top' as const,
-        labels: { boxWidth: 10, padding: 16, font: { size: 11 }, usePointStyle: true }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#1a1a2e',
-        bodyColor: '#4a5568',
-        borderColor: 'rgba(0, 0, 0, 0.1)',
-        borderWidth: 1,
-        padding: 12,
-        cornerRadius: 8,
-        callbacks: { label: (ctx: any) => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}` },
-      },
-    },
-    scales: {
-      y: { 
-        beginAtZero: true, 
-        grid: { color: 'rgba(0, 0, 0, 0.05)' },
-        ticks: { callback: (value: any) => formatCurrencyCompact(value) }
-      },
-      x: { grid: { display: false } },
-    },
-  };
+  const vencidosCount = fluxo?.vencidos?.count || 0;
 
-  const proximosVencimentos = fluxo?.proximosVencimentos || [];
-  const totalVencidos = fluxo?.aging.reduce((acc, a) => acc + a.count, 0) || 0;
-  const temDados = fluxo && (fluxo.vencidos.count > 0 || proximosVencimentos.length > 0 || fluxo.projecaoDiaria.length > 0);
-
-  // Estado de erro
+  // Error state
   if (isError) {
     return (
-      <div className="space-y-4 sm:space-y-6 pb-8">
-        <header>
-          <h1 className="text-fluid-3xl font-bold text-foreground flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-white" />
-            </div>
-            Fluxo de Caixa
-          </h1>
-        </header>
-        
-        <GlassCard padding="lg" className="text-center">
-          <XCircle className="h-16 w-16 mx-auto mb-4 text-red-400" />
-          <h2 className="text-xl font-semibold text-foreground mb-2">Erro ao carregar dados</h2>
-          <p className="text-muted-foreground mb-4">
-            {error?.message || 'Não foi possível conectar ao servidor'}
-          </p>
-          <Button onClick={() => window.location.reload()}>
-            Tentar novamente
-          </Button>
-        </GlassCard>
+      <div className="space-y-6">
+        <PageHeader 
+          title="Títulos" 
+          description="Gestão de contas a pagar e receber" 
+          icon={<TrendingUp className="h-8 w-8 text-emerald-600" />}
+        />
+        <QueryError error={error} onRetry={() => refetch()} />
       </div>
     );
   }
 
+  const titulos = data?.titulos || [];
+  const totalPages = data?.pages || 1;
+
+  // Handlers
+  const handleSelectTitulo = (titulo: any) => {
+    setSelectedTituloId(titulo.id);
+    if (window.innerWidth < 1024) {
+      setShowMobileDetail(true);
+    }
+  };
+
+  const handleNewTituloSuccess = () => {
+    setShowNovoModal(false);
+    refetch();
+  };
+
+  const handleBaixaSuccess = () => {
+    setShowBaixaModal(false);
+    refetch();
+  };
+
+  const handleCloseMobileDetail = () => {
+    setShowMobileDetail(false);
+    setSelectedTituloId(null);
+  };
+
+  const handleEditTitulo = () => {
+    if (selectedTituloId) {
+      setEditingTituloId(selectedTituloId);
+      setShowNovoModal(true);
+    }
+  };
+
+  // Generate month options
+  const monthOptions = [];
+  const now = new Date();
+  for (let i = -6; i <= 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+    monthOptions.push({ value, label });
+  }
+
   return (
-    <div className="space-y-4 sm:space-y-6 pb-8">
+    <div className="h-[calc(100vh-theme(spacing.16)-theme(spacing.8))] lg:h-[calc(100vh-theme(spacing.8))] flex flex-col">
       {/* Header */}
-      <header className="animate-fade-in-up opacity-0" style={{ animationFillMode: 'forwards' }}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-fluid-3xl font-bold text-foreground flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-white" />
+      <div className="flex items-center justify-between gap-4 mb-4 shrink-0">
+        <PageHeader
+          title="Títulos"
+          description="Gestão de contas a pagar e receber"
+          icon={<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+            <TrendingUp className="h-5 w-5 text-white" />
+          </div>}
+        />
+        <Button onClick={() => { setEditingTituloId(null); setShowNovoModal(true); }} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Novo Título</span>
+        </Button>
+      </div>
+
+      {/* Alertas */}
+      {vencidosCount > 0 && (
+        <div className="mb-4 shrink-0">
+          <GlassCard className="border-rose-200 bg-gradient-to-r from-rose-50 to-red-50">
+            <div className="flex items-center gap-3 p-3">
+              <AlertTriangle className="h-5 w-5 text-rose-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-rose-800 text-sm">
+                  {vencidosCount} título{vencidosCount > 1 ? 's' : ''} vencido{vencidosCount > 1 ? 's' : ''}
+                </span>
+                <span className="text-rose-600 text-xs ml-2 hidden sm:inline">
+                  Total: {formatCurrency(fluxo?.vencidos?.valor || 0)}
+                </span>
               </div>
-              Fluxo de Caixa
-            </h1>
-            <p className="text-fluid-sm text-muted-foreground mt-1">
-              Projeção financeira e gestão de vencimentos
-            </p>
-          </div>
-        </div>
-      </header>
-
-      {/* KPIs Principais */}
-      <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
-        ) : (
-          <>
-            <StatCard
-              title="Saldo Projetado 30d"
-              value={formatCurrencyCompact(fluxo?.projecao.d30.saldo || 0)}
-              subtitle="próximos 30 dias"
-              icon={Wallet}
-              accentColor={(fluxo?.projecao.d30.saldo || 0) >= 0 ? 'success' : 'danger'}
-              delay={1}
-            />
-            <StatCard
-              title="Recebimentos Esperados"
-              value={formatCurrencyCompact(fluxo?.projecao.d30.receber || 0)}
-              subtitle="a receber em 30d"
-              icon={ArrowUpRight}
-              accentColor="success"
-              delay={2}
-            />
-            <StatCard
-              title="Pagamentos Previstos"
-              value={formatCurrencyCompact(fluxo?.projecao.d30.pagar || 0)}
-              subtitle="a pagar em 30d"
-              icon={ArrowDownRight}
-              accentColor="gold"
-              delay={3}
-            />
-            <StatCard
-              title="Vencidos"
-              value={String(fluxo?.vencidos.count || 0)}
-              subtitle={formatCurrency(fluxo?.vencidos.valor || 0)}
-              icon={AlertTriangle}
-              accentColor={totalVencidos > 0 ? 'danger' : 'success'}
-              delay={4}
-            />
-          </>
-        )}
-      </section>
-
-      {/* Gráfico de Projeção */}
-      <section className="animate-fade-in-up opacity-0" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
-        {isLoading ? (
-          <ChartContainerSkeleton minHeight="280px" />
-        ) : !temDados ? (
-          <GlassCard padding="lg" className="text-center">
-            <TrendingUp className="h-12 w-12 mx-auto mb-3 text-slate-300" />
-            <h3 className="text-lg font-semibold text-foreground mb-1">Nenhum dado para projeção</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Cadastre títulos a pagar ou receber para visualizar o fluxo de caixa
-            </p>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Título
-            </Button>
-          </GlassCard>
-        ) : (
-          <ChartContainer
-            title="Projeção de Fluxo"
-            subtitle="Próximos 30 dias"
-            icon={TrendingUp}
-            minHeight="280px"
-            delay={5}
-          >
-            <Line data={chartData} options={chartOptions} />
-          </ChartContainer>
-        )}
-      </section>
-
-      {/* Aging Report */}
-      <section className="animate-fade-in-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
-        <GlassCard padding="md">
-          <GlassCardHeader>
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-amber-500" />
-              <GlassCardTitle>Aging de Vencidos</GlassCardTitle>
-            </div>
-            <GlassCardDescription>
-              Títulos vencidos por faixa de tempo - clique para expandir
-            </GlassCardDescription>
-          </GlassCardHeader>
-          
-          {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="skeleton h-24 rounded-xl" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-              {fluxo?.aging.map((bucket, i) => (
-                <button
-                  key={bucket.faixa}
-                  onClick={() => setExpandedAging(expandedAging === bucket.faixa ? null : bucket.faixa)}
-                  disabled={bucket.count === 0}
-                  aria-expanded={expandedAging === bucket.faixa}
-                  aria-label={`${bucket.faixa}: ${bucket.count} títulos, ${formatCurrency(bucket.valor)}`}
-                  className={cn(
-                    'p-4 rounded-xl border-2 transition-all duration-200 text-left',
-                    agingColors[i].bg,
-                    agingColors[i].border,
-                    expandedAging === bucket.faixa && 'ring-2 ring-offset-2 ring-primary shadow-lg scale-[1.02]',
-                    bucket.count === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md cursor-pointer'
-                  )}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={cn('text-xs font-medium', agingColors[i].text)}>{bucket.faixa}</span>
-                    <div className="flex items-center gap-1">
-                      {bucket.count > 0 && (
-                        <Badge className={cn('text-[10px]', agingColors[i].badge)}>
-                          {bucket.count}
-                        </Badge>
-                      )}
-                      {bucket.count > 0 && (
-                        expandedAging === bucket.faixa 
-                          ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
-                          : <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                      )}
-                    </div>
-                  </div>
-                  <div className={cn('text-lg font-bold', agingColors[i].text)}>
-                    {formatCurrencyCompact(bucket.valor)}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-          
-          {/* Lista expandida de vencidos por faixa */}
-          {expandedAging && totalVencidos > 0 && (
-            <div className="mt-4 p-4 bg-muted/30 rounded-xl border border-dashed animate-fade-in">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-sm">Títulos vencidos: {expandedAging}</h4>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setExpandedAging(null)}
-                  className="h-7 px-2"
-                >
-                  <XCircle className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Para ver detalhes dos títulos vencidos nesta faixa, acesse o módulo de Títulos.
-              </p>
-              <Button variant="outline" size="sm" className="mt-3">
-                Ver títulos vencidos
-                <ChevronRight className="h-4 w-4 ml-1" />
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-rose-500 text-rose-600 hover:bg-rose-50"
+                onClick={() => setFiltroStatus('vencido')}
+              >
+                Ver Vencidos
               </Button>
             </div>
-          )}
+          </GlassCard>
+        </div>
+      )}
+
+      {/* Master-Detail Layout */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-0">
+        {/* Lista (Master) */}
+        <Card className="lg:col-span-5 xl:col-span-4 flex flex-col overflow-hidden">
+          <CardHeader className="py-3 px-4 shrink-0 border-b">
+            <div className="space-y-3">
+              {/* Busca */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por descrição ou pessoa..."
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="pl-10 h-9"
+                />
+                {search && (
+                  <button 
+                    onClick={() => setSearch('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Filtro de Mês */}
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Select value={mesAno || 'all'} onValueChange={(v) => { setMesAno(v === 'all' ? undefined : v); setPage(1); }}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Todos os meses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os meses</SelectItem>
+                    {monthOptions.map(m => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Quick Stats */}
+              <QuickStats 
+                stats={stats} 
+                filtroTipo={filtroTipo} 
+                setFiltroTipo={(v) => { setFiltroTipo(v); setPage(1); }} 
+              />
+
+              {/* Status Filters */}
+              <StatusFilters 
+                status={filtroStatus} 
+                setStatus={(v) => { setFiltroStatus(v); setPage(1); }}
+                vencidosCount={vencidosCount}
+              />
+
+              {/* Financial Summary */}
+              <FinancialSummary stats={stats} />
+            </div>
+          </CardHeader>
           
-          {totalVencidos === 0 && !isLoading && (
-            <div className="text-center py-6 text-muted-foreground">
-              <CheckCircle2 className="h-10 w-10 mx-auto mb-2 text-green-500" />
-              <p className="font-medium text-green-700">Nenhum título vencido!</p>
-              <p className="text-xs text-muted-foreground mt-1">Todos os compromissos estão em dia</p>
+          <CardContent className="flex-1 overflow-y-auto p-2">
+            <TitulosList 
+              titulos={titulos} 
+              selectedId={selectedTituloId} 
+              onSelect={handleSelectTitulo}
+              isLoading={isLoading}
+            />
+          </CardContent>
+
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <div className="p-3 border-t shrink-0">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalItems={data?.total || 0}
+                itemsShown={titulos.length}
+                onPageChange={setPage}
+                itemLabel="títulos"
+              />
             </div>
           )}
-        </GlassCard>
-      </section>
+        </Card>
 
-      {/* Próximos Vencimentos - Timeline */}
-      <section className="animate-fade-in-up opacity-0" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
-        <GlassCard padding="md">
-          <GlassCardHeader>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              <GlassCardTitle>Próximos Vencimentos</GlassCardTitle>
-            </div>
-            <GlassCardDescription>
-              Compromissos dos próximos 14 dias
-            </GlassCardDescription>
-          </GlassCardHeader>
-
-          {isLoading ? (
-            <div className="space-y-3 mt-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="skeleton h-16 rounded-lg" />
-              ))}
-            </div>
-          ) : proximosVencimentos.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Calendar className="h-10 w-10 mx-auto mb-2 text-slate-300" />
-              <p className="font-medium">Nenhum vencimento nos próximos 14 dias</p>
-              <p className="text-xs mt-1">Sua agenda está livre!</p>
+        {/* Detalhes (Detail) - Desktop */}
+        <Card className="hidden lg:flex lg:col-span-7 xl:col-span-8 flex-col overflow-hidden">
+          {selectedTituloId ? (
+            <div className="h-full overflow-hidden">
+              <TituloDetail 
+                tituloId={selectedTituloId} 
+                onClose={() => setSelectedTituloId(null)}
+                onBaixar={() => setShowBaixaModal(true)}
+                onEdit={handleEditTitulo}
+              />
             </div>
           ) : (
-            <div className="mt-4 space-y-2">
-              {proximosVencimentos.map((titulo, idx) => {
-                const hoje = new Date();
-                const venc = new Date(titulo.dataVencimento);
-                const diffDays = Math.ceil((venc.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-                const isUrgent = diffDays <= 3;
-                const isToday = diffDays === 0;
-                
-                return (
-                  <div 
-                    key={titulo.id}
-                    className={cn(
-                      'group flex items-center gap-4 p-3 rounded-lg border transition-all hover:shadow-md',
-                      titulo.tipo === 'pagar' 
-                        ? 'border-red-100 hover:border-red-300 bg-red-50/30' 
-                        : 'border-green-100 hover:border-green-300 bg-green-50/30',
-                      isUrgent && 'ring-1 ring-amber-300'
-                    )}
-                    style={{ animationDelay: `${idx * 50}ms` }}
-                  >
-                    {/* Indicador de tipo */}
-                    <div className={cn(
-                      'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
-                      titulo.tipo === 'pagar' ? 'bg-red-100' : 'bg-green-100'
-                    )}>
-                      {titulo.tipo === 'pagar' ? (
-                        <Banknote className="h-5 w-5 text-red-600" />
-                      ) : (
-                        <CreditCard className="h-5 w-5 text-green-600" />
-                      )}
-                    </div>
-                    
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm truncate">{titulo.descricao}</p>
-                        {isToday && (
-                          <Badge className="bg-amber-100 text-amber-800 text-[10px]">Hoje</Badge>
-                        )}
-                        {isUrgent && !isToday && (
-                          <Badge className="bg-orange-100 text-orange-800 text-[10px]">Urgente</Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {titulo.pessoaNome || 'Sem pessoa'} · {formatDate(titulo.dataVencimento)}
-                      </p>
-                    </div>
-                    
-                    {/* Valor */}
-                    <div className="text-right shrink-0">
-                      <p className={cn(
-                        'font-mono font-bold',
-                        titulo.tipo === 'pagar' ? 'text-red-600' : 'text-green-600'
-                      )}>
-                        {titulo.tipo === 'pagar' ? '-' : '+'}{formatCurrency(titulo.valor)}
-                      </p>
-                    </div>
-                    
-                    {/* Ações */}
-                    <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Ver detalhes">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-              
-              {proximosVencimentos.length >= 10 && (
-                <div className="text-center pt-2">
-                  <Button variant="ghost" size="sm" className="text-primary">
-                    Ver todos os vencimentos
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              )}
-            </div>
+            <EmptySelection onNewTitulo={() => { setEditingTituloId(null); setShowNovoModal(true); }} />
           )}
-        </GlassCard>
-      </section>
+        </Card>
+      </div>
+
+      {/* Detail Mobile Overlay */}
+      {showMobileDetail && selectedTituloId && (
+        <div className="lg:hidden">
+          <TituloDetail 
+            tituloId={selectedTituloId} 
+            onClose={handleCloseMobileDetail}
+            onBaixar={() => setShowBaixaModal(true)}
+            onEdit={handleEditTitulo}
+          />
+        </div>
+      )}
+
+      {/* Modal Novo/Editar Título */}
+      <TituloWizard 
+        open={showNovoModal} 
+        onOpenChange={setShowNovoModal}
+        tituloId={editingTituloId}
+        onSuccess={handleNewTituloSuccess}
+      />
+
+      {/* Modal Baixa */}
+      <TituloBaixaModal
+        open={showBaixaModal}
+        onOpenChange={setShowBaixaModal}
+        tituloId={selectedTituloId}
+        onSuccess={handleBaixaSuccess}
+      />
     </div>
   );
 }

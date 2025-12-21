@@ -3,7 +3,8 @@ import {
   BookOpen, Plus, ChevronRight, ChevronDown, Search, Calendar, 
   FileText, CheckCircle2, AlertCircle, Lock, Unlock, RotateCcw,
   BarChart3, Calculator, Eye, EyeOff, Edit2, Trash2, Play, Ban, 
-  Layers, ChevronsUpDown
+  Layers, ChevronsUpDown, X, Save, ArrowUpDown, TrendingUp, TrendingDown,
+  Wallet, Building2, PiggyBank
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -68,13 +69,324 @@ const formatMonth = (mes: number, ano: number) => {
 };
 
 // ============================================================================
-// TAB: PLANO DE CONTAS
+// TAB: PLANO DE CONTAS (Master-Detail Layout)
 // ============================================================================
+
+const typeIcons: Record<string, React.ReactNode> = {
+  ativo: <Wallet className="h-4 w-4" />,
+  passivo: <Building2 className="h-4 w-4" />,
+  patrimonio_social: <PiggyBank className="h-4 w-4" />,
+  receita: <TrendingUp className="h-4 w-4" />,
+  despesa: <TrendingDown className="h-4 w-4" />,
+};
+
+// Quick Filters by Type
+function QuickTypeFilters({ 
+  tree, 
+  activeFilter, 
+  onFilterChange 
+}: { 
+  tree: any[]; 
+  activeFilter: string; 
+  onFilterChange: (v: string) => void;
+}) {
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: tree.length };
+    tree.forEach(conta => { c[conta.tipo] = (c[conta.tipo] || 0) + 1; });
+    return c;
+  }, [tree]);
+
+  const filters = [
+    { id: 'all', label: 'Todas', icon: <Layers className="h-3.5 w-3.5" />, color: 'bg-slate-100 text-slate-600' },
+    { id: 'ativo', label: 'Ativo', icon: typeIcons.ativo, color: 'bg-blue-100 text-blue-600' },
+    { id: 'passivo', label: 'Passivo', icon: typeIcons.passivo, color: 'bg-orange-100 text-orange-600' },
+    { id: 'patrimonio_social', label: 'Patrimônio', icon: typeIcons.patrimonio_social, color: 'bg-purple-100 text-purple-600' },
+    { id: 'receita', label: 'Receita', icon: typeIcons.receita, color: 'bg-emerald-100 text-emerald-600' },
+    { id: 'despesa', label: 'Despesa', icon: typeIcons.despesa, color: 'bg-rose-100 text-rose-600' },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-1.5">
+      {filters.map(f => (
+        <button
+          key={f.id}
+          onClick={() => onFilterChange(f.id)}
+          className={cn(
+            'flex flex-col items-center p-2 rounded-lg transition-all text-center',
+            activeFilter === f.id 
+              ? `${f.color} ring-2 ring-offset-1 ring-current` 
+              : 'bg-muted/50 hover:bg-muted text-muted-foreground'
+          )}
+        >
+          {f.icon}
+          <span className="text-lg font-bold mt-0.5">{counts[f.id] || 0}</span>
+          <span className="text-[10px]">{f.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Tree Item Component
+function ContaTreeItem({ 
+  conta, 
+  level, 
+  filtered, 
+  expanded, 
+  search,
+  selectedId,
+  onToggleExpand,
+  onSelect
+}: {
+  conta: any;
+  level: number;
+  filtered: any[];
+  expanded: Set<string>;
+  search: string;
+  selectedId: string | null;
+  onToggleExpand: (id: string) => void;
+  onSelect: (conta: any) => void;
+}) {
+  const children = filtered.filter(c => c.contaPaiId === conta.id);
+  const hasChildren = children.length > 0;
+  const isExpanded = expanded.has(conta.id) || !!search;
+  const colors = typeColors[conta.tipo] || typeColors.ativo;
+  const isSelected = selectedId === conta.id;
+
+  return (
+    <div className={cn(level > 0 && 'ml-3 border-l border-border/30 pl-2')}>
+      <button
+        onClick={() => onSelect(conta)}
+        className={cn(
+          'w-full flex items-center gap-2 py-1.5 px-2 rounded-lg text-left transition-all',
+          'hover:bg-accent/50 focus:outline-none focus:ring-1 focus:ring-violet-500',
+          isSelected && 'bg-violet-100 ring-1 ring-violet-500',
+          !conta.ativo && 'opacity-50'
+        )}
+      >
+        {hasChildren ? (
+          <span 
+            onClick={(e) => { e.stopPropagation(); onToggleExpand(conta.id); }}
+            className="p-0.5 hover:bg-accent rounded cursor-pointer"
+          >
+            {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+          </span>
+        ) : (
+          <span className="w-4 flex justify-center">
+            <span className={cn('w-1.5 h-1.5 rounded-full', colors.text.replace('text', 'bg'))} />
+          </span>
+        )}
+        <span className="font-mono text-[10px] text-muted-foreground w-14 shrink-0">{conta.codigo}</span>
+        <span className={cn(
+          'text-xs flex-1 truncate', 
+          conta.classificacao === 'sintetica' ? 'font-semibold' : 'font-medium',
+          !conta.ativo && 'line-through'
+        )}>
+          {conta.nome}
+        </span>
+        {conta.classificacao === 'sintetica' && (
+          <span className="text-[9px] px-1 py-0.5 rounded bg-slate-200 text-slate-600">Σ</span>
+        )}
+        <ChevronRight className={cn(
+          'h-3.5 w-3.5 text-slate-300 shrink-0 transition-transform',
+          isSelected && 'text-violet-500 rotate-90'
+        )} />
+      </button>
+      {isExpanded && hasChildren && children.map(c => (
+        <ContaTreeItem 
+          key={c.id}
+          conta={c}
+          level={level + 1}
+          filtered={filtered}
+          expanded={expanded}
+          search={search}
+          selectedId={selectedId}
+          onToggleExpand={onToggleExpand}
+          onSelect={onSelect}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Empty Selection State
+function EmptyContaSelection({ onNewConta }: { onNewConta: () => void }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center p-8">
+      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-5">
+        <Layers className="h-10 w-10 text-violet-500" />
+      </div>
+      <h3 className="text-lg font-semibold text-slate-800 mb-2">Selecione uma conta</h3>
+      <p className="text-sm text-muted-foreground max-w-xs mb-5">
+        Clique em uma conta na árvore ao lado para ver detalhes, editar ou gerenciar.
+      </p>
+      <Button onClick={onNewConta} className="bg-violet-600 hover:bg-violet-700">
+        <Plus className="h-4 w-4 mr-2" />Nova Conta
+      </Button>
+    </div>
+  );
+}
+
+// Conta Detail Panel
+function ContaDetail({ 
+  conta, 
+  onClose, 
+  onEdit,
+  onToggleAtivo,
+  isToggling,
+  isMobile
+}: { 
+  conta: any; 
+  onClose: () => void;
+  onEdit: () => void;
+  onToggleAtivo: () => void;
+  isToggling: boolean;
+  isMobile?: boolean;
+}) {
+  const colors = typeColors[conta.tipo] || typeColors.ativo;
+
+  const Wrapper = ({ children }: { children: React.ReactNode }) => {
+    if (isMobile) {
+      return (
+        <div className="fixed inset-0 z-50 flex justify-end pt-16 lg:pt-0">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+          <div className="relative w-full max-w-md bg-background shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col">
+            {children}
+          </div>
+        </div>
+      );
+    }
+    return <div className="h-full flex flex-col">{children}</div>;
+  };
+
+  return (
+    <Wrapper>
+      {/* Header */}
+      <div className={cn('text-white p-5 shrink-0 relative', `bg-gradient-to-br ${colors.gradient}`)}>
+        <button 
+          onClick={onClose} 
+          className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-white/20 transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+            {typeIcons[conta.tipo]}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-mono text-xs text-white/70">{conta.codigo}</p>
+            <h2 className="text-lg font-bold truncate">{conta.nome}</h2>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <Badge className="bg-white/20 text-white text-xs border-0">
+                {typeLabels[conta.tipo]}
+              </Badge>
+              <Badge className="bg-white/20 text-white text-xs border-0">
+                {conta.classificacao === 'sintetica' ? 'Sintética' : 'Analítica'}
+              </Badge>
+              {!conta.ativo && (
+                <Badge className="bg-red-500/80 text-white text-xs border-0">Inativa</Badge>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Info Cards */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 rounded-lg bg-muted/50 text-center">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Natureza</p>
+            <p className="text-sm font-semibold mt-0.5 capitalize">{conta.naturezaSaldo}</p>
+          </div>
+          <div className="p-3 rounded-lg bg-muted/50 text-center">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Classificação</p>
+            <p className="text-sm font-semibold mt-0.5 capitalize">{conta.classificacao}</p>
+          </div>
+        </div>
+
+        {/* Details */}
+        <Card>
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <FileText className="h-4 w-4" /> Informações
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-2 px-4 space-y-2">
+            <div className="flex justify-between py-1.5 border-b">
+              <span className="text-xs text-muted-foreground">Código</span>
+              <span className="text-sm font-mono">{conta.codigo}</span>
+            </div>
+            <div className="flex justify-between py-1.5 border-b">
+              <span className="text-xs text-muted-foreground">Tipo</span>
+              <Badge className={cn('text-[10px]', colors.bg, colors.text)}>{typeLabels[conta.tipo]}</Badge>
+            </div>
+            <div className="flex justify-between py-1.5 border-b">
+              <span className="text-xs text-muted-foreground">Natureza do Saldo</span>
+              <span className="text-sm capitalize">{conta.naturezaSaldo}</span>
+            </div>
+            <div className="flex justify-between py-1.5 border-b">
+              <span className="text-xs text-muted-foreground">Aceita Lançamentos</span>
+              <span className="text-sm">{conta.classificacao === 'analitica' ? 'Sim' : 'Não (sintética)'}</span>
+            </div>
+            <div className="flex justify-between py-1.5">
+              <span className="text-xs text-muted-foreground">Status</span>
+              <Badge className={conta.ativo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}>
+                {conta.ativo ? 'Ativa' : 'Inativa'}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ITG 2002 Info */}
+        <Card className="bg-gradient-to-r from-violet-50 to-indigo-50 border-violet-200">
+          <CardContent className="py-3 px-4">
+            <div className="flex items-start gap-2">
+              <BookOpen className="h-4 w-4 text-violet-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-medium text-violet-800">ITG 2002</p>
+                <p className="text-[10px] text-violet-600 mt-0.5">
+                  {conta.tipo === 'ativo' && 'Bens e direitos da entidade'}
+                  {conta.tipo === 'passivo' && 'Obrigações com terceiros'}
+                  {conta.tipo === 'patrimonio_social' && 'Recursos próprios da entidade'}
+                  {conta.tipo === 'receita' && 'Recursos recebidos sem contraprestação'}
+                  {conta.tipo === 'despesa' && 'Gastos com manutenção das atividades'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Actions */}
+      <div className="p-4 border-t shrink-0 flex gap-2">
+        <Button onClick={onEdit} variant="outline" className="flex-1">
+          <Edit2 className="h-4 w-4 mr-2" /> Editar
+        </Button>
+        <Button 
+          onClick={onToggleAtivo}
+          variant={conta.ativo ? 'destructive' : 'default'}
+          disabled={isToggling}
+          className="flex-1"
+        >
+          {conta.ativo ? (
+            <><EyeOff className="h-4 w-4 mr-2" /> Desativar</>
+          ) : (
+            <><Eye className="h-4 w-4 mr-2" /> Ativar</>
+          )}
+        </Button>
+      </div>
+    </Wrapper>
+  );
+}
 
 function PlanoContasTab() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [selectedContaId, setSelectedContaId] = useState<string | null>(null);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editConta, setEditConta] = useState<any>(null);
   const [form, setForm] = useState({ codigo: '', nome: '', tipo: 'despesa', naturezaSaldo: 'devedora', classificacao: 'analitica', contaPaiId: '', descricao: '' });
@@ -82,6 +394,7 @@ function PlanoContasTab() {
   const utils = trpc.useUtils();
   const { data: tree = [], isLoading } = trpc.accounts.planoContasTree.useQuery();
   const { data: hierarchy = [] } = trpc.accounts.planoContasHierarchy.useQuery();
+  
   const createMutation = trpc.accounts.planoContasCreate.useMutation({
     onSuccess: () => { utils.accounts.planoContasTree.invalidate(); setDialogOpen(false); toast.success('Conta criada'); },
     onError: (e) => toast.error(e.message),
@@ -105,6 +418,7 @@ function PlanoContasTab() {
   }), [tree, typeFilter, search]);
 
   const roots = useMemo(() => filtered.filter(c => !c.contaPaiId), [filtered]);
+  const selectedConta = useMemo(() => tree.find(c => c.id === selectedContaId), [tree, selectedContaId]);
 
   const toggleExpand = (id: string) => {
     setExpanded(prev => {
@@ -114,6 +428,13 @@ function PlanoContasTab() {
     });
   };
 
+  const handleSelectConta = (conta: any) => {
+    setSelectedContaId(conta.id);
+    if (window.innerWidth < 1024) {
+      setShowMobileDetail(true);
+    }
+  };
+
   const handleNew = () => {
     setEditConta(null);
     const nat = ['ativo', 'despesa'].includes('despesa') ? 'devedora' : 'credora';
@@ -121,9 +442,11 @@ function PlanoContasTab() {
     setDialogOpen(true);
   };
 
-  const handleEdit = (conta: any) => {
-    setEditConta(conta);
-    setForm({ codigo: conta.codigo, nome: conta.nome, tipo: conta.tipo, naturezaSaldo: conta.naturezaSaldo, classificacao: conta.classificacao, contaPaiId: conta.contaPaiId || '', descricao: '' });
+  const handleEdit = (conta?: any) => {
+    const c = conta || selectedConta;
+    if (!c) return;
+    setEditConta(c);
+    setForm({ codigo: c.codigo, nome: c.nome, tipo: c.tipo, naturezaSaldo: c.naturezaSaldo, classificacao: c.classificacao, contaPaiId: c.contaPaiId || '', descricao: '' });
     setDialogOpen(true);
   };
 
@@ -149,73 +472,127 @@ function PlanoContasTab() {
     setForm(f => ({ ...f, tipo, naturezaSaldo: nat }));
   };
 
-  const renderTree = (conta: any, level = 0) => {
-    const children = filtered.filter(c => c.contaPaiId === conta.id);
-    const hasChildren = children.length > 0;
-    const isExpanded = expanded.has(conta.id) || !!search;
-    const colors = typeColors[conta.tipo] || typeColors.ativo;
-
-    return (
-      <div key={conta.id} className={cn(level > 0 && 'ml-4 border-l border-border/40 pl-3')}>
-        <div className="group flex items-center gap-2 py-1.5 px-2 -ml-2 rounded-lg hover:bg-accent/50 transition-all">
-          {hasChildren ? (
-            <button onClick={() => toggleExpand(conta.id)} className="p-0.5 hover:bg-accent rounded">
-              {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-            </button>
-          ) : (
-            <span className="w-5 flex justify-center"><span className={cn('w-1.5 h-1.5 rounded-full', colors.text.replace('text', 'bg'))} /></span>
-          )}
-          <span className="font-mono text-xs text-muted-foreground w-20 shrink-0">{conta.codigo}</span>
-          <span className={cn('text-sm flex-1 truncate', conta.classificacao === 'sintetica' ? 'font-semibold' : 'font-medium', !conta.ativo && 'line-through text-muted-foreground')}>
-            {conta.nome}
-          </span>
-          <Badge variant="outline" className={cn('text-[10px] px-1.5', colors.bg, colors.text)}>{typeLabels[conta.tipo]}</Badge>
-          {conta.classificacao === 'sintetica' && <Badge variant="secondary" className="text-[10px] px-1.5">Σ</Badge>}
-          <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => handleEdit(conta)} title="Editar"><Edit2 className="h-3 w-3" /></Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => toggleAtivoMutation.mutate({ id: conta.id })} title={conta.ativo ? 'Desativar' : 'Ativar'} disabled={toggleAtivoMutation.isPending}>
-            {conta.ativo ? <EyeOff className="h-3 w-3 text-muted-foreground" /> : <Eye className="h-3 w-3 text-emerald-600" />}
-          </Button>
-        </div>
-        {isExpanded && hasChildren && children.map(c => renderTree(c, level + 1))}
-      </div>
-    );
+  const handleCloseMobileDetail = () => {
+    setShowMobileDetail(false);
+    setSelectedContaId(null);
   };
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="py-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
+    <div className="h-full flex flex-col">
+      {/* Master-Detail Grid */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-0">
+        {/* Master: Tree (5 cols) */}
+        <Card className="lg:col-span-5 xl:col-span-4 flex flex-col overflow-hidden">
+          <CardHeader className="py-3 px-4 shrink-0 border-b space-y-3">
+            {/* Search */}
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar código ou nome..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              <Input 
+                placeholder="Buscar código ou nome..." 
+                value={search} 
+                onChange={e => setSearch(e.target.value)} 
+                className="pl-9 h-9"
+              />
+              {search && (
+                <button 
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon" onClick={() => setExpanded(new Set(tree.map(c => c.id)))} title="Expandir"><Eye className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon" onClick={() => setExpanded(new Set())} title="Recolher"><ChevronsUpDown className="h-4 w-4" /></Button>
-            <Button onClick={handleNew}><Plus className="h-4 w-4 mr-1" />Nova Conta</Button>
+
+            {/* Quick Filters */}
+            <QuickTypeFilters tree={tree} activeFilter={typeFilter} onFilterChange={setTypeFilter} />
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setExpanded(new Set(tree.map(c => c.id)))} className="flex-1">
+                <Eye className="h-3.5 w-3.5 mr-1.5" />Expandir
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setExpanded(new Set())} className="flex-1">
+                <ChevronsUpDown className="h-3.5 w-3.5 mr-1.5" />Recolher
+              </Button>
+              <Button size="sm" onClick={handleNew} className="bg-violet-600 hover:bg-violet-700">
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="flex-1 overflow-y-auto p-2">
+            {isLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="animate-pulse p-2 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded bg-muted" />
+                      <div className="w-12 h-3 rounded bg-muted" />
+                      <div className="flex-1 h-3 rounded bg-muted" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : roots.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <span className="text-4xl">🔍</span>
+                <p className="mt-2 text-sm">Nenhuma conta encontrada</p>
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                {roots.map(c => (
+                  <ContaTreeItem
+                    key={c.id}
+                    conta={c}
+                    level={0}
+                    filtered={filtered}
+                    expanded={expanded}
+                    search={search}
+                    selectedId={selectedContaId}
+                    onToggleExpand={toggleExpand}
+                    onSelect={handleSelectConta}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+
+          <div className="p-3 border-t shrink-0 text-xs text-muted-foreground">
+            {filtered.length} contas exibidas
           </div>
-        </CardContent>
-      </Card>
+        </Card>
 
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Layers className="h-4 w-4" />Estrutura Hierárquica ITG 2002</CardTitle></CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-2">{[...Array(6)].map((_, i) => <div key={i} className="h-8 bg-muted rounded animate-pulse" />)}</div>
+        {/* Detail (7 cols) - Desktop */}
+        <Card className="hidden lg:flex lg:col-span-7 xl:col-span-8 flex-col overflow-hidden">
+          {selectedConta ? (
+            <ContaDetail 
+              conta={selectedConta}
+              onClose={() => setSelectedContaId(null)}
+              onEdit={() => handleEdit()}
+              onToggleAtivo={() => toggleAtivoMutation.mutate({ id: selectedConta.id })}
+              isToggling={toggleAtivoMutation.isPending}
+            />
           ) : (
-            <div className="max-h-[60vh] overflow-auto">{roots.map(c => renderTree(c))}</div>
+            <EmptyContaSelection onNewConta={handleNew} />
           )}
-          <div className="mt-4 pt-3 border-t text-xs text-muted-foreground">{filtered.length} contas exibidas</div>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
 
+      {/* Mobile Detail Overlay */}
+      {showMobileDetail && selectedConta && (
+        <div className="lg:hidden">
+          <ContaDetail 
+            conta={selectedConta}
+            onClose={handleCloseMobileDetail}
+            onEdit={() => handleEdit()}
+            onToggleAtivo={() => toggleAtivoMutation.mutate({ id: selectedConta.id })}
+            isToggling={toggleAtivoMutation.isPending}
+            isMobile
+          />
+        </div>
+      )}
+
+      {/* Dialog Nova/Editar Conta */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -904,6 +1281,47 @@ function BalanceteTab() {
 export default function Contabilidade() {
   const [activeTab, setActiveTab] = useState<TabId>('plano');
 
+  // Plano de Contas uses full-height master-detail layout
+  if (activeTab === 'plano') {
+    return (
+      <div className="h-[calc(100vh-theme(spacing.16)-theme(spacing.8))] lg:h-[calc(100vh-theme(spacing.8))] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-4 shrink-0">
+          <PageHeader
+            title="Contabilidade"
+            description="Plano de Contas, Lançamentos e Demonstrações Contábeis conforme ITG 2002"
+            icon={<BookOpen className="h-8 w-8 text-violet-600" />}
+          />
+        </div>
+
+        {/* Tabs */}
+        <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg w-fit mb-4 shrink-0">
+          {TABS.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all',
+                  activeTab === tab.id ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Full-height content */}
+        <div className="flex-1 min-h-0">
+          <PlanoContasTab />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -934,7 +1352,6 @@ export default function Contabilidade() {
 
       {/* Tab Content */}
       <div>
-        {activeTab === 'plano' && <PlanoContasTab />}
         {activeTab === 'periodos' && <PeriodosTab />}
         {activeTab === 'lancamentos' && <LancamentosTab />}
         {activeTab === 'balancete' && <BalanceteTab />}

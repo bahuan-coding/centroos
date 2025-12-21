@@ -2129,7 +2129,7 @@ const pessoasRouter = router({
     `);
     
     // Estatísticas
-    const [stats] = await db.execute(sql`
+    const statsResult = await db.execute(sql`
       SELECT 
         COUNT(DISTINCT CASE WHEN t.pessoa_id IS NULL THEN t.id END) as titulos_sem_pessoa,
         COUNT(DISTINCT p.id) FILTER (WHERE NOT EXISTS (
@@ -2139,6 +2139,8 @@ const pessoasRouter = router({
       LEFT JOIN titulo t ON t.pessoa_id = p.id AND t.deleted_at IS NULL
       WHERE p.deleted_at IS NULL
     `);
+    
+    const statsRow = statsResult.rows[0] as any;
     
     return {
       titulosSemPessoa: titulosSemPessoa.rows.map((t: any) => ({
@@ -2157,8 +2159,8 @@ const pessoasRouter = router({
         isAssociado: p.is_associado,
       })),
       stats: {
-        titulosSemPessoa: Number((stats.rows[0] as any)?.titulos_sem_pessoa) || 0,
-        pessoasSemTitulo: Number((stats.rows[0] as any)?.pessoas_sem_titulo) || 0,
+        titulosSemPessoa: Number(statsRow?.titulos_sem_pessoa) || 0,
+        pessoasSemTitulo: Number(statsRow?.pessoas_sem_titulo) || 0,
       },
     };
   }),

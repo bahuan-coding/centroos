@@ -156,6 +156,7 @@ export function ContaFinanceiraWizard({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         className="max-w-none w-screen h-screen p-0 rounded-none sm:rounded-none border-0 gap-0"
+        hideCloseButton
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         aria-label={mode === 'edit' ? 'Editar conta financeira' : 'Cadastro de nova conta financeira'}

@@ -141,6 +141,7 @@ export function ContaContabilWizard({ open, onOpenChange, onSuccess }: ContaCont
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         className="max-w-none w-screen h-screen p-0 rounded-none sm:rounded-none border-0 gap-0"
+        hideCloseButton
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         aria-label="Cadastro de nova conta contábil"

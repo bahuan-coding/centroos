@@ -106,6 +106,9 @@ interface PeriodoWizardContextValue {
   
   // Existing periods for validation
   existingPeriods: Array<{ id: number; month: number; year: number; status: string }>;
+  
+  // Close wizard and navigate
+  closeWizard: () => void;
 }
 
 const PeriodoWizardContext = createContext<PeriodoWizardContextValue | null>(null);
@@ -126,7 +129,7 @@ interface PeriodoWizardProviderProps {
   onCancel?: () => void;
 }
 
-export function PeriodoWizardProvider({ children, onSuccess }: PeriodoWizardProviderProps) {
+export function PeriodoWizardProvider({ children, onSuccess, onCancel }: PeriodoWizardProviderProps) {
   const utils = trpc.useUtils();
   
   const [form, setForm] = useState<PeriodoFormData>(initialFormData);
@@ -391,6 +394,10 @@ export function PeriodoWizardProvider({ children, onSuccess }: PeriodoWizardProv
     setPendingDraft(null);
   };
   
+  const closeWizard = useCallback(() => {
+    onCancel?.();
+  }, [onCancel]);
+  
   // Submit
   const submit = async (): Promise<number | null> => {
     for (let i = 0; i < totalSteps - 1; i++) {
@@ -458,6 +465,7 @@ export function PeriodoWizardProvider({ children, onSuccess }: PeriodoWizardProv
     checkingDuplicate,
     submit,
     existingPeriods,
+    closeWizard,
   };
   
   return (

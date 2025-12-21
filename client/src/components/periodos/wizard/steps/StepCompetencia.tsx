@@ -6,7 +6,7 @@ import { RichPopover } from '@/components/ui/rich-popover';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Calendar, ExternalLink, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Link } from 'wouter';
+import { useLocation } from 'wouter';
 
 const MESES = [
   { value: 1, label: 'Janeiro' },
@@ -24,12 +24,23 @@ const MESES = [
 ];
 
 export function StepCompetencia() {
-  const { form, updateField, errors, fieldRefs, warnings, duplicateInfo, checkingDuplicate, existingPeriods } = usePeriodoWizard();
+  const { form, updateField, errors, fieldRefs, warnings, duplicateInfo, checkingDuplicate, existingPeriods, closeWizard } = usePeriodoWizard();
+  const [, navigate] = useLocation();
   
   // Find previous period info
   const prevMonth = form.mes ? (form.mes === 1 ? 12 : form.mes - 1) : null;
   const prevYear = form.mes ? (form.mes === 1 ? form.ano - 1 : form.ano) : null;
   const prevPeriodExists = prevMonth && prevYear ? existingPeriods.some(p => p.month === prevMonth && p.year === prevYear) : null;
+  
+  const handleOpenExistingPeriod = () => {
+    if (duplicateInfo?.periodId) {
+      closeWizard();
+      // Small delay to allow wizard to close before navigating
+      setTimeout(() => {
+        navigate(`/periods?selected=${duplicateInfo.periodId}`);
+      }, 100);
+    }
+  };
   
   return (
     <div className="space-y-8">
@@ -132,12 +143,15 @@ export function StepCompetencia() {
                   O período {MESES.find(m => m.value === form.mes)?.label}/{form.ano} já está cadastrado no sistema.
                   Cada competência (mês/ano) deve ser única.
                 </p>
-                <Link href={`/periods?selected=${duplicateInfo.periodId}`}>
-                  <Button variant="outline" size="sm" className="mt-3 border-destructive/30 text-destructive hover:bg-destructive/10">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Abrir período existente
-                  </Button>
-                </Link>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleOpenExistingPeriod}
+                  className="mt-3 border-destructive/30 text-destructive hover:bg-destructive/10"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Abrir período existente
+                </Button>
               </div>
             </div>
           </div>

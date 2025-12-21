@@ -174,7 +174,8 @@ interface CentroCustoFormProps {
 
 export function CentroCustoForm({ open, onClose, editingItem }: CentroCustoFormProps) {
   const utils = trpc.useUtils();
-  const { data: pessoas = [] } = trpc.pessoas.list.useQuery();
+  const { data: pessoasData } = trpc.pessoas.list.useQuery();
+  const pessoas = pessoasData?.pessoas ?? [];
 
   const [form, setForm] = useState({
     codigo: '',

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Calendar, Lock, ChevronRight, Search, X, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
+import { useSearch, useLocation } from 'wouter';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -237,8 +238,30 @@ export default function Periods() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [showMobileDetail, setShowMobileDetail] = useState(false);
 
+  const searchString = useSearch();
+  const [, navigate] = useLocation();
+  
   const utils = trpc.useUtils();
   const { data: periodsData, isLoading } = trpc.periods.listWithStats.useQuery();
+  
+  // Handle URL query param for selected period
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const selected = params.get('selected');
+    if (selected) {
+      const periodId = parseInt(selected);
+      if (!isNaN(periodId)) {
+        setSelectedPeriodId(periodId);
+        // Find the period to set the correct year filter
+        const period = periodsData?.periods?.find(p => p.id === periodId);
+        if (period) {
+          setFiltroAno(period.year.toString());
+        }
+        // Clean up the URL after reading the param
+        navigate('/periods', { replace: true });
+      }
+    }
+  }, [searchString, periodsData?.periods, navigate]);
 
   const handleWizardSuccess = () => {
     utils.periods.listWithStats.invalidate();

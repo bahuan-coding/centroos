@@ -259,7 +259,8 @@ interface ProjetoFormProps {
 export function ProjetoForm({ open, onClose, editingItem }: ProjetoFormProps) {
   const utils = trpc.useUtils();
   const { data: centrosCusto = [] } = trpc.centroCusto.list.useQuery({ ativo: true });
-  const { data: pessoas = [] } = trpc.pessoas.list.useQuery();
+  const { data: pessoasData } = trpc.pessoas.list.useQuery();
+  const pessoas = pessoasData?.pessoas ?? [];
 
   const [form, setForm] = useState({
     codigo: '',

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FileBarChart, FileCheck, FileSpreadsheet, Download, Loader2, TrendingUp, Building2, Shield, Terminal, Copy, ChevronRight, Settings, CheckCircle2 } from 'lucide-react';
+import { useIsMobile } from '@/lib/hooks';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -330,6 +331,7 @@ export default function Reports() {
   const [periodId, setPeriodId] = useState<string>('');
   const [auditDialogOpen, setAuditDialogOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data: periods = [] } = trpc.periods.list.useQuery();
   const financialMutation = trpc.reports.generateFinancial.useMutation();
@@ -468,9 +470,9 @@ export default function Reports() {
       </div>
 
       {/* Mobile: Show preview as modal when report selected */}
-      {selectedReport && (
+      {isMobile && selectedReport && (
         <Dialog open={!!selectedReportId} onOpenChange={(open) => !open && setSelectedReportId(null)}>
-          <DialogContent className="lg:hidden max-w-lg p-0 overflow-hidden">
+          <DialogContent className="max-w-lg p-0 overflow-hidden">
             <div className="max-h-[80vh] overflow-y-auto">
               <ReportPreview
                 report={selectedReport}

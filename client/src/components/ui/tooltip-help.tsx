@@ -32,8 +32,10 @@ export function TooltipHelp({ content, side = 'top', className }: TooltipHelpPro
           <TooltipPrimitive.Content
             side={side}
             sideOffset={6}
+            avoidCollisions
+            collisionPadding={12}
             className={cn(
-              'z-50 max-w-xs rounded-lg px-3 py-2',
+              'z-50 max-w-xs sm:max-w-sm rounded-lg px-3 py-2',
               'bg-slate-900 text-white text-sm leading-relaxed',
               'shadow-lg animate-in fade-in-0 zoom-in-95',
               'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
@@ -93,8 +95,10 @@ export function Tooltip({ content, children, side = 'top' }: TooltipWrapperProps
           <TooltipPrimitive.Content
             side={side}
             sideOffset={6}
+            avoidCollisions
+            collisionPadding={12}
             className={cn(
-              'z-50 max-w-xs rounded-lg px-3 py-2',
+              'z-50 max-w-xs sm:max-w-sm rounded-lg px-3 py-2',
               'bg-slate-900 text-white text-sm leading-relaxed',
               'shadow-lg animate-in fade-in-0 zoom-in-95',
               'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',

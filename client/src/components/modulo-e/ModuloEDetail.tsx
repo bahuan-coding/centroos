@@ -7,9 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CentroCustoForm } from './CentroCusto';
-import { ProjetoForm, ProjetoConcluirDialog } from './Projeto';
-import { FundoForm } from './Fundo';
+import { ProjetoConcluirDialog } from './Projeto';
+import { CentroWizard } from './CentroWizard';
+import { ProjetoWizard } from './ProjetoWizard';
+import { FundoWizard } from './FundoWizard';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -404,20 +405,35 @@ export function ModuloEDetail({ item, onClose, onUpdated }: ModuloEDetailProps) 
           </Tabs>
         </div>
 
-        {/* Edit Forms */}
-        <CentroCustoForm
+        {/* Edit Wizards */}
+        <CentroWizard
           open={isEditing && item.tipo === 'centro'}
-          onClose={() => setIsEditing(false)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsEditing(false);
+              handleFormSuccess();
+            }
+          }}
           editingItem={centroCusto}
         />
-        <ProjetoForm
+        <ProjetoWizard
           open={isEditing && item.tipo === 'projeto'}
-          onClose={() => setIsEditing(false)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsEditing(false);
+              handleFormSuccess();
+            }
+          }}
           editingItem={projeto}
         />
-        <FundoForm
+        <FundoWizard
           open={isEditing && item.tipo === 'fundo'}
-          onClose={() => setIsEditing(false)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsEditing(false);
+              handleFormSuccess();
+            }
+          }}
           editingItem={fundo}
         />
 

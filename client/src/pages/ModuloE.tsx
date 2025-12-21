@@ -12,14 +12,14 @@ import {
   EmptySelection,
   QuickStats, 
   HealthStats,
-  CentroCustoForm, 
-  ProjetoForm, 
-  FundoForm,
   AlocacaoForm,
   ConsumoForm,
   AprovacaoGrid,
   RelatoriosTab
 } from '@/components/modulo-e';
+import { CentroWizard } from '@/components/modulo-e/CentroWizard';
+import { ProjetoWizard } from '@/components/modulo-e/ProjetoWizard';
+import { FundoWizard } from '@/components/modulo-e/FundoWizard';
 import type { EntityType, UnifiedItem } from '@/components/modulo-e/ModuloEList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -328,21 +328,18 @@ export default function ModuloE() {
           </div>
         )}
 
-        {/* Forms */}
-        <CentroCustoForm 
+        {/* Wizards */}
+        <CentroWizard 
           open={showNewCentroForm} 
-          onClose={() => setShowNewCentroForm(false)} 
-          editingItem={null} 
+          onOpenChange={setShowNewCentroForm}
         />
-        <ProjetoForm 
+        <ProjetoWizard 
           open={showNewProjetoForm} 
-          onClose={() => setShowNewProjetoForm(false)} 
-          editingItem={null} 
+          onOpenChange={setShowNewProjetoForm}
         />
-        <FundoForm 
+        <FundoWizard 
           open={showNewFundoForm} 
-          onClose={() => setShowNewFundoForm(false)} 
-          editingItem={null} 
+          onOpenChange={setShowNewFundoForm}
         />
 
         {/* Keyboard shortcuts hint */}

@@ -21,12 +21,24 @@ export interface NewsCardProps {
   className?: string;
 }
 
+function formatRelativeDate(date: Date): { label: string; isToday: boolean } {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.floor((startOfToday.getTime() - startOfDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return { label: 'Hoje', isToday: true };
+  if (diffDays === 1) return { label: 'Ontem', isToday: false };
+  if (diffDays < 7) return { label: `Há ${diffDays} dias`, isToday: false };
+  return { 
+    label: date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }), 
+    isToday: false 
+  };
+}
+
 export function NewsCard({ item, compact = false, delay = 0, className }: NewsCardProps) {
   const publishedDate = new Date(item.publishedAt);
-  const formattedDate = publishedDate.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-  });
+  const { label: relativeDate, isToday } = formatRelativeDate(publishedDate);
 
   if (compact) {
     return (
@@ -45,13 +57,13 @@ export function NewsCard({ item, compact = false, delay = 0, className }: NewsCa
         </div>
         
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+          <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
             {item.title}
           </h4>
           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
             <span>{item.source}</span>
             <span>•</span>
-            <span>{formattedDate}</span>
+            <span className={isToday ? 'text-primary font-medium' : ''}>{relativeDate}</span>
           </div>
         </div>
         
@@ -80,15 +92,27 @@ export function NewsCard({ item, compact = false, delay = 0, className }: NewsCa
               alt={item.title}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
-            {item.category && (
-              <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-medium bg-primary text-white">
-                {item.category}
-              </span>
-            )}
+            <div className="absolute top-2 left-2 flex items-center gap-1.5">
+              {isToday && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white uppercase tracking-wide">
+                  Novo
+                </span>
+              )}
+              {item.category && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary text-white">
+                  {item.category}
+                </span>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="h-32 bg-gradient-to-br from-primary/20 to-violet/20 flex items-center justify-center">
+          <div className="relative h-32 bg-gradient-to-br from-primary/20 to-violet/20 flex items-center justify-center">
             <Newspaper className="h-10 w-10 text-primary/50" />
+            {isToday && (
+              <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white uppercase tracking-wide">
+                Novo
+              </span>
+            )}
           </div>
         )}
         
@@ -106,9 +130,12 @@ export function NewsCard({ item, compact = false, delay = 0, className }: NewsCa
           
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
             <span className="text-xs font-medium text-muted-foreground">{item.source}</span>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <div className={cn(
+              'flex items-center gap-1 text-xs',
+              isToday ? 'text-primary font-medium' : 'text-muted-foreground'
+            )}>
               <Calendar className="h-3 w-3" />
-              <span>{formattedDate}</span>
+              <span>{relativeDate}</span>
             </div>
           </div>
         </div>
@@ -194,6 +221,7 @@ export function NewsFeed({ items, loading = false, compact = false, maxItems = 5
     </div>
   );
 }
+
 
 
 

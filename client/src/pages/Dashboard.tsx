@@ -10,9 +10,9 @@ import {
   PieChart,
   BarChart3,
   Newspaper,
-  AlertTriangle,
   ExternalLink,
   ChevronRight,
+  ChevronDown,
   Sparkles,
   Calendar
 } from 'lucide-react';
@@ -35,10 +35,9 @@ import {
 import { GlassCard, GlassCardHeader, GlassCardTitle, GlassCardDescription } from '@/components/ui/glass-card';
 import { StatCard, StatCardSkeleton } from '@/components/ui/stat-card';
 import { ChartContainer, ChartContainerSkeleton } from '@/components/ui/chart-container';
-import { AlertBanner, AlertStack } from '@/components/ui/alert-banner';
 import { NewsFeed, type NewsItem } from '@/components/ui/news-card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Tooltip as TooltipUI } from '@/components/ui/tooltip-help';
 import { cn } from '@/lib/utils';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler);
@@ -86,11 +85,28 @@ function formatCurrentDate(): string {
   });
 }
 
+function formatPeriodLabel(mesAtual: string): { label: string; intervalo: string } {
+  const [ano, mes] = mesAtual.split('-');
+  const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const mesIdx = parseInt(mes) - 1;
+  const nomeMes = meses[mesIdx];
+  const ultimoDia = new Date(parseInt(ano), mesIdx + 1, 0).getDate();
+  return {
+    label: `${nomeMes} ${ano}`,
+    intervalo: `01 ${nomeMes.slice(0, 3).toLowerCase()} → ${ultimoDia} ${nomeMes.slice(0, 3).toLowerCase()}`
+  };
+}
+
+function getInitials(nome: string): string {
+  const parts = nome.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export default function Dashboard() {
   const { data: kpis, isLoading: loadingKpis } = trpc.dashboard.kpisEnhanced.useQuery();
   const { data: fluxoCaixa, isLoading: loadingFluxo } = trpc.dashboard.fluxoCaixa.useQuery(12);
   const { data: composicao, isLoading: loadingComposicao } = trpc.dashboard.composicaoReceitas.useQuery();
-  const { data: alertas = [] } = trpc.dashboard.alertasFiscais.useQuery();
   const { data: topContribuintes = [], isLoading: loadingTop } = trpc.dashboard.topContribuintes.useQuery({ limite: 5 });
   const { data: contasData, isLoading: loadingContas } = trpc.dashboard.contasComSaldo.useQuery();
   const { data: newsFeed = [], isLoading: loadingNews } = trpc.dashboard.newsFeed.useQuery();
@@ -213,14 +229,6 @@ export default function Dashboard() {
     },
   };
 
-  // Convert alerts to AlertStack format
-  const alertItems = alertas.map(a => ({
-    id: a.id,
-    variant: a.tipo as 'info' | 'warning' | 'danger' | 'success',
-    title: a.titulo,
-    message: a.mensagem,
-  }));
-
   return (
     <div className="space-y-6 md:space-y-8 pb-8">
       {/* ========== HEADER ========== */}
@@ -238,11 +246,28 @@ export default function Dashboard() {
           </div>
           
           <div className="flex items-center gap-3">
-            {kpis?.mesAtual && (
-              <Badge variant="secondary" className="hidden sm:inline-flex text-sm px-3 py-1.5">
-                Período: {kpis.mesAtual.split('-').reverse().join('/')}
-              </Badge>
-            )}
+            {kpis?.mesAtual && (() => {
+              const { label, intervalo } = formatPeriodLabel(kpis.mesAtual);
+              return (
+                <TooltipUI 
+                  content={
+                    <div className="text-center">
+                      <p className="font-medium">{intervalo}</p>
+                      <p className="text-xs text-white/70 mt-1">Baseado em: data de competência</p>
+                    </div>
+                  }
+                >
+                  <button 
+                    className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/80 hover:bg-secondary text-sm font-medium text-foreground transition-colors border border-border/50"
+                    aria-label={`Período selecionado: ${label}`}
+                  >
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>{label}</span>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                </TooltipUI>
+              );
+            })()}
             <Link href="/titulos">
               <Button size="sm" className="glass-hover shadow-sm min-h-[44px] px-4">
                 <TrendingUp className="mr-2 h-4 w-4" />
@@ -377,21 +402,6 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* ========== ALERTAS FISCAIS ========== */}
-      {alertItems.length > 0 && (
-        <section className="animate-fade-in-up opacity-0 stagger-7" style={{ animationFillMode: 'forwards' }}>
-          <GlassCard padding="md">
-            <GlassCardHeader>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-warning" />
-                <GlassCardTitle>Alertas e Compliance</GlassCardTitle>
-              </div>
-            </GlassCardHeader>
-            <AlertStack alerts={alertItems} maxVisible={3} />
-          </GlassCard>
-        </section>
-      )}
-
       {/* ========== OPERACIONAL ========== */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
         {/* Top Contribuintes */}
@@ -416,50 +426,62 @@ export default function Dashboard() {
           </GlassCardHeader>
 
           {loadingTop ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="skeleton h-8 w-8 rounded-full" />
-                  <div className="flex-1 space-y-1">
+                <div key={i} className="flex items-center gap-3 p-2.5">
+                  <div className="skeleton h-9 w-9 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
                     <div className="skeleton h-4 w-32 rounded" />
                     <div className="skeleton h-3 w-20 rounded" />
                   </div>
-                  <div className="skeleton h-4 w-16 rounded" />
+                  <div className="skeleton h-5 w-16 rounded" />
                 </div>
               ))}
             </div>
+          ) : topContribuintes.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground">Nenhum contribuinte ainda</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-[200px] mx-auto">
+                Os maiores contribuintes aparecerão aqui após registrar recebimentos.
+              </p>
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-1">
               {topContribuintes.map((pessoa, idx) => (
-                <div 
-                  key={pessoa.id} 
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 transition-colors"
-                >
-                  <div className={cn(
-                    'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
-                    idx === 0 ? 'bg-gold/20 text-gold' :
-                    idx === 1 ? 'bg-muted text-muted-foreground' :
-                    idx === 2 ? 'bg-warning/20 text-warning' :
-                    'bg-muted/50 text-muted-foreground'
-                  )}>
-                    {idx + 1}
+                <Link key={pessoa.id} href={`/pessoas/${pessoa.id}`}>
+                  <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/60 transition-colors cursor-pointer group">
+                    <div className="relative flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-primary">
+                          {getInitials(pessoa.nome)}
+                        </span>
+                      </div>
+                      {idx < 3 && (
+                        <span className={cn(
+                          'absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white',
+                          idx === 0 ? 'bg-amber-400 text-amber-900' :
+                          idx === 1 ? 'bg-slate-300 text-slate-700' :
+                          'bg-orange-300 text-orange-800'
+                        )}>
+                          {idx + 1}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                        {pessoa.nome}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {pessoa.totalContribuicoes} contribuiç{pessoa.totalContribuicoes === 1 ? 'ão' : 'ões'}
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold text-foreground tabular-nums">
+                      {formatCompact(pessoa.valorTotal)}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{pessoa.nome}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {pessoa.totalContribuicoes} contribuiç{pessoa.totalContribuicoes === 1 ? 'ão' : 'ões'}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-primary">
-                    {formatCompact(pessoa.valorTotal)}
-                  </span>
-                </div>
+                </Link>
               ))}
-              {topContribuintes.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-4">
-                  Nenhuma contribuição registrada
-                </p>
-              )}
             </div>
           )}
         </GlassCard>
@@ -487,19 +509,32 @@ export default function Dashboard() {
 
           {loadingContas ? (
             <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="space-y-2">
                   <div className="flex justify-between">
                     <div className="skeleton h-4 w-28 rounded" />
                     <div className="skeleton h-4 w-20 rounded" />
                   </div>
-                  <div className="skeleton h-2 w-full rounded-full" />
+                  <div className="skeleton h-1.5 w-full rounded-full" />
                 </div>
               ))}
             </div>
+          ) : !contasData?.contas?.length ? (
+            <div className="text-center py-6">
+              <Building2 className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground">Nenhuma conta cadastrada</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-[220px] mx-auto">
+                Cadastre contas bancárias para acompanhar saldos e movimentações.
+              </p>
+              <Link href="/contas">
+                <Button variant="outline" size="sm" className="mt-4">
+                  Cadastrar conta
+                </Button>
+              </Link>
+            </div>
           ) : (
             <div className="space-y-4">
-              {contasData?.contas.map(conta => (
+              {contasData.contas.slice(0, 3).map(conta => (
                 <div key={conta.id} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="min-w-0 flex-1">
@@ -507,13 +542,12 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground capitalize">{conta.tipo?.replace('_', ' ')}</p>
                     </div>
                     <span className={cn(
-                      'text-sm font-semibold whitespace-nowrap',
+                      'text-sm font-semibold whitespace-nowrap tabular-nums',
                       conta.saldoAtual >= 0 ? 'text-success' : 'text-destructive'
                     )}>
                       {formatCurrency(conta.saldoAtual)}
                     </span>
                   </div>
-                  {/* Mini progress bar */}
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-success to-primary rounded-full transition-all duration-500"
@@ -522,24 +556,20 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
-              {(!contasData?.contas || contasData.contas.length === 0) && (
-                <p className="text-center text-sm text-muted-foreground py-4">
-                  Nenhuma conta cadastrada
+              {contasData.contas.length > 3 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  +{contasData.contas.length - 3} conta{contasData.contas.length - 3 > 1 ? 's' : ''}
                 </p>
               )}
-
-              {/* Total */}
-              {contasData && contasData.contas.length > 0 && (
-                <div className="pt-3 mt-3 border-t border-border/50 flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Saldo Total</span>
-                  <span className={cn(
-                    'text-base font-bold',
-                    (contasData?.saldoTotal || 0) >= 0 ? 'text-success' : 'text-destructive'
-                  )}>
-                    {formatCurrency(contasData?.saldoTotal || 0)}
-                  </span>
-                </div>
-              )}
+              <div className="pt-3 mt-1 border-t border-border/50 flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Saldo Total</span>
+                <span className={cn(
+                  'text-base font-bold tabular-nums',
+                  contasData.saldoTotal >= 0 ? 'text-success' : 'text-destructive'
+                )}>
+                  {formatCurrency(contasData.saldoTotal)}
+                </span>
+              </div>
             </div>
           )}
         </GlassCard>
@@ -557,26 +587,26 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-2 gap-3">
             <Link href="/pessoas">
-              <Button className="w-full h-auto py-4 flex-col gap-2 glass-subtle glass-hover border-0" variant="outline">
-                <Users className="h-6 w-6 text-violet" />
+              <Button className="w-full h-auto min-h-[72px] py-4 flex-col gap-2 glass-subtle glass-hover border-0 focus:ring-2 focus:ring-primary/50" variant="outline">
+                <Users className="h-5 w-5 text-violet" />
                 <span className="text-xs font-medium">Pessoas</span>
               </Button>
             </Link>
             <Link href="/titulos">
-              <Button className="w-full h-auto py-4 flex-col gap-2 glass-subtle glass-hover border-0" variant="outline">
-                <FileText className="h-6 w-6 text-primary" />
+              <Button className="w-full h-auto min-h-[72px] py-4 flex-col gap-2 glass-subtle glass-hover border-0 focus:ring-2 focus:ring-primary/50" variant="outline">
+                <FileText className="h-5 w-5 text-primary" />
                 <span className="text-xs font-medium">Lançamentos</span>
               </Button>
             </Link>
             <Link href="/contas">
-              <Button className="w-full h-auto py-4 flex-col gap-2 glass-subtle glass-hover border-0" variant="outline">
-                <Building2 className="h-6 w-6 text-success" />
+              <Button className="w-full h-auto min-h-[72px] py-4 flex-col gap-2 glass-subtle glass-hover border-0 focus:ring-2 focus:ring-primary/50" variant="outline">
+                <Building2 className="h-5 w-5 text-success" />
                 <span className="text-xs font-medium">Contas</span>
               </Button>
             </Link>
             <Link href="/reports">
-              <Button className="w-full h-auto py-4 flex-col gap-2 glass-subtle glass-hover border-0" variant="outline">
-                <BarChart3 className="h-6 w-6 text-gold" />
+              <Button className="w-full h-auto min-h-[72px] py-4 flex-col gap-2 glass-subtle glass-hover border-0 focus:ring-2 focus:ring-primary/50" variant="outline">
+                <BarChart3 className="h-5 w-5 text-gold" />
                 <span className="text-xs font-medium">Relatórios</span>
               </Button>
             </Link>

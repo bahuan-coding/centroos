@@ -1,6 +1,5 @@
-import { X, Check, Clock } from 'lucide-react';
+import { X, Check, Clock, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useWizard } from './WizardProvider';
 import { cn } from '@/lib/utils';
 
@@ -9,52 +8,52 @@ interface WizardHeaderProps {
 }
 
 export function WizardHeader({ onClose }: WizardHeaderProps) {
-  const { isDirty, isSaving, lastSaved, form, currentStep, totalSteps } = useWizard();
+  const { isDirty, isSaving, lastSaved, currentStep, totalSteps } = useWizard();
   
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center gap-3">
-        <span className="text-2xl">{form.tipo === 'fisica' ? '👤' : '🏢'}</span>
+    <header className="flex items-center justify-between gap-4 px-6 py-4 border-b border-zinc-100 bg-white">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/20">
+          <UserPlus className="h-5 w-5" />
+        </div>
         <div>
-          <h1 className="text-lg font-semibold">Nova Pessoa</h1>
-          <p className="text-xs text-muted-foreground">
+          <h1 className="text-lg font-semibold text-zinc-900">Nova Pessoa</h1>
+          <p className="text-xs text-zinc-500">
             Etapa {currentStep + 1} de {totalSteps}
           </p>
         </div>
       </div>
       
-      <div className="flex items-center gap-3">
-        {/* Status */}
-        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-4">
+        {/* Status indicator */}
+        <div className="hidden sm:flex items-center">
           {isSaving && (
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3 animate-spin" />
+            <span className="flex items-center gap-2 text-xs text-zinc-500">
+              <Clock className="h-3.5 w-3.5 animate-spin" />
               Salvando...
             </span>
           )}
           {isDirty && !isSaving && (
-            <span className="flex items-center gap-1 text-amber-600">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              Alterações não salvas
+            <span className="flex items-center gap-2 text-xs text-amber-600">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Não salvo
             </span>
           )}
           {lastSaved && !isDirty && !isSaving && (
-            <span className="flex items-center gap-1 text-emerald-600">
-              <Check className="h-3 w-3" />
+            <span className="flex items-center gap-2 text-xs text-emerald-600">
+              <Check className="h-3.5 w-3.5" />
               Salvo
             </span>
           )}
         </div>
-        
-        <Badge variant="outline" className="hidden sm:flex">Novo cadastro</Badge>
         
         <Button
           variant="ghost"
           size="icon"
           onClick={onClose}
           className={cn(
-            "rounded-full",
-            isDirty && "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+            "h-9 w-9 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100",
+            isDirty && "text-amber-500 hover:text-amber-600 hover:bg-amber-50"
           )}
           aria-label="Fechar"
         >

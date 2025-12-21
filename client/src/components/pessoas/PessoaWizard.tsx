@@ -69,14 +69,14 @@ function WizardContent({ onClose, onSuccess }: { onClose: () => void; onSuccess?
   
   return (
     <>
-      <div className="flex flex-col h-full max-h-[100dvh]">
+      <div className="flex flex-col h-full max-h-[100dvh] bg-zinc-50">
         <WizardHeader onClose={handleClose} />
         
         <div className="flex flex-1 min-h-0">
           <WizardStepper />
           
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-2xl mx-auto">
+          <main className="flex-1 overflow-y-auto">
+            <div className="max-w-2xl mx-auto p-8 py-10">
               {renderStep()}
             </div>
           </main>

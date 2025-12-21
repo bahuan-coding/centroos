@@ -16,14 +16,15 @@ export function WizardFooter({ onSubmit, isSubmitting }: WizardFooterProps) {
   const currentStepConfig = steps[currentStep];
   
   return (
-    <footer className="sticky bottom-0 z-10 flex items-center justify-between gap-4 px-6 py-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" role="navigation" aria-label="Navegação do wizard">
-      <div className="flex items-center gap-2">
+    <footer className="flex items-center justify-between gap-4 px-6 py-4 border-t border-zinc-100 bg-white" role="navigation" aria-label="Navegação do wizard">
+      <div className="flex items-center gap-3">
         {!isFirstStep && (
           <Button
             type="button"
             variant="outline"
             onClick={goBack}
             disabled={isSubmitting}
+            className="h-10 px-4 border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
@@ -36,7 +37,7 @@ export function WizardFooter({ onSubmit, isSubmitting }: WizardFooterProps) {
             variant="ghost"
             onClick={saveDraft}
             disabled={isSaving || isSubmitting}
-            className="text-muted-foreground hidden sm:flex"
+            className="h-10 text-zinc-500 hover:text-zinc-700 hidden sm:flex"
           >
             <Save className="h-4 w-4 mr-2" />
             Salvar rascunho
@@ -45,30 +46,25 @@ export function WizardFooter({ onSubmit, isSubmitting }: WizardFooterProps) {
       </div>
       
       <div className="flex items-center gap-3">
-        {/* Step indicator mobile */}
-        <span className="text-xs text-muted-foreground sm:hidden">
-          {currentStep + 1}/{totalSteps}
-        </span>
-        
         {isLastStep ? (
           <Button
             type="button"
             onClick={onSubmit}
             disabled={isSubmitting}
             className={cn(
-              "bg-emerald-600 hover:bg-emerald-700 min-w-[140px]",
+              "h-11 px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all",
               isSubmitting && "opacity-70"
             )}
           >
             {isSubmitting ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2" />
                 Cadastrando...
               </>
             ) : (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                Cadastrar
+                Cadastrar Pessoa
               </>
             )}
           </Button>
@@ -77,7 +73,7 @@ export function WizardFooter({ onSubmit, isSubmitting }: WizardFooterProps) {
             type="button"
             onClick={goNext}
             disabled={isSubmitting}
-            className="bg-violet-600 hover:bg-violet-700 min-w-[120px]"
+            className="h-11 px-6 bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700 text-white font-medium shadow-lg shadow-violet-500/20 transition-all"
           >
             {currentStepConfig?.optional ? 'Pular' : 'Próximo'}
             <ArrowRight className="h-4 w-4 ml-2" />

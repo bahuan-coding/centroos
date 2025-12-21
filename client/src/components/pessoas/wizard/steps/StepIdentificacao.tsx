@@ -60,61 +60,79 @@ export function StepIdentificacao() {
   };
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-semibold flex items-center gap-2 mb-1">
-          {form.tipo === 'fisica' ? '👤' : '🏢'} Identificação
-        </h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="text-2xl font-semibold text-zinc-900 mb-2">Identificação</h2>
+        <p className="text-sm text-zinc-500">
           Informe os dados básicos e o documento principal.
         </p>
       </div>
       
       {/* Tipo de Pessoa */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <LabelWithHelp 
           label="Tipo de Pessoa" 
           help="Pessoa Física: indivíduo (CPF). Pessoa Jurídica: empresa (CNPJ)." 
           required 
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           <button
             type="button"
             onClick={() => handleTipoChange('fisica')}
             className={cn(
-              "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
+              "relative flex items-center gap-4 p-5 rounded-2xl border-2 transition-all group",
               form.tipo === 'fisica' 
-                ? "border-violet-500 bg-violet-50 text-violet-900" 
-                : "border-muted hover:border-muted-foreground/30"
+                ? "border-violet-500 bg-gradient-to-br from-violet-50 to-violet-100/50 shadow-lg shadow-violet-500/10" 
+                : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
             )}
           >
-            <User className={cn("h-6 w-6", form.tipo === 'fisica' ? "text-violet-600" : "text-muted-foreground")} />
-            <div className="text-left">
-              <div className="font-medium">Pessoa Física</div>
-              <div className="text-xs text-muted-foreground">CPF</div>
+            <div className={cn(
+              "flex items-center justify-center w-12 h-12 rounded-xl transition-all",
+              form.tipo === 'fisica' 
+                ? "bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/25" 
+                : "bg-zinc-100 text-zinc-400 group-hover:bg-zinc-200"
+            )}>
+              <User className="h-6 w-6" />
             </div>
+            <div className="text-left">
+              <div className={cn("font-semibold", form.tipo === 'fisica' ? "text-zinc-900" : "text-zinc-600")}>Pessoa Física</div>
+              <div className="text-xs text-zinc-500">CPF</div>
+            </div>
+            {form.tipo === 'fisica' && (
+              <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-violet-500" />
+            )}
           </button>
           <button
             type="button"
             onClick={() => handleTipoChange('juridica')}
             className={cn(
-              "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
+              "relative flex items-center gap-4 p-5 rounded-2xl border-2 transition-all group",
               form.tipo === 'juridica' 
-                ? "border-violet-500 bg-violet-50 text-violet-900" 
-                : "border-muted hover:border-muted-foreground/30"
+                ? "border-violet-500 bg-gradient-to-br from-violet-50 to-violet-100/50 shadow-lg shadow-violet-500/10" 
+                : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
             )}
           >
-            <Building2 className={cn("h-6 w-6", form.tipo === 'juridica' ? "text-violet-600" : "text-muted-foreground")} />
-            <div className="text-left">
-              <div className="font-medium">Pessoa Jurídica</div>
-              <div className="text-xs text-muted-foreground">CNPJ</div>
+            <div className={cn(
+              "flex items-center justify-center w-12 h-12 rounded-xl transition-all",
+              form.tipo === 'juridica' 
+                ? "bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/25" 
+                : "bg-zinc-100 text-zinc-400 group-hover:bg-zinc-200"
+            )}>
+              <Building2 className="h-6 w-6" />
             </div>
+            <div className="text-left">
+              <div className={cn("font-semibold", form.tipo === 'juridica' ? "text-zinc-900" : "text-zinc-600")}>Pessoa Jurídica</div>
+              <div className="text-xs text-zinc-500">CNPJ</div>
+            </div>
+            {form.tipo === 'juridica' && (
+              <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-violet-500" />
+            )}
           </button>
         </div>
       </div>
       
       {/* Nome */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <LabelWithHelp 
           htmlFor="nome" 
           label={form.tipo === 'fisica' ? 'Nome Completo' : 'Razão Social'} 
@@ -128,20 +146,23 @@ export function StepIdentificacao() {
           onChange={e => updateField('nome', e.target.value)}
           onBlur={checkDuplicidadeNome}
           placeholder={form.tipo === 'fisica' ? 'Ex: Maria da Silva Santos' : 'Ex: Empresa ABC Ltda'}
-          className={cn("h-12 text-base", errors.nome && "border-destructive")}
+          className={cn(
+            "h-12 text-base rounded-xl border-zinc-200 bg-white placeholder:text-zinc-400 focus:border-violet-500 focus:ring-violet-500/20",
+            errors.nome && "border-red-400 focus:border-red-500 focus:ring-red-500/20"
+          )}
           aria-invalid={!!errors.nome}
           aria-describedby={errors.nome ? 'nome-error' : undefined}
           autoFocus
         />
         {errors.nome && (
-          <p id="nome-error" className="text-sm text-destructive flex items-center gap-1" role="alert" aria-live="polite">
+          <p id="nome-error" className="text-sm text-red-600 flex items-center gap-1.5" role="alert" aria-live="polite">
             <AlertTriangle className="h-4 w-4" aria-hidden="true" /> {errors.nome}
           </p>
         )}
       </div>
       
       {/* Apelido / Nome Fantasia */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <LabelWithHelp 
           htmlFor="nomeFantasia" 
           label={form.tipo === 'fisica' ? 'Apelido' : 'Nome Fantasia'} 
@@ -152,7 +173,7 @@ export function StepIdentificacao() {
           value={form.nomeFantasia}
           onChange={e => updateField('nomeFantasia', e.target.value)}
           placeholder={form.tipo === 'fisica' ? 'Ex: Dona Maria' : 'Ex: Loja do Zé'}
-          className="h-11"
+          className="h-12 rounded-xl border-zinc-200 bg-white placeholder:text-zinc-400 focus:border-violet-500 focus:ring-violet-500/20"
         />
       </div>
       
@@ -168,19 +189,19 @@ export function StepIdentificacao() {
             type="button"
             variant="outline"
             onClick={addDocumento}
-            className="w-full h-12 border-dashed"
+            className="w-full h-12 rounded-xl border-dashed border-2 border-zinc-300 text-zinc-500 hover:border-violet-400 hover:text-violet-600 hover:bg-violet-50/50 transition-all"
           >
             + Adicionar {form.tipo === 'fisica' ? 'CPF' : 'CNPJ'}
           </Button>
         ) : (
           <div className="space-y-3">
             {form.documentos.map((doc, index) => (
-              <div key={index} className="flex gap-2 items-start">
+              <div key={index} className="flex gap-3 items-start">
                 <Select 
                   value={doc.tipo} 
                   onValueChange={(v: Documento['tipo']) => updateDocumento(index, { tipo: v })}
                 >
-                  <SelectTrigger className="w-28 h-11">
+                  <SelectTrigger className="w-28 h-12 rounded-xl border-zinc-200">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -199,13 +220,16 @@ export function StepIdentificacao() {
                     }}
                     onBlur={() => checkDuplicidade(doc)}
                     placeholder={doc.tipo === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
-                    className={cn("h-11", errors[`doc_${index}`] && "border-destructive")}
+                    className={cn(
+                      "h-12 rounded-xl border-zinc-200 bg-white font-mono tracking-wide placeholder:font-sans placeholder:tracking-normal focus:border-violet-500 focus:ring-violet-500/20",
+                      errors[`doc_${index}`] && "border-red-400"
+                    )}
                     aria-invalid={!!errors[`doc_${index}`]}
                     aria-describedby={errors[`doc_${index}`] ? `doc-${index}-error` : undefined}
                     maxLength={doc.tipo === 'cpf' ? 14 : 18}
                   />
                   {errors[`doc_${index}`] && (
-                    <p id={`doc-${index}-error`} className="text-xs text-destructive mt-1" role="alert">{errors[`doc_${index}`]}</p>
+                    <p id={`doc-${index}-error`} className="text-xs text-red-600 mt-1.5" role="alert">{errors[`doc_${index}`]}</p>
                   )}
                 </div>
                 {form.documentos.length > 1 && (
@@ -214,7 +238,7 @@ export function StepIdentificacao() {
                     variant="ghost"
                     size="icon"
                     onClick={() => removeDocumento(index)}
-                    className="h-11 w-11 text-muted-foreground hover:text-destructive"
+                    className="h-12 w-12 rounded-xl text-zinc-400 hover:text-red-500 hover:bg-red-50"
                   >
                     ×
                   </Button>
@@ -227,7 +251,7 @@ export function StepIdentificacao() {
                 variant="ghost"
                 size="sm"
                 onClick={addDocumento}
-                className="text-muted-foreground"
+                className="text-zinc-500 hover:text-violet-600"
               >
                 + Adicionar outro documento
               </Button>

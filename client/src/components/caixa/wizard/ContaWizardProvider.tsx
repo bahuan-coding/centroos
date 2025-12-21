@@ -127,6 +127,23 @@ interface ContaWizardProviderProps {
   mode?: 'create' | 'edit';
 }
 
+// Load draft from localStorage
+function loadDraftFromStorage(): ContaFinanceiraFormData | null {
+  try {
+    const draft = localStorage.getItem('conta_financeira_draft');
+    if (draft) {
+      const parsed = JSON.parse(draft);
+      // Validate it has required structure
+      if (parsed && typeof parsed.tipo === 'string' && typeof parsed.nome === 'string') {
+        return { ...initialFormData, ...parsed };
+      }
+    }
+  } catch {
+    // Invalid draft, ignore
+  }
+  return null;
+}
+
 export function ContaWizardProvider({ 
   children, 
   onSuccess,
@@ -136,16 +153,26 @@ export function ContaWizardProvider({
 }: ContaWizardProviderProps) {
   const utils = trpc.useUtils();
   
-  const [form, setForm] = useState<ContaFinanceiraFormData>(() => ({
-    ...initialFormData,
-    ...initialData,
-  }));
+  // Load draft if in create mode and no initialData
+  const [form, setForm] = useState<ContaFinanceiraFormData>(() => {
+    if (mode === 'create' && !initialData) {
+      const draft = loadDraftFromStorage();
+      if (draft) return draft;
+    }
+    return { ...initialFormData, ...initialData };
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [warnings, setWarnings] = useState<Warning[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(() => {
+    // If we loaded a draft, mark as previously saved
+    if (mode === 'create' && !initialData && loadDraftFromStorage()) {
+      return new Date();
+    }
+    return null;
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const initialFormRef = useRef<string>(JSON.stringify({ ...initialFormData, ...initialData }));

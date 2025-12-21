@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Plus, Building2, Wallet, PiggyBank, TrendingUp, CreditCard, Edit2, Power, RefreshCw, Loader2, FileSpreadsheet } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Building2, Wallet, PiggyBank, TrendingUp, CreditCard, Edit2, Power, RefreshCw, Loader2, FileSpreadsheet, FileEdit, Trash2, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -129,6 +129,29 @@ function ContaCard({ conta, onEdit, onView, onInativar }: { conta: ContaFinancei
   );
 }
 
+interface DraftInfo {
+  nome: string;
+  tipo: string;
+  savedAt?: string;
+}
+
+function getDraftInfo(): DraftInfo | null {
+  try {
+    const draft = localStorage.getItem('conta_financeira_draft');
+    if (!draft) return null;
+    const parsed = JSON.parse(draft);
+    if (parsed && parsed.nome) {
+      return {
+        nome: parsed.nome || 'Nova Conta',
+        tipo: parsed.tipo || 'conta_corrente',
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ContasFinanceiras() {
   const [, navigate] = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -136,6 +159,13 @@ export default function ContasFinanceiras() {
   const [showInativas, setShowInativas] = useState(false);
   const [inativarModalOpen, setInativarModalOpen] = useState(false);
   const [contaParaInativar, setContaParaInativar] = useState<ContaFinanceira | null>(null);
+  const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
+  const [draftDismissed, setDraftDismissed] = useState(false);
+
+  // Check for draft on mount
+  useEffect(() => {
+    setDraftInfo(getDraftInfo());
+  }, [dialogOpen]); // Re-check when dialog closes
 
   const { data: contasData, isLoading, isError, error, refetch } = trpc.contasFinanceiras.list.useQuery();
   const utils = trpc.useUtils();
@@ -191,6 +221,18 @@ export default function ContasFinanceiras() {
     setDialogOpen(true);
   };
 
+  const handleResumeDraft = () => {
+    setEditingConta(null);
+    setDialogOpen(true);
+  };
+
+  const handleDiscardDraft = () => {
+    localStorage.removeItem('conta_financeira_draft');
+    setDraftInfo(null);
+    setDraftDismissed(false);
+    toast.success('Rascunho descartado');
+  };
+
   const handleEdit = (conta: ContaFinanceira) => {
     setEditingConta(conta);
     setDialogOpen(true);
@@ -234,6 +276,51 @@ export default function ContasFinanceiras() {
           </div>
         }
       />
+
+      {/* Draft Banner */}
+      {draftInfo && !draftDismissed && (
+        <div className="relative rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-4">
+          <button
+            onClick={() => setDraftDismissed(true)}
+            className="absolute top-3 right-3 p-1 rounded-lg text-amber-400 hover:text-amber-600 hover:bg-amber-100 transition-colors"
+            aria-label="Fechar"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex items-center gap-4">
+            <div className="shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+                <FileEdit className="h-6 w-6 text-amber-600" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-amber-900">Rascunho encontrado</h3>
+              <p className="text-sm text-amber-700 mt-0.5">
+                Você tem um rascunho de <span className="font-medium">"{draftInfo.nome || 'Nova Conta'}"</span> não finalizado.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDiscardDraft}
+                className="border-amber-300 text-amber-700 hover:bg-amber-100"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Descartar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleResumeDraft}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                <FileEdit className="h-4 w-4 mr-1" />
+                Retomar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid sm:grid-cols-3 gap-4">

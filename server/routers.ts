@@ -1895,6 +1895,100 @@ const pessoasRouter = router({
       return { id: newPessoa.id };
     }),
 
+  // Criar pessoa completa com todos os relacionamentos (usado pelo Wizard)
+  createComplete: protectedProcedure
+    .input(z.object({
+      tipo: z.enum(['fisica', 'juridica']),
+      nome: z.string().min(2).max(255),
+      nomeFantasia: z.string().max(255).optional(),
+      observacoes: z.string().optional(),
+      documentos: z.array(z.object({
+        tipo: z.enum(['cpf', 'cnpj', 'rg', 'ie', 'im']),
+        numero: z.string(),
+      })).default([]),
+      contatos: z.array(z.object({
+        tipo: z.enum(['email', 'telefone', 'celular', 'whatsapp']),
+        valor: z.string(),
+        principal: z.boolean(),
+      })).default([]),
+      enderecos: z.array(z.object({
+        tipo: z.enum(['residencial', 'comercial', 'correspondencia']),
+        logradouro: z.string(),
+        numero: z.string().optional(),
+        complemento: z.string().optional(),
+        bairro: z.string().optional(),
+        cidade: z.string(),
+        uf: z.string().max(2),
+        cep: z.string().optional(),
+        principal: z.boolean(),
+      })).default([]),
+      // Mediunidade (opcional, apenas PF)
+      dataInicioDesenvolvimento: z.string().optional(),
+      tiposMediunidade: z.array(z.string()).optional(),
+      grupoEstudoId: z.string().uuid().optional(),
+      observacoesMediunidade: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      
+      // Criar pessoa com todos os campos
+      const [newPessoa] = await db.insert(schema.pessoa).values({
+        nome: input.nome.trim(),
+        tipo: input.tipo,
+        nomeFantasia: input.nomeFantasia?.trim() || null,
+        observacoes: input.observacoes?.trim() || null,
+        dataInicioDesenvolvimento: input.dataInicioDesenvolvimento || null,
+        tiposMediunidade: input.tiposMediunidade?.length ? input.tiposMediunidade : null,
+        grupoEstudoId: input.grupoEstudoId || null,
+        observacoesMediunidade: input.observacoesMediunidade?.trim() || null,
+        createdBy: ctx.user.id,
+        updatedBy: ctx.user.id,
+      }).returning({ id: schema.pessoa.id });
+      
+      // Inserir documentos
+      if (input.documentos.length > 0) {
+        await db.insert(schema.pessoaDocumento).values(
+          input.documentos.map(doc => ({
+            pessoaId: newPessoa.id,
+            tipo: doc.tipo,
+            numero: doc.numero.replace(/\D/g, ''),
+          }))
+        );
+      }
+      
+      // Inserir contatos
+      if (input.contatos.length > 0) {
+        await db.insert(schema.pessoaContato).values(
+          input.contatos.map(cont => ({
+            pessoaId: newPessoa.id,
+            tipo: cont.tipo,
+            valor: cont.tipo === 'email' ? cont.valor.trim() : cont.valor.replace(/\D/g, ''),
+            principal: cont.principal,
+          }))
+        );
+      }
+      
+      // Inserir endereços
+      if (input.enderecos.length > 0) {
+        await db.insert(schema.pessoaEndereco).values(
+          input.enderecos.map(end => ({
+            pessoaId: newPessoa.id,
+            tipo: end.tipo,
+            logradouro: end.logradouro.trim(),
+            numero: end.numero?.trim() || null,
+            complemento: end.complemento?.trim() || null,
+            bairro: end.bairro?.trim() || null,
+            cidade: end.cidade.trim(),
+            uf: end.uf.toUpperCase(),
+            cep: end.cep?.replace(/\D/g, '') || null,
+            principal: end.principal,
+          }))
+        );
+      }
+      
+      return { id: newPessoa.id };
+    }),
+
   // Busca pessoa existente por nome normalizado ou CPF, retorna null se não encontrar
   findByNameOrCpf: publicProcedure
     .input(z.object({ nome: z.string(), cpf: z.string().optional() }))

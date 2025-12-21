@@ -1,0 +1,339 @@
+import { User, Building2, AlertTriangle, ExternalLink, RotateCcw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LabelWithHelp } from '@/components/ui/tooltip-help';
+import { useWizard, Documento } from '../WizardProvider';
+import { cn } from '@/lib/utils';
+import { formatDocument } from '@/lib/validators';
+import { toast } from 'sonner';
+
+const DOCUMENTO_LABELS: Record<string, string> = {
+  cpf: 'CPF',
+  cnpj: 'CNPJ',
+  rg: 'RG',
+};
+
+export function StepIdentificacao() {
+  const { 
+    form, 
+    updateField, 
+    setForm, 
+    errors, 
+    fieldRefs,
+    duplicidade,
+    setDuplicidade,
+    ignorarDuplicidade,
+    setIgnorarDuplicidade,
+    duplicidadeNome,
+    setDuplicidadeNome,
+    ignorarDuplicidadeNome,
+    setIgnorarDuplicidadeNome,
+    checkDuplicidade,
+    checkDuplicidadeNome,
+  } = useWizard();
+  
+  const handleTipoChange = (tipo: 'fisica' | 'juridica') => {
+    updateField('tipo', tipo);
+    // Reset documento principal ao trocar tipo
+    const docPrincipal = tipo === 'fisica' ? 'cpf' : 'cnpj';
+    if (form.documentos.length === 0) {
+      setForm(f => ({ ...f, documentos: [{ tipo: docPrincipal, numero: '' }] }));
+    }
+  };
+  
+  const addDocumento = () => {
+    const defaultTipo = form.tipo === 'fisica' ? 'cpf' : 'cnpj';
+    setForm(f => ({ ...f, documentos: [...f.documentos, { tipo: defaultTipo, numero: '' }] }));
+  };
+  
+  const updateDocumento = (index: number, updates: Partial<Documento>) => {
+    setForm(f => ({
+      ...f,
+      documentos: f.documentos.map((d, i) => i === index ? { ...d, ...updates } : d),
+    }));
+  };
+  
+  const removeDocumento = (index: number) => {
+    setForm(f => ({ ...f, documentos: f.documentos.filter((_, i) => i !== index) }));
+  };
+  
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold flex items-center gap-2 mb-1">
+          {form.tipo === 'fisica' ? '👤' : '🏢'} Identificação
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Informe os dados básicos e o documento principal.
+        </p>
+      </div>
+      
+      {/* Tipo de Pessoa */}
+      <div className="space-y-2">
+        <LabelWithHelp 
+          label="Tipo de Pessoa" 
+          help="Pessoa Física: indivíduo (CPF). Pessoa Jurídica: empresa (CNPJ)." 
+          required 
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => handleTipoChange('fisica')}
+            className={cn(
+              "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
+              form.tipo === 'fisica' 
+                ? "border-violet-500 bg-violet-50 text-violet-900" 
+                : "border-muted hover:border-muted-foreground/30"
+            )}
+          >
+            <User className={cn("h-6 w-6", form.tipo === 'fisica' ? "text-violet-600" : "text-muted-foreground")} />
+            <div className="text-left">
+              <div className="font-medium">Pessoa Física</div>
+              <div className="text-xs text-muted-foreground">CPF</div>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTipoChange('juridica')}
+            className={cn(
+              "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
+              form.tipo === 'juridica' 
+                ? "border-violet-500 bg-violet-50 text-violet-900" 
+                : "border-muted hover:border-muted-foreground/30"
+            )}
+          >
+            <Building2 className={cn("h-6 w-6", form.tipo === 'juridica' ? "text-violet-600" : "text-muted-foreground")} />
+            <div className="text-left">
+              <div className="font-medium">Pessoa Jurídica</div>
+              <div className="text-xs text-muted-foreground">CNPJ</div>
+            </div>
+          </button>
+        </div>
+      </div>
+      
+      {/* Nome */}
+      <div className="space-y-2">
+        <LabelWithHelp 
+          htmlFor="nome" 
+          label={form.tipo === 'fisica' ? 'Nome Completo' : 'Razão Social'} 
+          help={form.tipo === 'fisica' ? 'Nome completo conforme documento de identidade.' : 'Razão social conforme CNPJ.'} 
+          required 
+        />
+        <Input
+          id="nome"
+          ref={el => { fieldRefs.current['nome'] = el; }}
+          value={form.nome}
+          onChange={e => updateField('nome', e.target.value)}
+          onBlur={checkDuplicidadeNome}
+          placeholder={form.tipo === 'fisica' ? 'Ex: Maria da Silva Santos' : 'Ex: Empresa ABC Ltda'}
+          className={cn("h-12 text-base", errors.nome && "border-destructive")}
+          aria-invalid={!!errors.nome}
+          aria-describedby={errors.nome ? 'nome-error' : undefined}
+          autoFocus
+        />
+        {errors.nome && (
+          <p id="nome-error" className="text-sm text-destructive flex items-center gap-1" role="alert" aria-live="polite">
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" /> {errors.nome}
+          </p>
+        )}
+      </div>
+      
+      {/* Apelido / Nome Fantasia */}
+      <div className="space-y-2">
+        <LabelWithHelp 
+          htmlFor="nomeFantasia" 
+          label={form.tipo === 'fisica' ? 'Apelido' : 'Nome Fantasia'} 
+          help={form.tipo === 'fisica' ? 'Como a pessoa é conhecida na comunidade.' : 'Nome fantasia da empresa.'} 
+        />
+        <Input
+          id="nomeFantasia"
+          value={form.nomeFantasia}
+          onChange={e => updateField('nomeFantasia', e.target.value)}
+          placeholder={form.tipo === 'fisica' ? 'Ex: Dona Maria' : 'Ex: Loja do Zé'}
+          className="h-11"
+        />
+      </div>
+      
+      {/* Documento Principal */}
+      <div className="space-y-3">
+        <LabelWithHelp 
+          label={form.tipo === 'fisica' ? 'CPF' : 'CNPJ'} 
+          help={form.tipo === 'fisica' ? 'CPF é necessário para emissão de recibos de doação.' : 'CNPJ é obrigatório para empresas.'} 
+        />
+        
+        {form.documentos.length === 0 ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addDocumento}
+            className="w-full h-12 border-dashed"
+          >
+            + Adicionar {form.tipo === 'fisica' ? 'CPF' : 'CNPJ'}
+          </Button>
+        ) : (
+          <div className="space-y-3">
+            {form.documentos.map((doc, index) => (
+              <div key={index} className="flex gap-2 items-start">
+                <Select 
+                  value={doc.tipo} 
+                  onValueChange={(v: Documento['tipo']) => updateDocumento(index, { tipo: v })}
+                >
+                  <SelectTrigger className="w-28 h-11">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(DOCUMENTO_LABELS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex-1">
+                  <Input
+                    ref={el => { fieldRefs.current[`doc_${index}`] = el; }}
+                    value={formatDocument(doc.tipo, doc.numero)}
+                    onChange={e => {
+                      const rawValue = e.target.value.replace(/\D/g, '');
+                      updateDocumento(index, { numero: rawValue });
+                    }}
+                    onBlur={() => checkDuplicidade(doc)}
+                    placeholder={doc.tipo === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
+                    className={cn("h-11", errors[`doc_${index}`] && "border-destructive")}
+                    aria-invalid={!!errors[`doc_${index}`]}
+                    aria-describedby={errors[`doc_${index}`] ? `doc-${index}-error` : undefined}
+                    maxLength={doc.tipo === 'cpf' ? 14 : 18}
+                  />
+                  {errors[`doc_${index}`] && (
+                    <p id={`doc-${index}-error`} className="text-xs text-destructive mt-1" role="alert">{errors[`doc_${index}`]}</p>
+                  )}
+                </div>
+                {form.documentos.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeDocumento(index)}
+                    className="h-11 w-11 text-muted-foreground hover:text-destructive"
+                  >
+                    ×
+                  </Button>
+                )}
+              </div>
+            ))}
+            {form.documentos.length < 3 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={addDocumento}
+                className="text-muted-foreground"
+              >
+                + Adicionar outro documento
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Duplicidade por Documento */}
+      {duplicidade?.encontrado && !ignorarDuplicidade && (
+        <div className={cn(
+          'rounded-lg border p-4',
+          duplicidade.ativo ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-slate-50'
+        )}>
+          <div className="flex items-start gap-3">
+            <AlertTriangle className={cn('h-5 w-5 shrink-0', duplicidade.ativo ? 'text-amber-600' : 'text-slate-500')} />
+            <div className="flex-1">
+              <p className="font-medium text-sm">
+                {duplicidade.ativo ? 'Cadastro existente encontrado' : 'Encontramos cadastro inativo'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {duplicidade.nome} ({duplicidade.documentoMascarado})
+              </p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(`/pessoas?id=${duplicidade.pessoaId}`, '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-1.5" />
+                  Ver cadastro
+                </Button>
+                {duplicidade.inativo && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="border-emerald-500 text-emerald-600"
+                    onClick={() => toast.info('Reativar pelo cadastro existente')}
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1.5" />
+                    Reativar
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground"
+                  onClick={() => {
+                    setIgnorarDuplicidade(true);
+                    setDuplicidade(null);
+                  }}
+                >
+                  É outra pessoa
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Duplicidade por Nome */}
+      {duplicidadeNome && duplicidadeNome.possiveis.length > 0 && !ignorarDuplicidadeNome && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-blue-600" />
+            <div className="flex-1">
+              <p className="font-medium text-sm text-blue-800">Possíveis cadastros similares</p>
+              <div className="mt-2 space-y-1">
+                {duplicidadeNome.possiveis.slice(0, 3).map(p => (
+                  <div key={p.id} className="flex items-center gap-2 text-sm">
+                    <span className={cn(!p.ativo && 'text-muted-foreground line-through')}>
+                      {p.nome}
+                    </span>
+                    {!p.ativo && <Badge variant="outline" className="text-[10px]">Inativo</Badge>}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs text-blue-600"
+                      onClick={() => window.open(`/pessoas?id=${p.id}`, '_blank')}
+                    >
+                      Ver
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="mt-2 text-muted-foreground"
+                onClick={() => {
+                  setIgnorarDuplicidadeNome(true);
+                  setDuplicidadeNome(null);
+                }}
+              >
+                Nenhum destes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+

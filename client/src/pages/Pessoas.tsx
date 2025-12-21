@@ -5,10 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { PageHeader, Pagination } from '@/components/ui/page-header';
 import { GlassCard } from '@/components/ui/glass-card';
-import { PessoaForm, PessoaDetail } from '@/components/pessoas';
+import { PessoaDetail, PessoaWizard } from '@/components/pessoas';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
 import { QueryError } from '@/components/ui/query-error';
@@ -463,21 +462,12 @@ export default function Pessoas() {
         </div>
       )}
 
-      {/* Modal Nova Pessoa */}
-      <Dialog open={showNovaModal} onOpenChange={setShowNovaModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <span className="text-xl">➕</span>
-              Nova Pessoa
-            </DialogTitle>
-            <DialogDescription>
-              Cadastre uma nova pessoa no sistema. Preencha os dados básicos e adicione documentos, contatos e endereços.
-            </DialogDescription>
-          </DialogHeader>
-          <PessoaForm mode="create" onSuccess={handleNewPessoaSuccess} onCancel={() => setShowNovaModal(false)} />
-        </DialogContent>
-      </Dialog>
+      {/* Modal Nova Pessoa - Wizard Full-Screen */}
+      <PessoaWizard 
+        open={showNovaModal} 
+        onOpenChange={setShowNovaModal}
+        onSuccess={handleNewPessoaSuccess}
+      />
     </div>
   );
 }

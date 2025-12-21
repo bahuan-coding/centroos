@@ -3,6 +3,35 @@ import 'jspdf-autotable';
 import { eq, and, desc } from 'drizzle-orm';
 import { getDb, schema } from '../db';
 
+// Import PDF theme and components
+import {
+  PDF_COLORS,
+  PDF_LAYOUT,
+  PDF_TABLE_STYLES,
+  formatCurrency,
+  formatPeriodLong,
+  generateDocumentHash,
+} from './pdf/theme';
+
+import {
+  ReportMetadata,
+  TocEntry,
+  KpiData,
+  HighlightItem,
+  drawCoverPage,
+  drawTableOfContents,
+  drawKpiCards,
+  drawHighlights,
+  drawSectionTitle,
+  drawNotesBlock,
+  drawProfessionalTable,
+  drawResultBox,
+  drawWatermark,
+  drawPageHeader,
+  drawPageFooter,
+  checkPageBreak,
+} from './pdf/components';
+
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
@@ -11,18 +40,29 @@ declare module 'jspdf' {
 }
 
 // ============================================================================
-// CONSTANTES E CORES
+// INTERFACE DE OPÇÕES
+// ============================================================================
+
+export interface FinancialReportOptions {
+  periodId: number;
+  isDraft?: boolean;
+  includeDetails?: boolean;
+  includeInstitutionalFooter?: boolean;
+}
+
+// ============================================================================
+// CONSTANTES LEGACY (para outros relatórios)
 // ============================================================================
 
 const COLORS = {
-  textPrimary: [31, 41, 55] as [number, number, number],      // #1f2937
-  textSecondary: [107, 114, 128] as [number, number, number], // #6b7280
-  headerBg: [243, 244, 246] as [number, number, number],      // #f3f4f6
-  border: [229, 231, 235] as [number, number, number],        // #e5e7eb
-  positive: [22, 101, 52] as [number, number, number],        // #166534
-  negative: [153, 27, 27] as [number, number, number],        // #991b1b
-  sectionTitle: [55, 65, 81] as [number, number, number],     // #374151
-  accent: [59, 130, 246] as [number, number, number],         // #3b82f6
+  textPrimary: [31, 41, 55] as [number, number, number],
+  textSecondary: [107, 114, 128] as [number, number, number],
+  headerBg: [243, 244, 246] as [number, number, number],
+  border: [229, 231, 235] as [number, number, number],
+  positive: [22, 101, 52] as [number, number, number],
+  negative: [153, 27, 27] as [number, number, number],
+  sectionTitle: [55, 65, 81] as [number, number, number],
+  accent: [59, 130, 246] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
 };
 
@@ -31,10 +71,10 @@ const PAGE_WIDTH = 210;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGINS.left - MARGINS.right;
 
 // ============================================================================
-// FUNÇÕES AUXILIARES
+// FUNÇÕES AUXILIARES LEGACY
 // ============================================================================
 
-function formatCurrency(cents: number): string {
+function formatCurrencyLegacy(cents: number): string {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
 }
 
@@ -68,26 +108,23 @@ async function getOrganization() {
 }
 
 // ============================================================================
-// FUNÇÕES DE DESENHO COMPARTILHADAS
+// FUNÇÕES DE DESENHO LEGACY (para outros relatórios)
 // ============================================================================
 
 function drawHeader(doc: jsPDF, org: any): number {
   let y = MARGINS.top;
   
-  // Nome da organização (grande)
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.textPrimary);
   doc.text(org.name.toUpperCase(), PAGE_WIDTH / 2, y, { align: 'center' });
   y += 8;
   
-  // Linha separadora
   doc.setDrawColor(...COLORS.border);
   doc.setLineWidth(0.5);
   doc.line(MARGINS.left, y, PAGE_WIDTH - MARGINS.right, y);
   y += 5;
   
-  // Endereço
   if (org.address || org.city) {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
@@ -97,7 +134,6 @@ function drawHeader(doc: jsPDF, org: any): number {
     y += 5;
   }
   
-  // CNPJ e contatos
   const contacts: string[] = [];
   if (org.cnpj) contacts.push(`CNPJ: ${org.cnpj}`);
   if (org.phone) contacts.push(`Fone: ${org.phone}`);
@@ -115,14 +151,12 @@ function drawHeader(doc: jsPDF, org: any): number {
 function drawReportTitle(doc: jsPDF, title: string, period: { month: number; year: number }, startY: number): number {
   let y = startY + 5;
   
-  // Título do relatório
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.textPrimary);
   doc.text(`Relatório ${title}`, PAGE_WIDTH / 2, y, { align: 'center' });
   y += 7;
   
-  // Período
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...COLORS.textSecondary);
@@ -132,7 +166,7 @@ function drawReportTitle(doc: jsPDF, title: string, period: { month: number; yea
   return y;
 }
 
-function drawSectionTitle(doc: jsPDF, number: number, title: string, startY: number): number {
+function drawSectionTitleLegacy(doc: jsPDF, number: number, title: string, startY: number): number {
   const y = startY + 3;
   
   doc.setFontSize(12);
@@ -161,23 +195,18 @@ function drawFooter(doc: jsPDF): void {
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     
-    // Linha separadora
     doc.setDrawColor(...COLORS.border);
     doc.setLineWidth(0.3);
     doc.line(MARGINS.left, 280, PAGE_WIDTH - MARGINS.right, 280);
     
-    // Data de geração
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLORS.textSecondary);
     doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, MARGINS.left, 285);
-    
-    // Número da página
     doc.text(`Página ${i} de ${pageCount}`, PAGE_WIDTH - MARGINS.right, 285, { align: 'right' });
   }
 }
 
-// Estilo base para tabelas profissionais
 const baseTableStyles = {
   theme: 'grid' as const,
   styles: {
@@ -200,13 +229,20 @@ const baseTableStyles = {
 };
 
 // ============================================================================
-// RELATÓRIO FINANCEIRO MENSAL
+// RELATÓRIO FINANCEIRO MENSAL - VERSÃO PREMIUM
 // ============================================================================
 
-export async function generateFinancialReportPDF(periodId: number): Promise<Buffer> {
+export async function generateFinancialReportPDF(
+  periodIdOrOptions: number | FinancialReportOptions
+): Promise<Buffer> {
+  // Normalizar opções
+  const options: FinancialReportOptions = typeof periodIdOrOptions === 'number'
+    ? { periodId: periodIdOrOptions, isDraft: false, includeDetails: true, includeInstitutionalFooter: true }
+    : { isDraft: false, includeDetails: true, includeInstitutionalFooter: true, ...periodIdOrOptions };
+
   const db = await getDb();
 
-  const [period] = await db.select().from(schema.periods).where(eq(schema.periods.id, periodId));
+  const [period] = await db.select().from(schema.periods).where(eq(schema.periods.id, options.periodId));
   if (!period) throw new Error('Período não encontrado');
 
   const entries = await db.select({
@@ -215,21 +251,39 @@ export async function generateFinancialReportPDF(periodId: number): Promise<Buff
   })
     .from(schema.entries)
     .leftJoin(schema.accounts, eq(schema.entries.accountId, schema.accounts.id))
-    .where(eq(schema.entries.periodId, periodId))
+    .where(eq(schema.entries.periodId, options.periodId))
     .orderBy(desc(schema.entries.transactionDate));
 
   const org = await getOrganization();
   const doc = new jsPDF();
+  const generatedAt = new Date();
+  const documentHash = generateDocumentHash(options.periodId, generatedAt);
 
-  // Cabeçalho
-  let y = drawHeader(doc, org);
-  y = drawReportTitle(doc, 'Financeiro', period, y);
+  // Preparar metadata
+  const meta: ReportMetadata = {
+    title: 'Relatório Financeiro Mensal',
+    periodMonth: period.month,
+    periodYear: period.year,
+    periodId: options.periodId,
+    orgName: org.name,
+    orgCnpj: org.cnpj || undefined,
+    orgAddress: org.address || undefined,
+    orgCity: org.city || undefined,
+    orgState: org.state || undefined,
+    orgPhone: org.phone || undefined,
+    orgEmail: org.email || undefined,
+    isDraft: options.isDraft || false,
+    generatedAt,
+    documentHash,
+  };
 
   // Processar dados
   let totalReceitas = 0;
   let totalDespesas = 0;
-  const receitasByCategoria: Record<string, { valor: number; obs: string }> = {};
-  const despesasByCategoria: Record<string, { items: { desc: string; valor: number }[] }> = {};
+  const receitasByCategoria: Record<string, { valor: number; count: number }> = {};
+  const despesasByCategoria: Record<string, { valor: number; items: { desc: string; valor: number }[] }> = {};
+  let maiorReceita = { categoria: '', valor: 0 };
+  let maiorDespesa = { categoria: '', valor: 0 };
 
   for (const { entry, account } of entries) {
     if (!account) continue;
@@ -238,170 +292,289 @@ export async function generateFinancialReportPDF(periodId: number): Promise<Buff
       totalReceitas += entry.amountCents;
       const categoria = account.name;
       if (!receitasByCategoria[categoria]) {
-        receitasByCategoria[categoria] = { valor: 0, obs: '' };
+        receitasByCategoria[categoria] = { valor: 0, count: 0 };
       }
       receitasByCategoria[categoria].valor += entry.amountCents;
+      receitasByCategoria[categoria].count += 1;
+      
+      if (receitasByCategoria[categoria].valor > maiorReceita.valor) {
+        maiorReceita = { categoria, valor: receitasByCategoria[categoria].valor };
+      }
     }
     
     if (account.type === 'expense' || account.type === 'fixed_asset') {
       totalDespesas += entry.amountCents;
       const categoria = account.name;
       if (!despesasByCategoria[categoria]) {
-        despesasByCategoria[categoria] = { items: [] };
+        despesasByCategoria[categoria] = { valor: 0, items: [] };
       }
+      despesasByCategoria[categoria].valor += entry.amountCents;
       despesasByCategoria[categoria].items.push({
         desc: entry.description,
         valor: entry.amountCents,
       });
+      
+      if (despesasByCategoria[categoria].valor > maiorDespesa.valor) {
+        maiorDespesa = { categoria, valor: despesasByCategoria[categoria].valor };
+      }
     }
   }
 
-  const saldo = totalReceitas - totalDespesas;
+  const resultado = totalReceitas - totalDespesas;
 
-  // SEÇÃO 1: Sumário Executivo
-  y = drawSectionTitle(doc, 1, 'Sumário Executivo', y);
+  // ========== PÁGINA 1: CAPA ==========
+  drawCoverPage(doc, meta);
+
+  // ========== PÁGINA 2: SUMÁRIO ==========
+  doc.addPage();
   
-  const sumarioText = `Este relatório financeiro abrange o período de ${formatPeriod(period.month, period.year).toLowerCase()}, apresentando as Receitas, Despesas e o Saldo geral.\n\nDurante o mês, a ${org.name} arrecadou ${formatCurrency(totalReceitas)} em receitas e incorreu ${formatCurrency(totalDespesas)} em despesas, resultando em ${saldo >= 0 ? 'superávit' : 'déficit'} de ${formatCurrency(Math.abs(saldo))}.`;
-  
-  y = drawParagraph(doc, sumarioText, y);
-  y += 5;
-
-  // SEÇÃO 2: Receitas
-  y = drawSectionTitle(doc, 2, 'Receitas', y);
-  
-  const receitasRows = Object.entries(receitasByCategoria).map(([categoria, data]) => [
-    categoria,
-    formatCurrency(data.valor),
-    data.obs || '',
-  ]);
-  receitasRows.push(['Total das Receitas', formatCurrency(totalReceitas), '']);
-
-  doc.autoTable({
-    ...baseTableStyles,
-    startY: y,
-    head: [['ORIGEM DA RECEITA', 'VALOR ARRECADADO', 'OBSERVAÇÕES']],
-    body: receitasRows,
-    columnStyles: {
-      0: { cellWidth: 80 },
-      1: { cellWidth: 45, halign: 'right' },
-      2: { cellWidth: 'auto' },
-    },
-    didParseCell: (data: any) => {
-      if (data.row.index === receitasRows.length - 1) {
-        data.cell.styles.fontStyle = 'bold';
-        data.cell.styles.fillColor = [220, 252, 231]; // green-100
-      }
-    },
-  });
-
-  y = doc.lastAutoTable.finalY + 10;
-
-  // SEÇÃO 3: Despesas
-  y = drawSectionTitle(doc, 3, 'Despesas', y);
-  
-  const despesasRows: string[][] = [];
-  for (const [categoria, data] of Object.entries(despesasByCategoria)) {
-    for (const item of data.items) {
-      despesasRows.push([categoria, item.desc, formatCurrency(item.valor)]);
-    }
-  }
-  despesasRows.push(['Total das Despesas', '', formatCurrency(totalDespesas)]);
-
-  doc.autoTable({
-    ...baseTableStyles,
-    startY: y,
-    head: [['CATEGORIA', 'ITEM/DESCRIÇÃO', 'VALOR (R$)']],
-    body: despesasRows,
-    columnStyles: {
-      0: { cellWidth: 50 },
-      1: { cellWidth: 90 },
-      2: { cellWidth: 40, halign: 'right' },
-    },
-    didParseCell: (data: any) => {
-      if (data.row.index === despesasRows.length - 1) {
-        data.cell.styles.fontStyle = 'bold';
-        data.cell.styles.fillColor = [254, 226, 226]; // red-100
-      }
-    },
-  });
-
-  y = doc.lastAutoTable.finalY + 10;
-
-  // Verificar se precisa nova página
-  if (y > 220) {
-    doc.addPage();
-    y = MARGINS.top;
-  }
-
-  // SEÇÃO 4: Balanço Financeiro
-  y = drawSectionTitle(doc, 4, 'Balanço Financeiro', y);
-  
-  doc.autoTable({
-    ...baseTableStyles,
-    startY: y,
-    head: [['DESCRIÇÃO', 'VALOR (R$)']],
-    body: [
-      ['Total de Receitas', formatCurrency(totalReceitas)],
-      ['Total de Despesas', `(${formatCurrency(totalDespesas)})`],
-      [saldo >= 0 ? 'Superávit do Mês' : 'Déficit do Mês', formatCurrency(Math.abs(saldo))],
-    ],
-    columnStyles: {
-      0: { cellWidth: 100 },
-      1: { cellWidth: 60, halign: 'right' },
-    },
-    didParseCell: (data: any) => {
-      if (data.row.index === 2) {
-        data.cell.styles.fontStyle = 'bold';
-        data.cell.styles.fillColor = saldo >= 0 ? COLORS.positive : COLORS.negative;
-        data.cell.styles.textColor = COLORS.white;
-      }
-    },
-  });
-
-  y = doc.lastAutoTable.finalY + 10;
-
-  // SEÇÃO 5: Notas Explicativas
-  y = drawSectionTitle(doc, 5, 'Notas Explicativas', y);
-  
-  const notas = [
-    `1. Receitas totalizaram ${formatCurrency(totalReceitas)} no período.`,
-    `2. Despesas totalizaram ${formatCurrency(totalDespesas)} no período.`,
-    saldo >= 0 
-      ? `3. O resultado do período foi positivo (superávit), indicando boa gestão financeira.`
-      : `3. O resultado do período foi negativo (déficit), exigindo atenção para os próximos meses.`,
+  const tocEntries: TocEntry[] = [
+    { title: 'Visão Geral', page: 3 },
+    { title: 'Demonstrativo de Receitas', page: 4 },
+    { title: 'Demonstrativo de Despesas', page: 5 },
+    { title: 'Resultado e Observações', page: 6 },
   ];
   
-  for (const nota of notas) {
-    y = drawParagraph(doc, nota, y);
-  }
+  drawTableOfContents(doc, tocEntries, meta);
 
+  // ========== PÁGINA 3: VISÃO GERAL ==========
+  doc.addPage();
+  let y = PDF_LAYOUT.margin.top + 20;
+
+  // Título da seção
+  y = drawSectionTitle(doc, 1, 'Visão Geral do Período', y);
   y += 5;
 
-  // SEÇÃO 6: Contatos
-  y = drawSectionTitle(doc, 6, 'Contatos', y);
+  // KPI Cards
+  const kpis: KpiData[] = [
+    { label: 'Total de Receitas', value: totalReceitas, type: 'revenue' },
+    { label: 'Total de Despesas', value: totalDespesas, type: 'expense' },
+    { label: 'Resultado do Período', value: resultado, type: 'result', subtitle: resultado >= 0 ? 'Superávit' : 'Déficit' },
+    { label: 'Saldo Final', value: resultado, type: 'balance', subtitle: `${formatPeriodLong(period.month, period.year)}` },
+  ];
+
+  y = drawKpiCards(doc, kpis, y);
+  y += 10;
+
+  // Highlights
+  const highlights: HighlightItem[] = [];
   
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...COLORS.textSecondary);
-  doc.text('Para quaisquer dúvidas ou esclarecimentos, favor contatar a administração.', MARGINS.left, y);
-  
-  if (org.email) {
-    y += 5;
-    doc.text(`E-mail: ${org.email}`, MARGINS.left, y);
+  if (maiorReceita.categoria) {
+    highlights.push({
+      label: 'Maior fonte de receita',
+      value: `${maiorReceita.categoria} (${formatCurrency(maiorReceita.valor)})`,
+    });
   }
-  if (org.phone) {
-    y += 5;
-    doc.text(`Telefone: ${org.phone}`, MARGINS.left, y);
+  
+  if (maiorDespesa.categoria) {
+    highlights.push({
+      label: 'Maior categoria de despesa',
+      value: `${maiorDespesa.categoria} (${formatCurrency(maiorDespesa.valor)})`,
+    });
+  }
+  
+  highlights.push({
+    label: 'Total de lançamentos',
+    value: `${entries.length} lançamentos no período`,
+  });
+
+  if (highlights.length > 0) {
+    y = drawHighlights(doc, highlights, y);
   }
 
-  // Rodapé
-  drawFooter(doc);
+  y += 10;
+
+  // Texto explicativo
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...PDF_COLORS.textSecondary);
+  const texto = `Este relatório apresenta a movimentação financeira de ${meta.orgName} referente ao período de ${formatPeriodLong(period.month, period.year)}. Os valores demonstrados refletem as receitas arrecadadas e despesas realizadas, conforme registros do sistema de gestão financeira.`;
+  const lines = doc.splitTextToSize(texto, PDF_LAYOUT.contentWidth);
+  doc.text(lines, PDF_LAYOUT.margin.left, y);
+
+  // ========== PÁGINA 4: RECEITAS ==========
+  doc.addPage();
+  y = PDF_LAYOUT.margin.top + 20;
+
+  y = drawSectionTitle(doc, 2, 'Demonstrativo de Receitas', y);
+  y += 5;
+
+  // Tabela de receitas por categoria
+  const receitasData = Object.entries(receitasByCategoria)
+    .sort(([, a], [, b]) => b.valor - a.valor)
+    .map(([categoria, data]) => ({
+      categoria,
+      quantidade: data.count,
+      valor: data.valor,
+      percentual: totalReceitas > 0 ? ((data.valor / totalReceitas) * 100).toFixed(1) + '%' : '—',
+    }));
+
+  if (receitasData.length > 0) {
+    y = drawProfessionalTable(
+      doc,
+      [
+        { header: 'CATEGORIA', key: 'categoria', width: 80 },
+        { header: 'QTD', key: 'quantidade', width: 20, align: 'center' },
+        { header: '% TOTAL', key: 'percentual', width: 25, align: 'right' },
+        { header: 'VALOR (R$)', key: 'valor', width: 45, align: 'right', isCurrency: true },
+      ],
+      receitasData,
+      y,
+      {
+        type: 'revenue',
+        showTotal: true,
+        totalLabel: 'TOTAL DAS RECEITAS',
+        totalValue: totalReceitas,
+        totalColumn: 3,
+      }
+    );
+  } else {
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(10);
+    doc.setTextColor(...PDF_COLORS.textMuted);
+    doc.text('Nenhuma receita registrada no período.', PDF_LAYOUT.margin.left, y);
+    y += 10;
+  }
+
+  y += 15;
+
+  // Nota explicativa de receitas
+  y = drawNotesBlock(doc, 'Notas sobre Receitas', [
+    'As receitas são registradas pelo regime de competência, no momento do reconhecimento do direito.',
+    'Os valores apresentados representam a totalidade das entradas financeiras do período.',
+  ], y);
+
+  // ========== PÁGINA 5: DESPESAS ==========
+  doc.addPage();
+  y = PDF_LAYOUT.margin.top + 20;
+
+  y = drawSectionTitle(doc, 3, 'Demonstrativo de Despesas', y);
+  y += 5;
+
+  // Tabela de despesas por categoria (resumo)
+  const despesasData = Object.entries(despesasByCategoria)
+    .sort(([, a], [, b]) => b.valor - a.valor)
+    .map(([categoria, data]) => ({
+      categoria,
+      quantidade: data.items.length,
+      valor: data.valor,
+      percentual: totalDespesas > 0 ? ((data.valor / totalDespesas) * 100).toFixed(1) + '%' : '—',
+    }));
+
+  if (despesasData.length > 0) {
+    y = drawProfessionalTable(
+      doc,
+      [
+        { header: 'CATEGORIA', key: 'categoria', width: 80 },
+        { header: 'QTD', key: 'quantidade', width: 20, align: 'center' },
+        { header: '% TOTAL', key: 'percentual', width: 25, align: 'right' },
+        { header: 'VALOR (R$)', key: 'valor', width: 45, align: 'right', isCurrency: true },
+      ],
+      despesasData,
+      y,
+      {
+        type: 'expense',
+        showTotal: true,
+        totalLabel: 'TOTAL DAS DESPESAS',
+        totalValue: totalDespesas,
+        totalColumn: 3,
+        alertThreshold: 25, // Destacar categorias > 25% do total
+      }
+    );
+  } else {
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(10);
+    doc.setTextColor(...PDF_COLORS.textMuted);
+    doc.text('Nenhuma despesa registrada no período.', PDF_LAYOUT.margin.left, y);
+    y += 10;
+  }
+
+  y += 15;
+
+  // Nota explicativa de despesas
+  y = drawNotesBlock(doc, 'Notas sobre Despesas', [
+    'As despesas são classificadas conforme o Plano de Contas da instituição.',
+    'Itens com fundo destacado representam categorias com mais de 25% do total de despesas.',
+  ], y);
+
+  // ========== PÁGINA 6: RESULTADO E OBSERVAÇÕES ==========
+  doc.addPage();
+  y = PDF_LAYOUT.margin.top + 20;
+
+  y = drawSectionTitle(doc, 4, 'Resultado do Período', y);
+  y += 5;
+
+  // Box de resultado
+  y = drawResultBox(doc, resultado, y, {
+    entradas: totalReceitas,
+    saidas: totalDespesas,
+  });
+
+  y += 15;
+
+  // Resumo da conciliação
+  y = drawSectionTitle(doc, 5, 'Resumo da Movimentação', y);
+  y += 5;
+
+  const resumoData = [
+    { descricao: 'Total de Receitas', valor: totalReceitas },
+    { descricao: 'Total de Despesas', valor: -totalDespesas },
+    { descricao: resultado >= 0 ? 'Superávit do Período' : 'Déficit do Período', valor: Math.abs(resultado) },
+  ];
+
+  y = drawProfessionalTable(
+    doc,
+    [
+      { header: 'DESCRIÇÃO', key: 'descricao', width: 120 },
+      { header: 'VALOR (R$)', key: 'valor', width: 50, align: 'right', isCurrency: true },
+    ],
+    resumoData,
+    y,
+    { type: 'neutral' }
+  );
+
+  y += 20;
+
+  // Notas de conformidade
+  y = checkPageBreak(doc, y, 60);
+  
+  y = drawNotesBlock(doc, 'Notas de Conformidade', [
+    `1. Este relatório foi gerado automaticamente pelo sistema CentroOS em ${generatedAt.toLocaleString('pt-BR')}.`,
+    '2. Os valores apresentados estão sujeitos a ajustes conforme conciliação bancária.',
+    '3. Para dúvidas ou esclarecimentos, contate a administração financeira da instituição.',
+    resultado >= 0
+      ? '4. O período apresentou resultado positivo (superávit), demonstrando equilíbrio financeiro.'
+      : '4. O período apresentou resultado negativo (déficit), recomenda-se análise detalhada das despesas.',
+  ], y);
+
+  // Contatos se solicitado
+  if (options.includeInstitutionalFooter && (org.email || org.phone)) {
+    y += 15;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...PDF_COLORS.textSecondary);
+    
+    const contatos: string[] = [];
+    if (org.email) contatos.push(`E-mail: ${org.email}`);
+    if (org.phone) contatos.push(`Telefone: ${org.phone}`);
+    
+    doc.text(contatos.join('   •   '), PDF_LAYOUT.margin.left, y);
+  }
+
+  // ========== APLICAR HEADERS E FOOTERS ==========
+  drawPageHeader(doc, meta, true); // Pula primeira página (capa)
+  drawPageFooter(doc, meta, true); // Pula primeira página (capa)
+
+  // Aplicar watermark se for rascunho
+  if (options.isDraft) {
+    drawWatermark(doc, 'RASCUNHO');
+  }
 
   return Buffer.from(doc.output('arraybuffer'));
 }
 
 // ============================================================================
-// RELATÓRIO NOTA FISCAL CIDADÃ
+// RELATÓRIO NOTA FISCAL CIDADÃ (mantido legacy)
 // ============================================================================
 
 export async function generateNfcReportPDF(periodId: number): Promise<Buffer> {
@@ -424,7 +597,6 @@ export async function generateNfcReportPDF(periodId: number): Promise<Buffer> {
   let y = drawHeader(doc, org);
   y = drawReportTitle(doc, 'Nota Fiscal Cidadã', period, y);
 
-  // Processar dados
   let project70 = 0;
   let operating30 = 0;
   const projectEntries: any[] = [];
@@ -446,30 +618,28 @@ export async function generateNfcReportPDF(periodId: number): Promise<Buffer> {
   const p30Percent = total > 0 ? (operating30 / total) * 100 : 0;
   const compliant = total === 0 || (p70Percent >= 65 && p70Percent <= 75);
 
-  // SEÇÃO 1: Sumário
-  y = drawSectionTitle(doc, 1, 'Sumário', y);
+  y = drawSectionTitleLegacy(doc, 1, 'Sumário', y);
   
   const sumario = `Este relatório apresenta a aplicação dos recursos provenientes do Programa Nota Fiscal Cidadã no período de ${formatPeriod(period.month, period.year).toLowerCase()}. Conforme legislação, os recursos devem ser aplicados: 70% em projetos e aquisição de bens, e 30% em custeio operacional.`;
   y = drawParagraph(doc, sumario, y);
   y += 5;
 
-  // SEÇÃO 2: Investimento em Projetos (70%)
-  y = drawSectionTitle(doc, 2, 'Investimento em Projetos (70%)', y);
+  y = drawSectionTitleLegacy(doc, 2, 'Investimento em Projetos (70%)', y);
 
   const projectRows = projectEntries.map((e) => [
     formatDate(new Date(e.date)),
     e.desc,
     e.account || '',
-    formatCurrency(e.amount),
+    formatCurrencyLegacy(e.amount),
   ]);
-  projectRows.push(['', '', 'Total', formatCurrency(project70)]);
+  projectRows.push(['', '', 'Total', formatCurrencyLegacy(project70)]);
 
   doc.autoTable({
     ...baseTableStyles,
     startY: y,
     head: [['DATA', 'DESCRIÇÃO', 'CONTA', 'VALOR']],
     body: projectRows.length > 1 ? projectRows : [['', 'Nenhum lançamento no período', '', '']],
-    headStyles: { ...baseTableStyles.headStyles, fillColor: [237, 233, 254] }, // purple-100
+    headStyles: { ...baseTableStyles.headStyles, fillColor: [237, 233, 254] },
     columnStyles: {
       0: { cellWidth: 25 },
       1: { cellWidth: 70 },
@@ -486,23 +656,22 @@ export async function generateNfcReportPDF(periodId: number): Promise<Buffer> {
 
   y = doc.lastAutoTable.finalY + 10;
 
-  // SEÇÃO 3: Custeio Operacional (30%)
-  y = drawSectionTitle(doc, 3, 'Custeio Operacional (30%)', y);
+  y = drawSectionTitleLegacy(doc, 3, 'Custeio Operacional (30%)', y);
 
   const operatingRows = operatingEntries.map((e) => [
     formatDate(new Date(e.date)),
     e.desc,
     e.account || '',
-    formatCurrency(e.amount),
+    formatCurrencyLegacy(e.amount),
   ]);
-  operatingRows.push(['', '', 'Total', formatCurrency(operating30)]);
+  operatingRows.push(['', '', 'Total', formatCurrencyLegacy(operating30)]);
 
   doc.autoTable({
     ...baseTableStyles,
     startY: y,
     head: [['DATA', 'DESCRIÇÃO', 'CONTA', 'VALOR']],
     body: operatingRows.length > 1 ? operatingRows : [['', 'Nenhum lançamento no período', '', '']],
-    headStyles: { ...baseTableStyles.headStyles, fillColor: [254, 249, 195] }, // yellow-100
+    headStyles: { ...baseTableStyles.headStyles, fillColor: [254, 249, 195] },
     columnStyles: {
       0: { cellWidth: 25 },
       1: { cellWidth: 70 },
@@ -519,16 +688,15 @@ export async function generateNfcReportPDF(periodId: number): Promise<Buffer> {
 
   y = doc.lastAutoTable.finalY + 10;
 
-  // SEÇÃO 4: Análise de Conformidade
-  y = drawSectionTitle(doc, 4, 'Análise de Conformidade', y);
+  y = drawSectionTitleLegacy(doc, 4, 'Análise de Conformidade', y);
 
   doc.autoTable({
     ...baseTableStyles,
     startY: y,
     body: [
-      ['Total Recursos NFC', formatCurrency(total)],
-      ['Investimento (Meta: 70%)', `${formatCurrency(project70)} (${p70Percent.toFixed(1)}%)`],
-      ['Custeio (Meta: 30%)', `${formatCurrency(operating30)} (${p30Percent.toFixed(1)}%)`],
+      ['Total Recursos NFC', formatCurrencyLegacy(total)],
+      ['Investimento (Meta: 70%)', `${formatCurrencyLegacy(project70)} (${p70Percent.toFixed(1)}%)`],
+      ['Custeio (Meta: 30%)', `${formatCurrencyLegacy(operating30)} (${p30Percent.toFixed(1)}%)`],
       ['Situação', compliant ? 'CONFORME' : 'ATENÇÃO - FORA DA PROPORÇÃO'],
     ],
     columnStyles: {
@@ -546,8 +714,7 @@ export async function generateNfcReportPDF(periodId: number): Promise<Buffer> {
 
   y = doc.lastAutoTable.finalY + 10;
 
-  // SEÇÃO 5: Notas
-  y = drawSectionTitle(doc, 5, 'Notas Explicativas', y);
+  y = drawSectionTitleLegacy(doc, 5, 'Notas Explicativas', y);
   
   const notasNfc = [
     '1. Conforme legislação do programa, a aplicação deve respeitar: 70% para projetos e 30% para custeio.',
@@ -564,7 +731,7 @@ export async function generateNfcReportPDF(periodId: number): Promise<Buffer> {
 }
 
 // ============================================================================
-// BALANCETE MENSAL
+// BALANCETE MENSAL (mantido legacy)
 // ============================================================================
 
 export async function generateBalancetePDF(periodId: number): Promise<Buffer> {
@@ -589,13 +756,11 @@ export async function generateBalancetePDF(periodId: number): Promise<Buffer> {
   let y = drawHeader(doc, org);
   y = drawReportTitle(doc, 'Balancete Mensal', period, y);
 
-  // SEÇÃO 1: Sumário
-  y = drawSectionTitle(doc, 1, 'Apresentação', y);
+  y = drawSectionTitleLegacy(doc, 1, 'Apresentação', y);
   y = drawParagraph(doc, `Balancete de verificação das contas contábeis com movimentação no período de ${formatPeriod(period.month, period.year).toLowerCase()}.`, y);
   y += 3;
 
-  // SEÇÃO 2: Movimentação
-  y = drawSectionTitle(doc, 2, 'Movimentação por Conta', y);
+  y = drawSectionTitleLegacy(doc, 2, 'Movimentação por Conta', y);
 
   let totalDebits = 0;
   let totalCredits = 0;
@@ -610,14 +775,14 @@ export async function generateBalancetePDF(periodId: number): Promise<Buffer> {
       return [
         a.code,
         a.name,
-        formatCurrency(b.debit),
-        formatCurrency(b.credit),
-        formatCurrency(Math.abs(saldo)),
+        formatCurrencyLegacy(b.debit),
+        formatCurrencyLegacy(b.credit),
+        formatCurrencyLegacy(Math.abs(saldo)),
         saldo >= 0 ? 'D' : 'C',
       ];
     });
 
-  rows.push(['', 'TOTAIS', formatCurrency(totalDebits), formatCurrency(totalCredits), '', '']);
+  rows.push(['', 'TOTAIS', formatCurrencyLegacy(totalDebits), formatCurrencyLegacy(totalCredits), '', '']);
 
   doc.autoTable({
     ...baseTableStyles,
@@ -642,13 +807,12 @@ export async function generateBalancetePDF(periodId: number): Promise<Buffer> {
 
   y = doc.lastAutoTable.finalY + 10;
 
-  // SEÇÃO 3: Verificação
-  y = drawSectionTitle(doc, 3, 'Verificação', y);
+  y = drawSectionTitleLegacy(doc, 3, 'Verificação', y);
   
   const balanced = totalDebits === totalCredits;
   const verifyText = balanced
-    ? `Débitos (${formatCurrency(totalDebits)}) = Créditos (${formatCurrency(totalCredits)}). O balancete está equilibrado.`
-    : `ATENÇÃO: Débitos (${formatCurrency(totalDebits)}) ≠ Créditos (${formatCurrency(totalCredits)}). Verificar lançamentos.`;
+    ? `Débitos (${formatCurrencyLegacy(totalDebits)}) = Créditos (${formatCurrencyLegacy(totalCredits)}). O balancete está equilibrado.`
+    : `ATENÇÃO: Débitos (${formatCurrencyLegacy(totalDebits)}) ≠ Créditos (${formatCurrencyLegacy(totalCredits)}). Verificar lançamentos.`;
   
   y = drawParagraph(doc, verifyText, y);
 
@@ -657,7 +821,7 @@ export async function generateBalancetePDF(periodId: number): Promise<Buffer> {
 }
 
 // ============================================================================
-// DRE - DEMONSTRAÇÃO DO RESULTADO
+// DRE - DEMONSTRAÇÃO DO RESULTADO (mantido legacy)
 // ============================================================================
 
 export async function generateDREPDF(periodId: number): Promise<Buffer> {
@@ -701,13 +865,12 @@ export async function generateDREPDF(periodId: number): Promise<Buffer> {
 
   const result = totalRevenues - totalExpenses;
 
-  // SEÇÃO 1: Receitas Operacionais
-  y = drawSectionTitle(doc, 1, 'Receitas Operacionais', y);
+  y = drawSectionTitleLegacy(doc, 1, 'Receitas Operacionais', y);
 
   const revenueRows = Object.entries(revenueByAccount)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([name, value]) => [name, formatCurrency(value)]);
-  revenueRows.push(['TOTAL RECEITAS OPERACIONAIS', formatCurrency(totalRevenues)]);
+    .map(([name, value]) => [name, formatCurrencyLegacy(value)]);
+  revenueRows.push(['TOTAL RECEITAS OPERACIONAIS', formatCurrencyLegacy(totalRevenues)]);
 
   doc.autoTable({
     ...baseTableStyles,
@@ -727,13 +890,12 @@ export async function generateDREPDF(periodId: number): Promise<Buffer> {
 
   y = doc.lastAutoTable.finalY + 10;
 
-  // SEÇÃO 2: Despesas Operacionais
-  y = drawSectionTitle(doc, 2, 'Despesas Operacionais', y);
+  y = drawSectionTitleLegacy(doc, 2, 'Despesas Operacionais', y);
 
   const expenseRows = Object.entries(expenseByAccount)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([name, value]) => [name, `(${formatCurrency(value)})`]);
-  expenseRows.push(['TOTAL DESPESAS OPERACIONAIS', `(${formatCurrency(totalExpenses)})`]);
+    .map(([name, value]) => [name, `(${formatCurrencyLegacy(value)})`]);
+  expenseRows.push(['TOTAL DESPESAS OPERACIONAIS', `(${formatCurrencyLegacy(totalExpenses)})`]);
 
   doc.autoTable({
     ...baseTableStyles,
@@ -753,13 +915,12 @@ export async function generateDREPDF(periodId: number): Promise<Buffer> {
 
   y = doc.lastAutoTable.finalY + 15;
 
-  // SEÇÃO 3: Resultado
-  y = drawSectionTitle(doc, 3, 'Resultado do Período', y);
+  y = drawSectionTitleLegacy(doc, 3, 'Resultado do Período', y);
 
   doc.autoTable({
     ...baseTableStyles,
     startY: y,
-    body: [[result >= 0 ? 'SUPERÁVIT DO PERÍODO' : 'DÉFICIT DO PERÍODO', formatCurrency(Math.abs(result))]],
+    body: [[result >= 0 ? 'SUPERÁVIT DO PERÍODO' : 'DÉFICIT DO PERÍODO', formatCurrencyLegacy(Math.abs(result))]],
     styles: { ...baseTableStyles.styles, fontSize: 12 },
     columnStyles: {
       0: { cellWidth: 130, fontStyle: 'bold' },
@@ -776,7 +937,7 @@ export async function generateDREPDF(periodId: number): Promise<Buffer> {
 }
 
 // ============================================================================
-// BALANÇO PATRIMONIAL
+// BALANÇO PATRIMONIAL (mantido legacy)
 // ============================================================================
 
 export async function generateBalancoPatrimonialPDF(periodId: number): Promise<Buffer> {
@@ -813,11 +974,10 @@ export async function generateBalancoPatrimonialPDF(periodId: number): Promise<B
   for (const a of liabilities) totalLiabilities += Math.abs(balances[a.id] || 0);
   for (const a of equity) totalEquity += Math.abs(balances[a.id] || 0);
 
-  // SEÇÃO 1: Ativo
-  y = drawSectionTitle(doc, 1, 'Ativo', y);
+  y = drawSectionTitleLegacy(doc, 1, 'Ativo', y);
 
-  const assetRows = assets.map((a) => [a.code, a.name, formatCurrency(Math.abs(balances[a.id] || 0))]);
-  assetRows.push(['', 'TOTAL DO ATIVO', formatCurrency(totalAssets)]);
+  const assetRows = assets.map((a) => [a.code, a.name, formatCurrencyLegacy(Math.abs(balances[a.id] || 0))]);
+  assetRows.push(['', 'TOTAL DO ATIVO', formatCurrencyLegacy(totalAssets)]);
 
   doc.autoTable({
     ...baseTableStyles,
@@ -840,11 +1000,10 @@ export async function generateBalancoPatrimonialPDF(periodId: number): Promise<B
 
   y = doc.lastAutoTable.finalY + 10;
 
-  // SEÇÃO 2: Passivo
-  y = drawSectionTitle(doc, 2, 'Passivo', y);
+  y = drawSectionTitleLegacy(doc, 2, 'Passivo', y);
 
-  const liabilityRows = liabilities.map((a) => [a.code, a.name, formatCurrency(Math.abs(balances[a.id] || 0))]);
-  liabilityRows.push(['', 'TOTAL DO PASSIVO', formatCurrency(totalLiabilities)]);
+  const liabilityRows = liabilities.map((a) => [a.code, a.name, formatCurrencyLegacy(Math.abs(balances[a.id] || 0))]);
+  liabilityRows.push(['', 'TOTAL DO PASSIVO', formatCurrencyLegacy(totalLiabilities)]);
 
   doc.autoTable({
     ...baseTableStyles,
@@ -867,11 +1026,10 @@ export async function generateBalancoPatrimonialPDF(periodId: number): Promise<B
 
   y = doc.lastAutoTable.finalY + 10;
 
-  // SEÇÃO 3: Patrimônio Social
-  y = drawSectionTitle(doc, 3, 'Patrimônio Social', y);
+  y = drawSectionTitleLegacy(doc, 3, 'Patrimônio Social', y);
 
-  const equityRows = equity.map((a) => [a.code, a.name, formatCurrency(Math.abs(balances[a.id] || 0))]);
-  equityRows.push(['', 'TOTAL PATRIMÔNIO SOCIAL', formatCurrency(totalEquity)]);
+  const equityRows = equity.map((a) => [a.code, a.name, formatCurrencyLegacy(Math.abs(balances[a.id] || 0))]);
+  equityRows.push(['', 'TOTAL PATRIMÔNIO SOCIAL', formatCurrencyLegacy(totalEquity)]);
 
   doc.autoTable({
     ...baseTableStyles,
@@ -894,8 +1052,7 @@ export async function generateBalancoPatrimonialPDF(periodId: number): Promise<B
 
   y = doc.lastAutoTable.finalY + 15;
 
-  // SEÇÃO 4: Resumo
-  y = drawSectionTitle(doc, 4, 'Resumo', y);
+  y = drawSectionTitleLegacy(doc, 4, 'Resumo', y);
 
   const totalPassivoPatrimonio = totalLiabilities + totalEquity;
   const balanced = totalAssets === totalPassivoPatrimonio;
@@ -904,8 +1061,8 @@ export async function generateBalancoPatrimonialPDF(periodId: number): Promise<B
     ...baseTableStyles,
     startY: y,
     body: [
-      ['Total do Ativo', formatCurrency(totalAssets)],
-      ['Total do Passivo + Patrimônio Social', formatCurrency(totalPassivoPatrimonio)],
+      ['Total do Ativo', formatCurrencyLegacy(totalAssets)],
+      ['Total do Passivo + Patrimônio Social', formatCurrencyLegacy(totalPassivoPatrimonio)],
       ['Situação', balanced ? 'EQUILIBRADO' : 'VERIFICAR LANÇAMENTOS'],
     ],
     columnStyles: {

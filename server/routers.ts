@@ -1470,6 +1470,18 @@ const reportsRouter = router({
     return { pdf: pdf.toString('base64') };
   }),
 
+  generateFinancialAdvanced: protectedProcedure
+    .input(z.object({
+      periodId: z.number(),
+      isDraft: z.boolean().optional().default(false),
+      includeDetails: z.boolean().optional().default(true),
+      includeInstitutionalFooter: z.boolean().optional().default(true),
+    }))
+    .mutation(async ({ input }) => {
+      const pdf = await generateFinancialReportPDF(input);
+      return { pdf: pdf.toString('base64') };
+    }),
+
   generateNfc: protectedProcedure.input(z.number()).mutation(async ({ input }) => {
     const pdf = await generateNfcReportPDF(input);
     return { pdf: pdf.toString('base64') };

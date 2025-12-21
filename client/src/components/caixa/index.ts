@@ -14,6 +14,9 @@ export { ContaFinanceiraForm } from './ContaFinanceiraForm';
 export { ContaFinanceiraWizard } from './ContaFinanceiraWizard';
 export { ExtratoImportForm } from './ExtratoImportForm';
 
+// Detail view (master-detail)
+export { ContaDetail } from './ContaDetail';
+
 // Conciliação
 export { ConciliacaoPanel } from './ConciliacaoPanel';
 export { ConciliacaoSidebar } from './ConciliacaoSidebar';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileSearch, RefreshCw, Download, X, User, Clock, Plus, Edit2, Trash2, Lock, Unlock, Check, XCircle, Eye, ChevronRight, ChevronDown, Calendar, Filter } from 'lucide-react';
+import { FileSearch, RefreshCw, Download, X, User, Clock, Plus, Edit2, Trash2, Lock, Unlock, Check, XCircle, Eye, ChevronRight, ChevronDown, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileBarChart, FileCheck, FileSpreadsheet, Download, Loader2, TrendingUp, Building2, Shield, Terminal, Copy, ChevronRight, Calculator, Scale, CheckCircle2 } from 'lucide-react';
+import { FileBarChart, FileCheck, FileSpreadsheet, Download, Loader2, TrendingUp, Building2, Shield, Terminal, Copy, ChevronRight, Settings, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { formatPeriod } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
+import { ReportWizard, type ReportOptions } from '@/components/reports/ReportWizard';
 
 type Category = 'contabil' | 'fiscal' | 'auditoria';
 
@@ -24,6 +25,7 @@ interface Report {
   gradient: string;
   includes: string[];
   isCli?: boolean;
+  hasWizard?: boolean;
 }
 
 const reports: Report[] = [
@@ -65,7 +67,8 @@ const reports: Report[] = [
     category: 'fiscal',
     color: 'text-blue-600',
     gradient: 'from-blue-500 to-cyan-600',
-    includes: ['Resumo de entradas', 'Resumo de saídas', 'Fluxo de caixa', 'Posição de contas bancárias'],
+    includes: ['Capa profissional', 'KPIs e Visão Geral', 'Demonstrativo de Receitas', 'Demonstrativo de Despesas', 'Resultado e Notas'],
+    hasWizard: true,
   },
   {
     id: 'nfc_compliance',
@@ -161,6 +164,9 @@ function ReportCard({ report, isSelected, onSelect }: { report: Report; isSelect
             {report.isCli && (
               <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">CLI</Badge>
             )}
+            {report.hasWizard && (
+              <Badge className="text-[9px] px-1.5 py-0 shrink-0 bg-blue-100 text-blue-700 border-0">Premium</Badge>
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{report.description}</p>
         </div>
@@ -196,6 +202,7 @@ function ReportPreview({
   periodId, 
   setPeriodId,
   onGenerate,
+  onOpenWizard,
   isPending 
 }: { 
   report: Report;
@@ -203,6 +210,7 @@ function ReportPreview({
   periodId: string;
   setPeriodId: (id: string) => void;
   onGenerate: () => void;
+  onOpenWizard?: () => void;
   isPending: boolean;
 }) {
   const Icon = report.icon;
@@ -217,7 +225,12 @@ function ReportPreview({
             <Icon className="h-10 w-10" />
           </div>
           <div className="flex-1">
-            <Badge className="bg-white/20 text-white border-0 mb-2">{categoryLabel}</Badge>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge className="bg-white/20 text-white border-0">{categoryLabel}</Badge>
+              {report.hasWizard && (
+                <Badge className="bg-white/30 text-white border-0">Premium</Badge>
+              )}
+            </div>
             <h2 className="text-2xl font-bold">{report.title}</h2>
             <p className="text-white/80 mt-1">{report.description}</p>
           </div>
@@ -262,20 +275,49 @@ function ReportPreview({
         )}
       </div>
 
-      {/* Botão de ação */}
-      <div className="p-6 border-t bg-slate-50/50">
-        <Button 
-          onClick={onGenerate} 
-          disabled={isPending || (!report.isCli && !periodId)}
-          className={cn('w-full h-12 text-base font-semibold bg-gradient-to-r shadow-lg hover:shadow-xl transition-all', report.gradient)}
-        >
-          {isPending ? (
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          ) : (
-            <Download className="mr-2 h-5 w-5" />
-          )}
-          {report.isCli ? 'Ver Comandos CLI' : 'Gerar PDF'}
-        </Button>
+      {/* Botões de ação */}
+      <div className="p-6 border-t bg-slate-50/50 space-y-2">
+        {report.hasWizard && onOpenWizard ? (
+          <>
+            {/* Botão principal: Gerar rápido */}
+            <Button 
+              onClick={onGenerate} 
+              disabled={isPending || !periodId}
+              className={cn('w-full h-12 text-base font-semibold bg-gradient-to-r shadow-lg hover:shadow-xl transition-all', report.gradient)}
+            >
+              {isPending ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-5 w-5" />
+              )}
+              Gerar PDF Rápido
+            </Button>
+            
+            {/* Botão secundário: Wizard avançado */}
+            <Button 
+              onClick={onOpenWizard}
+              variant="outline"
+              disabled={isPending}
+              className="w-full gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Configurar Avançado
+            </Button>
+          </>
+        ) : (
+          <Button 
+            onClick={onGenerate} 
+            disabled={isPending || (!report.isCli && !periodId)}
+            className={cn('w-full h-12 text-base font-semibold bg-gradient-to-r shadow-lg hover:shadow-xl transition-all', report.gradient)}
+          >
+            {isPending ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-5 w-5" />
+            )}
+            {report.isCli ? 'Ver Comandos CLI' : 'Gerar PDF'}
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -287,15 +329,17 @@ export default function Reports() {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [periodId, setPeriodId] = useState<string>('');
   const [auditDialogOpen, setAuditDialogOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const { data: periods = [] } = trpc.periods.list.useQuery();
   const financialMutation = trpc.reports.generateFinancial.useMutation();
+  const financialAdvancedMutation = trpc.reports.generateFinancialAdvanced.useMutation();
   const nfcMutation = trpc.reports.generateNfc.useMutation();
   const balanceteMutation = trpc.reports.generateBalancete.useMutation();
   const dreMutation = trpc.reports.generateDRE.useMutation();
   const balancoMutation = trpc.reports.generateBalancoPatrimonial.useMutation();
 
-  const isPending = financialMutation.isPending || nfcMutation.isPending || balanceteMutation.isPending || dreMutation.isPending || balancoMutation.isPending;
+  const isPending = financialMutation.isPending || financialAdvancedMutation.isPending || nfcMutation.isPending || balanceteMutation.isPending || dreMutation.isPending || balancoMutation.isPending;
 
   const filteredReports = selectedCategory === 'all' 
     ? reports 
@@ -358,6 +402,21 @@ export default function Reports() {
     }
   };
 
+  const handleGenerateAdvanced = async (options: ReportOptions) => {
+    try {
+      const period = periods.find((p) => p.id === options.periodId);
+      const periodName = period ? formatPeriod(period.month, period.year).replace(/ /g, '_') : options.periodId;
+      const suffix = options.isDraft ? '_rascunho' : '';
+
+      const result = await financialAdvancedMutation.mutateAsync(options);
+      downloadPDF(result.pdf, `relatorio_financeiro_${periodName}${suffix}.pdf`);
+      
+      toast.success('Relatório gerado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao gerar relatório');
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-theme(spacing.16)-theme(spacing.8))] lg:h-[calc(100vh-theme(spacing.8))] flex flex-col">
       {/* Header */}
@@ -399,6 +458,7 @@ export default function Reports() {
               periodId={periodId}
               setPeriodId={setPeriodId}
               onGenerate={handleGenerate}
+              onOpenWizard={selectedReport.hasWizard ? () => setWizardOpen(true) : undefined}
               isPending={isPending}
             />
           ) : (
@@ -418,12 +478,23 @@ export default function Reports() {
                 periodId={periodId}
                 setPeriodId={setPeriodId}
                 onGenerate={handleGenerate}
+                onOpenWizard={selectedReport.hasWizard ? () => setWizardOpen(true) : undefined}
                 isPending={isPending}
               />
             </div>
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Wizard de Relatório Financeiro */}
+      <ReportWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        periods={periods}
+        onGenerate={handleGenerateAdvanced}
+        isPending={financialAdvancedMutation.isPending}
+        reportTitle="Relatório Financeiro Mensal"
+      />
 
       {/* Dialog de Auditoria Contábil (CLI) */}
       <Dialog open={auditDialogOpen} onOpenChange={setAuditDialogOpen}>

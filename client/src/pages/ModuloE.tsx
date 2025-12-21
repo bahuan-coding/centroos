@@ -1,33 +1,131 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Layers, FolderKanban, Wallet, ArrowUpDown, FileBarChart, Plus, Download, Search } from 'lucide-react';
-import { PageHeader, FilterBar } from '@/components/ui/page-header';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Layers, Plus, Download, Search, X, ArrowUpDown, FileBarChart } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Pagination } from '@/components/ui/page-header';
+import { 
+  ModuloEList, 
+  ModuloEDetail, 
+  EmptySelection,
+  QuickStats, 
+  HealthStats,
+  CentroCustoForm, 
+  ProjetoForm, 
+  FundoForm,
+  AlocacaoForm,
+  ConsumoForm,
+  AprovacaoGrid,
+  RelatoriosTab
+} from '@/components/modulo-e';
+import type { EntityType, UnifiedItem } from '@/components/modulo-e/ModuloEList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { trpc } from '@/lib/trpc';
-import { CentroCustoGrid, CentroCustoForm } from '@/components/modulo-e/CentroCusto';
-import { ProjetoGrid, ProjetoForm, ProjetoConcluirDialog } from '@/components/modulo-e/Projeto';
-import { FundoGrid, FundoForm } from '@/components/modulo-e/Fundo';
-import { AlocacaoForm, ConsumoForm, AprovacaoGrid } from '@/components/modulo-e/Movimentacoes';
-import { RelatoriosTab } from '@/components/modulo-e/Relatorios';
+import { cn } from '@/lib/utils';
 
-type TabValue = 'centros' | 'projetos' | 'fundos' | 'movimentacoes' | 'relatorios';
+type ViewMode = 'list' | 'movimentacoes' | 'relatorios';
 
 export default function ModuloE() {
-  const [activeTab, setActiveTab] = useState<TabValue>('centros');
   const [searchTerm, setSearchTerm] = useState('');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [concluirProjetoId, setConcluirProjetoId] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<EntityType | null>(null);
+  const [selectedItem, setSelectedItem] = useState<UnifiedItem | null>(null);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  
+  // Form states
+  const [showNewCentroForm, setShowNewCentroForm] = useState(false);
+  const [showNewProjetoForm, setShowNewProjetoForm] = useState(false);
+  const [showNewFundoForm, setShowNewFundoForm] = useState(false);
   const [movSubtab, setMovSubtab] = useState<'alocar' | 'consumir' | 'aprovar'>('alocar');
 
-  // Contagem de pendências
+  // Fetch all data
+  const { data: centros = [], isLoading: loadingCentros } = trpc.centroCusto.list.useQuery({
+    busca: searchTerm || undefined,
+  });
+  const { data: projetos = [], isLoading: loadingProjetos } = trpc.projeto.list.useQuery({
+    busca: searchTerm || undefined,
+  });
+  const { data: fundos = [], isLoading: loadingFundos } = trpc.fundo.list.useQuery({
+    busca: searchTerm || undefined,
+  });
   const { data: pendentes } = trpc.fundoConsumo.pendentes.useQuery();
   const pendentesCount = pendentes?.length || 0;
 
-  // Atalhos de teclado
+  const isLoading = loadingCentros || loadingProjetos || loadingFundos;
+
+  // Combine and filter items
+  const unifiedItems = useMemo(() => {
+    const items: UnifiedItem[] = [];
+    
+    if (!typeFilter || typeFilter === 'centro') {
+      centros.forEach(c => items.push({
+        id: c.id,
+        tipo: 'centro',
+        codigo: c.codigo,
+        nome: c.nome,
+        ativo: c.ativo,
+        projetosCount: c.projetosCount,
+      }));
+    }
+    
+    if (!typeFilter || typeFilter === 'projeto') {
+      projetos.forEach(p => items.push({
+        id: p.id,
+        tipo: 'projeto',
+        codigo: p.codigo,
+        nome: p.nome,
+        ativo: p.status !== 'cancelado',
+        status: p.status,
+        saldo: p.orcamentoPrevisto,
+        parceriaMrosc: p.parceriaMrosc,
+      }));
+    }
+    
+    if (!typeFilter || typeFilter === 'fundo') {
+      fundos.forEach(f => items.push({
+        id: f.id,
+        tipo: 'fundo',
+        codigo: f.codigo,
+        nome: f.nome,
+        ativo: f.ativo,
+        status: f.tipo,
+        saldo: f.saldoAtual,
+      }));
+    }
+    
+    return items.sort((a, b) => a.codigo.localeCompare(b.codigo));
+  }, [centros, projetos, fundos, typeFilter]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const ativosCC = centros.filter(c => c.ativo).length;
+    const ativosPJ = projetos.filter(p => p.status !== 'cancelado').length;
+    const ativosFD = fundos.filter(f => f.ativo).length;
+    const total = centros.length + projetos.length + fundos.length;
+    const totalAtivos = ativosCC + ativosPJ + ativosFD;
+    
+    const fundosComSaldo = fundos.filter(f => {
+      const saldo = typeof f.saldoAtual === 'string' ? parseFloat(f.saldoAtual) : f.saldoAtual;
+      return saldo && saldo > 0;
+    }).length;
+    
+    const projetosEmAndamento = projetos.filter(p => p.status === 'em_andamento').length;
+    
+    return {
+      centrosCount: centros.length,
+      projetosCount: projetos.length,
+      fundosCount: fundos.length,
+      ativosPercent: total > 0 ? Math.round((totalAtivos / total) * 100) : 0,
+      comSaldoPercent: fundos.length > 0 ? Math.round((fundosComSaldo / fundos.length) * 100) : 0,
+      projetosEmAndamento,
+      pendentesAprovacao: pendentesCount,
+    };
+  }, [centros, projetos, fundos, pendentesCount]);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -37,211 +135,299 @@ export default function ModuloE() {
         e.preventDefault();
         document.getElementById('modulo-e-search')?.focus();
       }
-      if (e.key === 'n' && !isInput && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        handleNew();
-      }
       if (e.key === 'Escape') {
-        setDrawerOpen(false);
-        setEditingItem(null);
-        setConcluirProjetoId(null);
+        setSelectedItem(null);
+        setShowMobileDetail(false);
+        setShowNewCentroForm(false);
+        setShowNewProjetoForm(false);
+        setShowNewFundoForm(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab]);
-
-  const handleNew = useCallback(() => {
-    setEditingItem(null);
-    setDrawerOpen(true);
   }, []);
 
-  const handleEdit = useCallback((item: any) => {
-    setEditingItem(item);
-    setDrawerOpen(true);
-  }, []);
-
-  const handleCloseDrawer = useCallback(() => {
-    setDrawerOpen(false);
-    setEditingItem(null);
-  }, []);
-
-  const getNewButtonLabel = () => {
-    switch (activeTab) {
-      case 'centros': return 'Novo Centro de Custo';
-      case 'projetos': return 'Novo Projeto';
-      case 'fundos': return 'Novo Fundo';
-      default: return null;
+  const handleSelectItem = useCallback((item: UnifiedItem) => {
+    setSelectedItem(item);
+    if (window.innerWidth < 1024) {
+      setShowMobileDetail(true);
     }
-  };
+  }, []);
 
-  const newButtonLabel = getNewButtonLabel();
+  const handleNewFromEmpty = useCallback((type: EntityType) => {
+    if (type === 'centro') setShowNewCentroForm(true);
+    else if (type === 'projeto') setShowNewProjetoForm(true);
+    else setShowNewFundoForm(true);
+  }, []);
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Projetos, Centros e Fundos"
-        description="Controle de recursos por área, projeto e fundo — NBC TG 26, ITG 2002 e MROSC"
-        icon={<Layers className="h-8 w-8 text-primary" />}
-        actions={
+  const handleCloseDetail = useCallback(() => {
+    setSelectedItem(null);
+    setShowMobileDetail(false);
+  }, []);
+
+  const handleUpdated = useCallback(() => {
+    // Refetch happens automatically via invalidation in mutations
+  }, []);
+
+  // Render list view (master-detail)
+  if (viewMode === 'list') {
+    return (
+      <div className="h-[calc(100vh-theme(spacing.16)-theme(spacing.8))] lg:h-[calc(100vh-theme(spacing.8))] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-4 shrink-0">
+          <PageHeader
+            title="Projetos, Centros e Fundos"
+            description="Controle de recursos por área, projeto e fundo"
+            icon={<Layers className="h-8 w-8 text-primary" />}
+          />
           <div className="flex items-center gap-2">
-            {newButtonLabel && activeTab !== 'movimentacoes' && activeTab !== 'relatorios' && (
-              <Button onClick={handleNew} size="sm">
-                <Plus className="mr-1.5 h-4 w-4" />
-                {newButtonLabel}
-              </Button>
-            )}
-            <Button variant="outline" size="sm">
-              <Download className="mr-1.5 h-4 w-4" />
-              Exportar
+            <Button onClick={() => setShowNewCentroForm(true)} variant="outline" size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Centro</span>
+            </Button>
+            <Button onClick={() => setShowNewProjetoForm(true)} variant="outline" size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Projeto</span>
+            </Button>
+            <Button onClick={() => setShowNewFundoForm(true)} className="bg-violet-600 hover:bg-violet-700" size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Fundo</span>
             </Button>
           </div>
-        }
-      />
+        </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="centros" className="flex items-center gap-2">
-            <FolderKanban className="h-4 w-4" />
-            <span className="hidden sm:inline">Centros de Custo</span>
-            <span className="sm:hidden">Centros</span>
-          </TabsTrigger>
-          <TabsTrigger value="projetos" className="flex items-center gap-2">
-            <Layers className="h-4 w-4" />
-            Projetos
-          </TabsTrigger>
-          <TabsTrigger value="fundos" className="flex items-center gap-2">
-            <Wallet className="h-4 w-4" />
-            Fundos
-          </TabsTrigger>
-          <TabsTrigger value="movimentacoes" className="flex items-center gap-2">
-            <ArrowUpDown className="h-4 w-4" />
-            <span className="hidden sm:inline">Movimentações</span>
-            <span className="sm:hidden">Mov.</span>
+        {/* View Mode Tabs */}
+        <div className="mb-4 shrink-0 flex items-center gap-2">
+          <Button 
+            variant={viewMode === 'list' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <Layers className="h-4 w-4 mr-1.5" />
+            Cadastros
+          </Button>
+          <Button 
+            variant={viewMode === 'movimentacoes' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewMode('movimentacoes')}
+            className="relative"
+          >
+            <ArrowUpDown className="h-4 w-4 mr-1.5" />
+            Movimentações
             {pendentesCount > 0 && (
               <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
                 {pendentesCount}
               </Badge>
             )}
-          </TabsTrigger>
-          <TabsTrigger value="relatorios" className="flex items-center gap-2">
-            <FileBarChart className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant={viewMode === 'relatorios' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewMode('relatorios')}
+          >
+            <FileBarChart className="h-4 w-4 mr-1.5" />
             Relatórios
-          </TabsTrigger>
-        </TabsList>
+          </Button>
+          <div className="flex-1" />
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-1.5" />
+            Exportar
+          </Button>
+        </div>
 
-        {/* Search bar for grid tabs */}
-        {activeTab !== 'movimentacoes' && activeTab !== 'relatorios' && (
-          <Card className="mt-4">
-            <CardContent className="py-3">
-              <FilterBar>
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        {/* Master-Detail Layout */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-0">
+          {/* Lista (Master) */}
+          <Card className="lg:col-span-5 xl:col-span-4 flex flex-col overflow-hidden">
+            <CardHeader className="py-3 px-4 shrink-0 border-b">
+              <div className="space-y-3">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="modulo-e-search"
-                    placeholder="Buscar por código ou nome... (tecle / para focar)"
+                    placeholder="Buscar por código ou nome..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
+                    className="pl-10 h-9"
+                    aria-label="Buscar centros, projetos ou fundos"
                   />
+                  {searchTerm && (
+                    <button 
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label="Limpar busca"
+                      type="button"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
-              </FilterBar>
+
+                {/* Quick Stats */}
+                <QuickStats 
+                  centrosCount={stats.centrosCount}
+                  projetosCount={stats.projetosCount}
+                  fundosCount={stats.fundosCount}
+                  activeFilter={typeFilter}
+                  onFilterChange={setTypeFilter}
+                />
+
+                {/* Health Stats */}
+                <HealthStats 
+                  ativosPercent={stats.ativosPercent}
+                  comSaldoPercent={stats.comSaldoPercent}
+                  projetosEmAndamento={stats.projetosEmAndamento}
+                  pendentesAprovacao={stats.pendentesAprovacao}
+                />
+              </div>
+            </CardHeader>
+            
+            <CardContent className="flex-1 overflow-y-auto p-2">
+              <ModuloEList 
+                items={unifiedItems} 
+                selectedId={selectedItem?.id || null} 
+                onSelect={handleSelectItem}
+                isLoading={isLoading}
+              />
             </CardContent>
+
+            {/* Pagination hint */}
+            {unifiedItems.length > 0 && (
+              <div className="p-3 border-t shrink-0 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Mostrando {unifiedItems.length} itens
+                </p>
+              </div>
+            )}
           </Card>
+
+          {/* Detail (Desktop) */}
+          <Card className="hidden lg:flex lg:col-span-7 xl:col-span-8 flex-col overflow-hidden">
+            {selectedItem ? (
+              <ModuloEDetail 
+                item={selectedItem} 
+                onClose={handleCloseDetail}
+                onUpdated={handleUpdated}
+              />
+            ) : (
+              <EmptySelection onNew={handleNewFromEmpty} />
+            )}
+          </Card>
+        </div>
+
+        {/* Mobile Detail Overlay */}
+        {showMobileDetail && selectedItem && (
+          <div className="lg:hidden">
+            <ModuloEDetail 
+              item={selectedItem} 
+              onClose={handleCloseDetail}
+              onUpdated={handleUpdated}
+            />
+          </div>
         )}
 
-        {/* Tab: Centros de Custo */}
-        <TabsContent value="centros" className="mt-4">
-          <CentroCustoGrid
-            searchTerm={searchTerm}
-            onEdit={handleEdit}
-          />
-          <CentroCustoForm
-            open={drawerOpen && activeTab === 'centros'}
-            onClose={handleCloseDrawer}
-            editingItem={editingItem}
-          />
-        </TabsContent>
+        {/* Forms */}
+        <CentroCustoForm 
+          open={showNewCentroForm} 
+          onClose={() => setShowNewCentroForm(false)} 
+          editingItem={null} 
+        />
+        <ProjetoForm 
+          open={showNewProjetoForm} 
+          onClose={() => setShowNewProjetoForm(false)} 
+          editingItem={null} 
+        />
+        <FundoForm 
+          open={showNewFundoForm} 
+          onClose={() => setShowNewFundoForm(false)} 
+          editingItem={null} 
+        />
 
-        {/* Tab: Projetos */}
-        <TabsContent value="projetos" className="mt-4">
-          <ProjetoGrid
-            searchTerm={searchTerm}
-            onEdit={handleEdit}
-            onConcluir={(id) => setConcluirProjetoId(id)}
-          />
-          <ProjetoForm
-            open={drawerOpen && activeTab === 'projetos'}
-            onClose={handleCloseDrawer}
-            editingItem={editingItem}
-          />
-          <ProjetoConcluirDialog
-            projetoId={concluirProjetoId}
-            onClose={() => setConcluirProjetoId(null)}
-          />
-        </TabsContent>
-
-        {/* Tab: Fundos */}
-        <TabsContent value="fundos" className="mt-4">
-          <FundoGrid
-            searchTerm={searchTerm}
-            onEdit={handleEdit}
-          />
-          <FundoForm
-            open={drawerOpen && activeTab === 'fundos'}
-            onClose={handleCloseDrawer}
-            editingItem={editingItem}
-          />
-        </TabsContent>
-
-        {/* Tab: Movimentações */}
-        <TabsContent value="movimentacoes" className="mt-4">
-          <Tabs value={movSubtab} onValueChange={(v) => setMovSubtab(v as any)}>
-            <TabsList>
-              <TabsTrigger value="alocar">Alocar</TabsTrigger>
-              <TabsTrigger value="consumir">Consumir</TabsTrigger>
-              <TabsTrigger value="aprovar" className="flex items-center gap-2">
-                Aprovações
-                {pendentesCount > 0 && (
-                  <Badge variant="destructive" className="h-5 px-1.5 text-xs">
-                    {pendentesCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="alocar" className="mt-4">
-              <AlocacaoForm />
-            </TabsContent>
-
-            <TabsContent value="consumir" className="mt-4">
-              <ConsumoForm />
-            </TabsContent>
-
-            <TabsContent value="aprovar" className="mt-4">
-              <AprovacaoGrid />
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-
-        {/* Tab: Relatórios */}
-        <TabsContent value="relatorios" className="mt-4">
-          <RelatoriosTab />
-        </TabsContent>
-      </Tabs>
-
-      {/* Keyboard shortcuts hint */}
-      <div className="text-xs text-muted-foreground text-center mt-4 opacity-60">
-        Atalhos: <kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">/</kbd> buscar · 
-        <kbd className="px-1 py-0.5 bg-muted rounded text-[10px] ml-2">n</kbd> novo · 
-        <kbd className="px-1 py-0.5 bg-muted rounded text-[10px] ml-2">Esc</kbd> fechar
+        {/* Keyboard shortcuts hint */}
+        <div className="text-xs text-muted-foreground text-center mt-4 opacity-60 shrink-0">
+          Atalhos: <kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">/</kbd> buscar · 
+          <kbd className="px-1 py-0.5 bg-muted rounded text-[10px] ml-2">Esc</kbd> fechar
+        </div>
       </div>
+    );
+  }
+
+  // Movimentações view
+  if (viewMode === 'movimentacoes') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <PageHeader
+            title="Movimentações"
+            description="Alocação e consumo de recursos"
+            icon={<ArrowUpDown className="h-8 w-8 text-primary" />}
+          />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setViewMode('list')}>
+              <Layers className="h-4 w-4 mr-1.5" />
+              Cadastros
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setViewMode('relatorios')}>
+              <FileBarChart className="h-4 w-4 mr-1.5" />
+              Relatórios
+            </Button>
+          </div>
+        </div>
+
+        <Tabs value={movSubtab} onValueChange={(v) => setMovSubtab(v as any)}>
+          <TabsList>
+            <TabsTrigger value="alocar">Alocar</TabsTrigger>
+            <TabsTrigger value="consumir">Consumir</TabsTrigger>
+            <TabsTrigger value="aprovar" className="flex items-center gap-2">
+              Aprovações
+              {pendentesCount > 0 && (
+                <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                  {pendentesCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="alocar" className="mt-4">
+            <AlocacaoForm />
+          </TabsContent>
+
+          <TabsContent value="consumir" className="mt-4">
+            <ConsumoForm />
+          </TabsContent>
+
+          <TabsContent value="aprovar" className="mt-4">
+            <AprovacaoGrid />
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  }
+
+  // Relatórios view
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <PageHeader
+          title="Relatórios"
+          description="Análises e demonstrativos"
+          icon={<FileBarChart className="h-8 w-8 text-primary" />}
+        />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setViewMode('list')}>
+            <Layers className="h-4 w-4 mr-1.5" />
+            Cadastros
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setViewMode('movimentacoes')}>
+            <ArrowUpDown className="h-4 w-4 mr-1.5" />
+            Movimentações
+          </Button>
+        </div>
+      </div>
+
+      <RelatoriosTab />
     </div>
   );
 }
-
-
-
-
-

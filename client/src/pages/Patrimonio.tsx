@@ -19,6 +19,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
+import { PatrimonioWizard } from '@/components/patrimonio';
 
 const roundMoney = (value: number): number => Math.round(value * 100) / 100;
 
@@ -466,183 +467,8 @@ function DetailPanel({ bem, timeline, onEdit, onTransfer, onBaixa }: {
 }
 
 // ============================================================================
-// DIALOGS (Mantidos do original)
+// DIALOGS
 // ============================================================================
-
-function BemFormDialog({ open, onOpenChange, bem, onSave }: { 
-  open: boolean; onOpenChange: (open: boolean) => void; bem: BemPatrimonial | null;
-  onSave: (data: Partial<BemPatrimonial>) => void;
-}) {
-  const isEdit = !!bem;
-  const [form, setForm] = useState({
-    codigo: '', descricao: '', categoria: 'equipamento', dataAquisicao: '', valorAquisicao: 0,
-    valorResidual: 0, vidaUtilMeses: 60, metodoDepreciacao: 'linear', localizacao: '',
-    responsavelId: '', fornecedorId: '', numeroNotaFiscal: '', contaAtivoId: '',
-    contaDepreciacaoId: '', contaDepreciacaoAcumId: '', projetoId: '', fundoId: '',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (bem) {
-      setForm({
-        codigo: bem.codigo, descricao: bem.descricao, categoria: bem.categoria,
-        dataAquisicao: bem.dataAquisicao, valorAquisicao: bem.valorAquisicao,
-        valorResidual: bem.valorResidual, vidaUtilMeses: bem.vidaUtilMeses,
-        metodoDepreciacao: bem.metodoDepreciacao, localizacao: bem.localizacao || '',
-        responsavelId: bem.responsavelId || '', fornecedorId: bem.fornecedorId || '',
-        numeroNotaFiscal: bem.numeroNotaFiscal || '', contaAtivoId: bem.contaAtivoId || '',
-        contaDepreciacaoId: bem.contaDepreciacaoId || '', contaDepreciacaoAcumId: bem.contaDepreciacaoAcumId || '',
-        projetoId: bem.projetoId || '', fundoId: bem.fundoId || '',
-      });
-    } else {
-      setForm({
-        codigo: '', descricao: '', categoria: 'equipamento', dataAquisicao: '', valorAquisicao: 0,
-        valorResidual: 0, vidaUtilMeses: 60, metodoDepreciacao: 'linear', localizacao: '',
-        responsavelId: '', fornecedorId: '', numeroNotaFiscal: '', contaAtivoId: '',
-        contaDepreciacaoId: '', contaDepreciacaoAcumId: '', projetoId: '', fundoId: '',
-      });
-    }
-    setErrors({});
-  }, [bem, open]);
-
-  const handleCategoriaChange = (cat: string) => {
-    const config = categoriaConfig[cat];
-    setForm(f => ({ ...f, categoria: cat, vidaUtilMeses: config?.vidaUtilPadrao || 60 }));
-  };
-
-  const depreciacaoMensal = form.metodoDepreciacao === 'linear' && form.vidaUtilMeses > 0
-    ? roundMoney((form.valorAquisicao - form.valorResidual) / form.vidaUtilMeses) : 0;
-
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!form.codigo.trim()) newErrors.codigo = 'Campo obrigatório';
-    if (!form.descricao.trim()) newErrors.descricao = 'Campo obrigatório';
-    if (!form.dataAquisicao) newErrors.dataAquisicao = 'Campo obrigatório';
-    if (form.valorAquisicao <= 0) newErrors.valorAquisicao = 'Valor deve ser positivo';
-    if (!form.contaAtivoId) newErrors.contaAtivoId = 'Conta do ativo é obrigatória';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (!validate()) { toast.error('Verifique os campos destacados'); return; }
-    onSave(form);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? `Editar Bem - ${bem?.codigo}` : 'Cadastrar Novo Bem'}</DialogTitle>
-          <DialogDescription>{isEdit ? 'Altere as informações permitidas.' : 'Preencha os dados para registrar um bem.'}</DialogDescription>
-        </DialogHeader>
-        {isEdit && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
-            <p className="text-sm text-amber-800">Valores contábeis não podem ser alterados.</p>
-          </div>
-        )}
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Identificação</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Código/Plaqueta *</Label>
-                <Input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value }))} disabled={isEdit} placeholder="VEI-001" className={errors.codigo ? 'border-red-500' : ''} />
-                {errors.codigo && <p className="text-xs text-red-500">{errors.codigo}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label>Categoria *</Label>
-                <Select value={form.categoria} onValueChange={handleCategoriaChange} disabled={isEdit}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(categoriaConfig).map(([key, cfg]) => (
-                      <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Descrição *</Label>
-              <Textarea value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} placeholder="Descrição completa..." rows={2} className={errors.descricao ? 'border-red-500' : ''} />
-            </div>
-          </div>
-          <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Aquisição</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Data de Aquisição *</Label>
-                <Input type="date" value={form.dataAquisicao} onChange={e => setForm(f => ({ ...f, dataAquisicao: e.target.value }))} disabled={isEdit} className={errors.dataAquisicao ? 'border-red-500' : ''} />
-              </div>
-              <div className="space-y-2">
-                <Label>Valor de Aquisição (R$) *</Label>
-                <Input type="number" step="0.01" value={form.valorAquisicao} onChange={e => setForm(f => ({ ...f, valorAquisicao: parseFloat(e.target.value) || 0 }))} disabled={isEdit} className={errors.valorAquisicao ? 'border-red-500' : ''} />
-              </div>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Depreciação</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Vida Útil (meses)</Label>
-                <Input type="number" value={form.vidaUtilMeses} onChange={e => setForm(f => ({ ...f, vidaUtilMeses: parseInt(e.target.value) || 0 }))} disabled={isEdit} />
-              </div>
-              <div className="space-y-2">
-                <Label>Valor Residual (R$)</Label>
-                <Input type="number" step="0.01" value={form.valorResidual} onChange={e => setForm(f => ({ ...f, valorResidual: parseFloat(e.target.value) || 0 }))} disabled={isEdit} />
-              </div>
-            </div>
-            {!isEdit && depreciacaoMensal > 0 && (
-              <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="p-3">
-                  <p className="text-sm font-medium text-blue-800">Prévia: {formatCurrency(depreciacaoMensal)}/mês</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-          <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Conta Contábil</h3>
-            <div className="space-y-2">
-              <Label>Conta do Ativo *</Label>
-              <Select value={form.contaAtivoId} onValueChange={v => setForm(f => ({ ...f, contaAtivoId: v }))}>
-                <SelectTrigger className={errors.contaAtivoId ? 'border-red-500' : ''}><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1.2.1.01">1.2.1.01 - Imóveis</SelectItem>
-                  <SelectItem value="1.2.1.02">1.2.1.02 - Veículos</SelectItem>
-                  <SelectItem value="1.2.1.03">1.2.1.03 - Equipamentos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Localização</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Localização Física</Label>
-                <Input value={form.localizacao} onChange={e => setForm(f => ({ ...f, localizacao: e.target.value }))} placeholder="Ex: Salão Principal" />
-              </div>
-              <div className="space-y-2">
-                <Label>Responsável</Label>
-                <Select value={form.responsavelId} onValueChange={v => setForm(f => ({ ...f, responsavelId: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">João Silva</SelectItem>
-                    <SelectItem value="2">Maria Santos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit}>{isEdit ? 'Salvar' : 'Cadastrar Bem'}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function TransferDialog({ open, onOpenChange, bem, onSave }: { 
   open: boolean; onOpenChange: (open: boolean) => void; bem: BemPatrimonial | null;
@@ -1061,7 +887,25 @@ export default function Patrimonio() {
       )}
 
       {/* Dialogs */}
-      <BemFormDialog open={formDialogOpen} onOpenChange={setFormDialogOpen} bem={editBem} onSave={handleSaveBem} />
+      <PatrimonioWizard 
+        open={formDialogOpen} 
+        onOpenChange={setFormDialogOpen} 
+        bemId={editBem?.id}
+        initialData={editBem ? {
+          codigo: editBem.codigo,
+          descricao: editBem.descricao,
+          categoria: editBem.categoria,
+          dataAquisicao: editBem.dataAquisicao,
+          valorAquisicao: String(editBem.valorAquisicao),
+          valorResidual: String(editBem.valorResidual),
+          vidaUtilMeses: editBem.vidaUtilMeses,
+          metodoDepreciacao: editBem.metodoDepreciacao,
+          contaAtivoId: editBem.contaAtivoId || '',
+          localizacao: editBem.localizacao || '',
+          responsavelId: editBem.responsavelId || '',
+        } : undefined}
+        onSuccess={handleSaveBem}
+      />
       <TransferDialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen} bem={transferBem} onSave={handleSaveTransfer} />
       <BaixaDialog open={baixaDialogOpen} onOpenChange={setBaixaDialogOpen} bem={baixaBem} onSave={handleSaveBaixa} />
       <DepreciacaoDialog open={depreciacaoDialogOpen} onOpenChange={setDepreciacaoDialogOpen} bens={bens} onEfetivar={() => setDepreciacaoDialogOpen(false)} />

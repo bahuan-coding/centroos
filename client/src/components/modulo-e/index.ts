@@ -4,4 +4,7 @@ export * from './Fundo';
 export * from './Movimentacoes';
 export * from './Relatorios';
 export * from './AuditTrail';
+export * from './ModuloEList';
+export * from './ModuloEDetail';
+export * from './ModuloEStats';
 

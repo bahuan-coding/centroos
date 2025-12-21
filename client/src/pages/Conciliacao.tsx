@@ -112,6 +112,8 @@ export default function Conciliacao() {
                       setSelectedContaId(conta.id);
                       setSelectedExtratoId('');
                     }}
+                    aria-pressed={isSelected}
+                    aria-label={`Selecionar conta ${conta.nome}`}
                     className={cn(
                       'flex items-center gap-3 p-3 rounded-lg border text-left transition-all',
                       isSelected

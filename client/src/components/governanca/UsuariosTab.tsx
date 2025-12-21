@@ -103,8 +103,12 @@ export function UsuariosTab({ readOnly = false }: UsuariosTabProps) {
                 className="pl-10"
               />
               {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                <button 
+                  onClick={() => setSearch('')} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  aria-label="Limpar busca"
+                >
+                  <X className="h-4 w-4 text-muted-foreground hover:text-foreground" aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -129,8 +133,8 @@ export function UsuariosTab({ readOnly = false }: UsuariosTabProps) {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon" onClick={() => refetch()}>
-              <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+            <Button variant="outline" size="icon" onClick={() => refetch()} aria-label="Atualizar lista">
+              <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} aria-hidden="true" />
             </Button>
           </div>
         </CardContent>

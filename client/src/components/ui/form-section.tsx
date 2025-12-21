@@ -68,8 +68,8 @@ export function FormField({ children, error, className }: FormFieldProps) {
     <div className={cn('space-y-1.5', className)}>
       {children}
       {error && (
-        <p className="text-xs text-destructive flex items-center gap-1">
-          <span>⚠️</span> {error}
+        <p className="text-xs text-destructive flex items-center gap-1" role="alert" aria-live="polite">
+          <span aria-hidden="true">⚠️</span> {error}
         </p>
       )}
     </div>

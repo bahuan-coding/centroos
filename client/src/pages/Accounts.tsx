@@ -260,10 +260,11 @@ function TreeItem({
           <Button 
             variant="ghost" 
             size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-6 w-6 sm:opacity-60 sm:group-hover:opacity-100 transition-opacity"
             onClick={() => onEdit(conta)}
+            aria-label={`Editar conta ${conta.nome}`}
           >
-            <Edit2 className="h-3 w-3" />
+            <Edit2 className="h-3 w-3" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -404,7 +405,13 @@ export default function Accounts() {
 
   const handleSubmit = () => {
     if (!form.code.trim() || !form.name.trim()) {
-      toast.error('Preencha os campos obrigatórios');
+      // Focus first empty field
+      if (!form.code.trim()) {
+        (document.getElementById('code') as HTMLInputElement)?.focus();
+      } else if (!form.name.trim()) {
+        (document.getElementById('name') as HTMLInputElement)?.focus();
+      }
+      toast.error('Preencha o código e o nome da conta');
       return;
     }
     
@@ -559,11 +566,11 @@ export default function Accounts() {
                   </SelectContent>
                 </Select>
                 <div className="flex gap-1">
-                  <Button variant="outline" size="icon" onClick={expandAll} title="Expandir tudo">
-                    <Eye className="h-4 w-4" />
+                  <Button variant="outline" size="icon" onClick={expandAll} aria-label="Expandir todas as contas">
+                    <Eye className="h-4 w-4" aria-hidden="true" />
                   </Button>
-                  <Button variant="outline" size="icon" onClick={collapseAll} title="Recolher tudo">
-                    <ChevronsUpDown className="h-4 w-4" />
+                  <Button variant="outline" size="icon" onClick={collapseAll} aria-label="Recolher todas as contas">
+                    <ChevronsUpDown className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
               </FilterBar>

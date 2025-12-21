@@ -454,7 +454,13 @@ export function PessoaForm({ pessoaId, initialData, onSuccess, onCancel, mode = 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
-      toast.error('Corrija os erros no formulário');
+      // Focus first field with error
+      const firstError = document.querySelector('[class*="border-destructive"]') as HTMLElement;
+      if (firstError) {
+        firstError.focus();
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      toast.error('Verifique os campos destacados e corrija os erros');
       return;
     }
 

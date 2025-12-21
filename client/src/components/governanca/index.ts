@@ -6,3 +6,5 @@ export { ConfiguracoesTab } from './ConfiguracoesTab';
 export { AuditoriaTab } from './AuditoriaTab';
 
 
+
+

@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
-import { Plus, Building2, Wallet, PiggyBank, TrendingUp, CreditCard, MoreHorizontal, Edit2, Power, Eye, RefreshCw, Loader2, FileSpreadsheet } from 'lucide-react';
+import { Plus, Building2, Wallet, PiggyBank, TrendingUp, CreditCard, Edit2, Power, RefreshCw, Loader2, FileSpreadsheet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip } from '@/components/ui/tooltip-help';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState, EMPTY_STATES } from '@/components/ui/empty-state';
+import { QueryError } from '@/components/ui/query-error';
 import { ContaFinanceiraForm, InativarContaModal } from '@/components/caixa';
 import { cn } from '@/lib/utils';
 import { trpc } from '@/lib/trpc';
@@ -64,10 +66,6 @@ function ContaCard({ conta, onEdit, onView, onInativar }: { conta: ContaFinancei
               </div>
             </div>
           </div>
-          
-          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
         </div>
 
         {/* Bank Info */}
@@ -103,7 +101,7 @@ function ContaCard({ conta, onEdit, onView, onInativar }: { conta: ContaFinancei
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-2 mt-4 sm:opacity-60 sm:group-hover:opacity-100 transition-opacity">
           <Button size="sm" variant="outline" className="flex-1" onClick={onView}>
             <FileSpreadsheet className="h-4 w-4 mr-1" />
             Extratos
@@ -113,9 +111,17 @@ function ContaCard({ conta, onEdit, onView, onInativar }: { conta: ContaFinancei
             Editar
           </Button>
           {conta.ativo && (
-            <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-rose-600" onClick={onInativar}>
-              <Power className="h-4 w-4" />
-            </Button>
+            <Tooltip content="Inativar conta">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-muted-foreground hover:text-rose-600 hover:bg-rose-50"
+                onClick={onInativar}
+                aria-label={`Inativar conta ${conta.nome}`}
+              >
+                <Power className="h-4 w-4" />
+              </Button>
+            </Tooltip>
           )}
         </div>
       </CardContent>
@@ -131,7 +137,7 @@ export default function ContasFinanceiras() {
   const [inativarModalOpen, setInativarModalOpen] = useState(false);
   const [contaParaInativar, setContaParaInativar] = useState<ContaFinanceira | null>(null);
 
-  const { data: contasData, isLoading } = trpc.contasFinanceiras.list.useQuery();
+  const { data: contasData, isLoading, isError, error, refetch } = trpc.contasFinanceiras.list.useQuery();
   const utils = trpc.useUtils();
   
   const inativarMutation = trpc.contasFinanceiras.update.useMutation({
@@ -168,6 +174,10 @@ export default function ContasFinanceiras() {
   const contasAtivas = contas.filter(c => c.ativo);
   const contasInativas = contas.filter(c => !c.ativo);
   
+  if (isError) {
+    return <QueryError error={error} onRetry={() => refetch()} />;
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">

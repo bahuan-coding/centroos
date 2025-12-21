@@ -600,3 +600,5 @@ stateDiagram-v2
 | 1.0 | Dez 2025 | Versão inicial completa |
 
 
+
+

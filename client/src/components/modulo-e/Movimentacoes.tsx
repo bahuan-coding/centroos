@@ -56,7 +56,15 @@ export function AlocacaoForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      // Focus first field with error
+      const firstErrorField = document.querySelector('[class*="border-destructive"]') as HTMLElement;
+      if (firstErrorField) {
+        firstErrorField.focus();
+      }
+      toast.error('Verifique os campos destacados');
+      return;
+    }
 
     createMutation.mutate({
       fundoId: form.fundoId,
@@ -318,7 +326,14 @@ export function ConsumoForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      const firstErrorField = document.querySelector('[class*="border-destructive"]') as HTMLElement;
+      if (firstErrorField) {
+        firstErrorField.focus();
+      }
+      toast.error('Verifique os campos destacados');
+      return;
+    }
 
     createMutation.mutate({
       fundoId: form.fundoId,

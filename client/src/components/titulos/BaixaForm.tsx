@@ -104,7 +104,11 @@ export default function BaixaForm({ tituloId, onSuccess, onCancel }: BaixaFormPr
   // Submit
   const handleSubmit = () => {
     if (!validate()) {
-      toast.error('Corrija os erros do formulário');
+      const firstErrorField = document.querySelector('[class*="border-destructive"]') as HTMLElement;
+      if (firstErrorField) {
+        firstErrorField.focus();
+      }
+      toast.error('Verifique os campos destacados');
       return;
     }
 

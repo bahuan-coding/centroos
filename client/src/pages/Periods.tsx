@@ -94,6 +94,10 @@ export default function Periods() {
   });
 
   const handleCreate = () => {
+    if (!form.month) {
+      toast.error('Selecione o mês do período');
+      return;
+    }
     const ob = parseFloat(form.openingBalance.replace(',', '.')) * 100 || 0;
     createMutation.mutate({ month: parseInt(form.month), year: parseInt(form.year), openingBalance: Math.round(ob) });
   };
@@ -323,6 +327,8 @@ export default function Periods() {
                   <button
                     key={p.id}
                     onClick={() => setSelectedPeriod(isSelected ? null : p.id)}
+                    aria-pressed={isSelected}
+                    aria-label={`Ver detalhes do período ${formatPeriodName(p.month, p.year)}`}
                     className={cn(
                       'flex-shrink-0 w-36 p-4 rounded-xl border-2 transition-all duration-200 text-left',
                       isSelected 
@@ -411,8 +417,8 @@ export default function Periods() {
             >
               <GlassCardHeader
                 action={
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedPeriod(null)}>
-                    <X className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedPeriod(null)} aria-label="Fechar detalhes do período">
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 }
               >
@@ -567,6 +573,7 @@ export default function Periods() {
                     <button
                       key={p.id}
                       onClick={() => setSelectedPeriod(p.id)}
+                      aria-label={`Ver detalhes de ${formatPeriodName(p.month, p.year)}`}
                       className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white/50 transition-colors text-left"
                     >
                       <div className="flex items-center gap-3">

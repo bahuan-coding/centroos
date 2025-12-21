@@ -22,7 +22,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { PageHeader, FilterBar } from '@/components/ui/page-header';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
@@ -131,6 +133,8 @@ export default function TitulosCrud() {
   const [formOpen, setFormOpen] = useState(false);
   const [baixaOpen, setBaixaOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [cancelarOpen, setCancelarOpen] = useState(false);
+  const [motivoCancelamento, setMotivoCancelamento] = useState('');
   const [selectedTituloId, setSelectedTituloId] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
 
@@ -204,12 +208,21 @@ export default function TitulosCrud() {
     aprovarMutation.mutate({ id });
   };
 
-  const handleCancelar = (id: string) => {
-    const motivo = prompt('Informe o motivo do cancelamento (mínimo 10 caracteres):');
-    if (motivo && motivo.length >= 10) {
-      cancelarMutation.mutate({ id, motivo });
-    } else if (motivo) {
+  const handleCancelarClick = (id: string) => {
+    setSelectedTituloId(id);
+    setMotivoCancelamento('');
+    setCancelarOpen(true);
+  };
+
+  const handleConfirmarCancelamento = () => {
+    if (motivoCancelamento.length < 10) {
       toast.error('Motivo deve ter no mínimo 10 caracteres');
+      return;
+    }
+    if (selectedTituloId) {
+      cancelarMutation.mutate({ id: selectedTituloId, motivo: motivoCancelamento });
+      setCancelarOpen(false);
+      setMotivoCancelamento('');
     }
   };
 
@@ -445,31 +458,61 @@ export default function TitulosCrud() {
                     </div>
 
                     {/* Ações */}
-                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleVerTitulo(titulo.id)}>
-                        <Eye className="h-4 w-4" />
+                    <div className="flex items-center gap-1 shrink-0 sm:opacity-60 sm:group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8" 
+                        onClick={() => handleVerTitulo(titulo.id)}
+                        aria-label="Ver detalhes do título"
+                      >
+                        <Eye className="h-4 w-4" aria-hidden="true" />
                       </Button>
 
                       {['aprovado', 'parcial', 'vencido'].includes(titulo.status) && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600" onClick={() => handleBaixar(titulo.id)}>
-                          <CreditCard className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-emerald-600" 
+                          onClick={() => handleBaixar(titulo.id)}
+                          aria-label="Registrar baixa/pagamento"
+                        >
+                          <CreditCard className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
 
                       {['rascunho', 'pendente_aprovacao'].includes(titulo.status) && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => handleAprovar(titulo.id)}>
-                          <Check className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-blue-600" 
+                          onClick={() => handleAprovar(titulo.id)}
+                          aria-label="Aprovar título"
+                        >
+                          <Check className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
 
                       {!['quitado', 'cancelado'].includes(titulo.status) && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-600" onClick={() => handleCancelar(titulo.id)}>
-                          <X className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-rose-600" 
+                          onClick={() => handleCancelarClick(titulo.id)}
+                          aria-label="Cancelar título"
+                        >
+                          <X className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
 
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditTitulo(titulo.id)}>
-                        <ChevronRight className="h-4 w-4" />
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8" 
+                        onClick={() => handleEditTitulo(titulo.id)}
+                        aria-label="Editar título"
+                      >
+                        <ChevronRight className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     </div>
                   </div>
@@ -553,6 +596,54 @@ export default function TitulosCrud() {
               }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Cancelar */}
+      <Dialog open={cancelarOpen} onOpenChange={setCancelarOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-rose-500" aria-hidden="true" />
+              Cancelar Título
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação irá cancelar o título permanentemente. Informe o motivo do cancelamento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <div>
+              <Label htmlFor="motivo-cancelamento">
+                Motivo do cancelamento <span className="text-rose-500">*</span>
+              </Label>
+              <Textarea
+                id="motivo-cancelamento"
+                value={motivoCancelamento}
+                onChange={(e) => setMotivoCancelamento(e.target.value)}
+                placeholder="Descreva o motivo do cancelamento (mínimo 10 caracteres)..."
+                rows={3}
+                className="mt-1.5"
+                autoFocus
+              />
+              {motivoCancelamento.length > 0 && motivoCancelamento.length < 10 && (
+                <p className="text-xs text-rose-500 mt-1" role="alert">
+                  Faltam {10 - motivoCancelamento.length} caracteres
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelarOpen(false)}>
+              Voltar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmarCancelamento}
+              disabled={motivoCancelamento.length < 10 || cancelarMutation.isPending}
+            >
+              {cancelarMutation.isPending ? 'Cancelando...' : 'Confirmar Cancelamento'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

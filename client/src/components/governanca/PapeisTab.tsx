@@ -104,9 +104,19 @@ export function PapeisTab({ readOnly = false }: PapeisTabProps) {
     duplicarMutation.mutate({ id: selectedPapel.id, ...duplicarForm });
   };
 
-  const handleDelete = (papel: any) => {
-    if (confirm(`Tem certeza que deseja excluir o papel "${papel.nome}"?`)) {
-      deleteMutation.mutate(papel.id);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [papelToDelete, setPapelToDelete] = useState<any>(null);
+
+  const handleDeleteClick = (papel: any) => {
+    setPapelToDelete(papel);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (papelToDelete) {
+      deleteMutation.mutate(papelToDelete.id);
+      setShowDeleteDialog(false);
+      setPapelToDelete(null);
     }
   };
 
@@ -124,8 +134,8 @@ export function PapeisTab({ readOnly = false }: PapeisTabProps) {
           <p className="text-sm text-muted-foreground">Perfis de acesso com níveis hierárquicos</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => refetch()}>
-            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+          <Button variant="outline" size="icon" onClick={() => refetch()} aria-label="Atualizar lista">
+            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} aria-hidden="true" />
           </Button>
           {!readOnly && (
             <Button onClick={handleOpenCreate}>
@@ -222,10 +232,11 @@ export function PapeisTab({ readOnly = false }: PapeisTabProps) {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleDelete(papel)}
+                                  onClick={() => handleDeleteClick(papel)}
                                   disabled={deleteMutation.isPending}
+                                  aria-label={`Excluir papel ${papel.nome}`}
                                 >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                  <Trash2 className="h-4 w-4 text-red-500" aria-hidden="true" />
                                 </Button>
                               </Tooltip>
                             )}
@@ -351,6 +362,34 @@ export function PapeisTab({ readOnly = false }: PapeisTabProps) {
               disabled={!duplicarForm.novoCodigo || !duplicarForm.novoNome || duplicarMutation.isPending}
             >
               {duplicarMutation.isPending ? 'Duplicando...' : 'Duplicar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Confirmar Exclusão */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-sm" role="alertdialog" aria-describedby="delete-papel-description">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Excluir Papel
+            </DialogTitle>
+            <DialogDescription id="delete-papel-description">
+              Tem certeza que deseja excluir o papel <strong>"{papelToDelete?.nome}"</strong>?
+              Usuários vinculados perderão este papel.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Excluindo...' : 'Confirmar Exclusão'}
             </Button>
           </DialogFooter>
         </DialogContent>

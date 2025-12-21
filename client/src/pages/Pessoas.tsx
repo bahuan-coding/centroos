@@ -11,6 +11,7 @@ import { GlassCard } from '@/components/ui/glass-card';
 import { PessoaForm, PessoaDetail } from '@/components/pessoas';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
+import { QueryError } from '@/components/ui/query-error';
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -276,7 +277,7 @@ export default function Pessoas() {
   const [showNovaModal, setShowNovaModal] = useState(false);
   const [showMobileDetail, setShowMobileDetail] = useState(false);
 
-  const { data, isLoading } = trpc.pessoas.list.useQuery({
+  const { data, isLoading, isError, error, refetch } = trpc.pessoas.list.useQuery({
     search: search || undefined,
     apenasAssociados: filtroAssociados,
     page,
@@ -284,6 +285,15 @@ export default function Pessoas() {
   });
 
   const { data: stats } = trpc.pessoas.stats.useQuery();
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Cadastro de Pessoas" description="Gerencie doadores, associados e membros" icon="👥" />
+        <QueryError error={error} onRetry={() => refetch()} />
+      </div>
+    );
+  }
   const { data: healthStats } = trpc.pessoas.healthStats.useQuery();
   const { data: inconsistencias } = trpc.pessoas.inconsistencias.useQuery();
 
@@ -369,17 +379,20 @@ export default function Pessoas() {
             <div className="space-y-3">
               {/* Busca */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
                   placeholder="Buscar por nome ou CPF/CNPJ..."
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   className="pl-10 h-9"
+                  aria-label="Buscar pessoas por nome ou documento"
                 />
                 {search && (
                   <button 
                     onClick={() => setSearch('')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Limpar busca"
+                    type="button"
                   >
                     <X className="h-4 w-4" />
                   </button>

@@ -180,7 +180,13 @@ export default function TituloForm({ tituloId, onSuccess, onCancel }: TituloForm
   // Submit
   const handleSubmit = () => {
     if (!validate()) {
-      toast.error('Corrija os erros do formulário');
+      // Focus first field with error
+      const firstErrorField = document.querySelector('[class*="border-destructive"]') as HTMLElement;
+      if (firstErrorField) {
+        firstErrorField.focus();
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      toast.error('Verifique os campos destacados e corrija os erros');
       return;
     }
 

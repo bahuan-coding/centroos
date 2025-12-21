@@ -120,8 +120,8 @@ export function PermissoesTab({ readOnly = false }: PermissoesTabProps) {
               </Button>
             </>
           )}
-          <Button variant="outline" size="icon" onClick={() => refetch()}>
-            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+          <Button variant="outline" size="icon" onClick={() => refetch()} aria-label="Atualizar matriz">
+            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} aria-hidden="true" />
           </Button>
         </div>
       </div>

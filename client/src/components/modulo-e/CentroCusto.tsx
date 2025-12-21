@@ -35,9 +35,12 @@ export function CentroCustoGrid({ searchTerm, onEdit }: CentroCustoGridProps) {
     },
   });
 
-  const handleInativar = (id: string) => {
-    if (confirm('Tem certeza que deseja inativar este centro de custo?')) {
-      inativarMutation.mutate(id);
+  const [inativarId, setInativarId] = useState<string | null>(null);
+
+  const handleInativar = () => {
+    if (inativarId) {
+      inativarMutation.mutate(inativarId);
+      setInativarId(null);
     }
   };
 
@@ -111,20 +114,20 @@ export function CentroCustoGrid({ searchTerm, onEdit }: CentroCustoGridProps) {
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => onEdit(centro)}
-                          title="Editar"
+                          aria-label={`Editar ${centro.nome}`}
                         >
-                          <Edit2 className="h-4 w-4" />
+                          <Edit2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                         {centro.ativo && (
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleInativar(centro.id)}
-                            title="Inativar"
+                            onClick={() => setInativarId(centro.id)}
+                            aria-label={`Inativar ${centro.nome}`}
                             disabled={inativarMutation.isPending}
                           >
-                            <XCircle className="h-4 w-4" />
+                            <XCircle className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         )}
                       </div>
@@ -135,6 +138,29 @@ export function CentroCustoGrid({ searchTerm, onEdit }: CentroCustoGridProps) {
             </TableBody>
           </Table>
         </ResponsiveTable>
+
+        {/* Dialog de Confirmação de Inativação */}
+        <Dialog open={!!inativarId} onOpenChange={(o) => !o && setInativarId(null)}>
+          <DialogContent className="max-w-sm" role="alertdialog" aria-describedby="inativar-cc-description">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <XCircle className="h-5 w-5" />
+                Inativar Centro de Custo
+              </DialogTitle>
+              <DialogDescription id="inativar-cc-description">
+                Tem certeza que deseja inativar este centro de custo? Ele não poderá receber novos lançamentos.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setInativarId(null)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleInativar} disabled={inativarMutation.isPending}>
+                {inativarMutation.isPending ? 'Inativando...' : 'Confirmar Inativação'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
@@ -260,7 +286,7 @@ export function CentroCustoForm({ open, onClose, editingItem }: CentroCustoFormP
               Código *
               <TooltipHelp content="Código único para identificar o centro. Ex: ADM, PAST, SOC" />
             </Label>
-            <Input
+              <Input
               id="cc-codigo"
               value={form.codigo}
               onChange={(e) => setForm({ ...form, codigo: e.target.value.toUpperCase() })}
@@ -268,6 +294,7 @@ export function CentroCustoForm({ open, onClose, editingItem }: CentroCustoFormP
               disabled={!!editingItem}
               className={cn('font-mono', errors.codigo && 'border-destructive')}
               maxLength={20}
+              autoFocus={!editingItem}
             />
             {errors.codigo && (
               <p className="text-xs text-destructive">{errors.codigo}</p>

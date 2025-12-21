@@ -185,8 +185,12 @@ export function PessoaDetail({ pessoaId, onClose, onUpdated }: PessoaDetailProps
       )}>
         {/* Header */}
         <div className={cn('text-white p-6 shrink-0', `bg-gradient-to-br ${headerBg}`)}>
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/20 transition-colors">
-            <X className="h-5 w-5" />
+          <button 
+            onClick={onClose} 
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/20 transition-colors"
+            aria-label="Fechar detalhes"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
           
           <div className="flex items-start gap-4">
@@ -395,8 +399,13 @@ export function PessoaDetail({ pessoaId, onClose, onUpdated }: PessoaDetailProps
                         <Edit2 className="h-4 w-4 mr-2" /> Editar Dados
                       </Button>
                       {pessoa.ativo ? (
-                        <Button onClick={() => setShowInativarDialog(true)} variant="destructive" size="icon" title="Inativar pessoa">
-                          <UserX className="h-4 w-4" />
+                        <Button 
+                          onClick={() => setShowInativarDialog(true)} 
+                          variant="destructive" 
+                          size="icon" 
+                          aria-label="Inativar pessoa"
+                        >
+                          <UserX className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       ) : (
                         <Button 

@@ -62,9 +62,12 @@ export function FundoGrid({ searchTerm, onEdit }: FundoGridProps) {
     },
   });
 
-  const handleInativar = (id: string) => {
-    if (confirm('Tem certeza que deseja inativar este fundo?')) {
-      inativarMutation.mutate(id);
+  const [inativarId, setInativarId] = useState<string | null>(null);
+
+  const handleInativar = () => {
+    if (inativarId) {
+      inativarMutation.mutate(inativarId);
+      setInativarId(null);
     }
   };
 
@@ -165,20 +168,20 @@ export function FundoGrid({ searchTerm, onEdit }: FundoGridProps) {
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => onEdit(fundo)}
-                          title="Editar"
+                          aria-label={`Editar ${fundo.nome}`}
                         >
-                          <Edit2 className="h-4 w-4" />
+                          <Edit2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                         {fundo.ativo && (
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleInativar(fundo.id)}
-                            title="Inativar"
+                            onClick={() => setInativarId(fundo.id)}
+                            aria-label={`Inativar ${fundo.nome}`}
                             disabled={inativarMutation.isPending}
                           >
-                            <XCircle className="h-4 w-4" />
+                            <XCircle className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         )}
                       </div>
@@ -189,6 +192,29 @@ export function FundoGrid({ searchTerm, onEdit }: FundoGridProps) {
             </TableBody>
           </Table>
         </ResponsiveTable>
+
+        {/* Dialog de Confirmação de Inativação */}
+        <Dialog open={!!inativarId} onOpenChange={(o) => !o && setInativarId(null)}>
+          <DialogContent className="max-w-sm" role="alertdialog" aria-describedby="inativar-fundo-description">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <XCircle className="h-5 w-5" />
+                Inativar Fundo
+              </DialogTitle>
+              <DialogDescription id="inativar-fundo-description">
+                Tem certeza que deseja inativar este fundo? Ele não poderá receber novas alocações ou consumos.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setInativarId(null)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleInativar} disabled={inativarMutation.isPending}>
+                {inativarMutation.isPending ? 'Inativando...' : 'Confirmar Inativação'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
@@ -418,6 +444,7 @@ export function FundoForm({ open, onClose, editingItem }: FundoFormProps) {
                   placeholder="OBRA, RESERVA"
                   disabled={!!editingItem}
                   className={cn('font-mono', errors.codigo && 'border-destructive')}
+                  autoFocus={!editingItem}
                 />
                 {errors.codigo && <p className="text-xs text-destructive">{errors.codigo}</p>}
               </div>

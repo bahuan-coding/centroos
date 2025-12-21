@@ -193,7 +193,12 @@ export function ContaFinanceiraForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
-      toast.error('Corrija os erros no formulário');
+      // Focus on first field with error
+      const firstErrorField = document.querySelector('[aria-invalid="true"], .text-destructive')?.closest('.space-y-1\\.5')?.querySelector('input, select, textarea') as HTMLElement | null;
+      if (firstErrorField) {
+        firstErrorField.focus();
+      }
+      toast.error('Verifique os campos destacados e tente novamente');
       return;
     }
 
@@ -359,6 +364,7 @@ export function ContaFinanceiraForm({
                   onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
                   placeholder="Digite o nome da conta..."
                   list="nome-sugestoes"
+                  autoFocus
                 />
                 <datalist id="nome-sugestoes">
                   {NOME_SUGESTOES[form.tipo]?.map((s) => (

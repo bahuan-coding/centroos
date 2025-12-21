@@ -282,8 +282,8 @@ export function ConciliacaoPanel({ extratoId, contaId }: ConciliacaoPanelProps) 
                   <CheckCircle2 className="h-4 w-4 mr-1" />
                   Aplicar Alta Confiança
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setShowSugestoes(false)}>
-                  <ChevronDown className="h-4 w-4" />
+                <Button size="sm" variant="ghost" onClick={() => setShowSugestoes(false)} aria-label="Ocultar sugestões">
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -384,8 +384,8 @@ export function ConciliacaoPanel({ extratoId, contaId }: ConciliacaoPanelProps) 
                       </p>
 
                       {linha.status === 'pendente' && (
-                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleVincularClick(linha); }}>
-                          <Link2 className="h-4 w-4" />
+                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleVincularClick(linha); }} aria-label={`Vincular linha ${linha.descricao}`}>
+                          <Link2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
                     </div>

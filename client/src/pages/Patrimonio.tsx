@@ -558,7 +558,13 @@ function BemFormDialog({
   const handleSubmit = async () => {
     const isValid = await validate();
     if (!isValid) {
-      toast.error('Corrija os erros antes de salvar');
+      // Focus first field with error
+      const firstErrorField = document.querySelector('.border-red-500') as HTMLElement;
+      if (firstErrorField) {
+        firstErrorField.focus();
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      toast.error('Verifique os campos destacados');
       return;
     }
     onSave(form);
@@ -1717,7 +1723,7 @@ export default function Patrimonio() {
                       <TableCell className="text-right font-medium text-emerald-600">{formatCurrency(bem.valorContabil)}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{bem.localizacao || '-'}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 sm:opacity-60 sm:group-hover:opacity-100 transition-opacity">
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -1725,7 +1731,7 @@ export default function Patrimonio() {
                             onClick={() => setDetailBem(bem)}
                             aria-label={`Ver detalhes do bem ${bem.codigo}`}
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-4 w-4" aria-hidden="true" />
                           </Button>
                           <Button 
                             variant="ghost" 
@@ -1733,7 +1739,7 @@ export default function Patrimonio() {
                             className="h-8 w-8"
                             aria-label={`Mais ações para ${bem.codigo}`}
                           >
-                            <MoreHorizontal className="h-4 w-4" />
+                            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </div>
                       </TableCell>

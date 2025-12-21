@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, CheckCircle, XCircle, Layers, AlertTriangle, Building2 } from 'lucide-react';
+import { Edit2, CheckCircle, XCircle, Layers, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,12 +54,18 @@ export function ProjetoGrid({ searchTerm, onEdit, onConcluir }: ProjetoGridProps
     },
   });
 
-  const handleCancelar = (id: string) => {
-    const motivo = prompt('Informe o motivo do cancelamento (mínimo 10 caracteres):');
-    if (motivo && motivo.length >= 10) {
-      cancelarMutation.mutate({ id, motivo });
-    } else if (motivo) {
-      toast.error('Motivo muito curto. Mínimo 10 caracteres.');
+  const [cancelarId, setCancelarId] = useState<string | null>(null);
+  const [motivoCancelamento, setMotivoCancelamento] = useState('');
+
+  const handleCancelar = () => {
+    if (motivoCancelamento.length < 10) {
+      toast.error('Motivo deve ter no mínimo 10 caracteres');
+      return;
+    }
+    if (cancelarId) {
+      cancelarMutation.mutate({ id: cancelarId, motivo: motivoCancelamento });
+      setCancelarId(null);
+      setMotivoCancelamento('');
     }
   };
 
@@ -160,9 +166,9 @@ export function ProjetoGrid({ searchTerm, onEdit, onConcluir }: ProjetoGridProps
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => onEdit(projeto)}
-                          title="Editar"
+                          aria-label={`Editar ${projeto.nome}`}
                         >
-                          <Edit2 className="h-4 w-4" />
+                          <Edit2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                         {(projeto.status === 'planejamento' || projeto.status === 'em_andamento') && (
                           <>
@@ -171,19 +177,22 @@ export function ProjetoGrid({ searchTerm, onEdit, onConcluir }: ProjetoGridProps
                               size="icon"
                               className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
                               onClick={() => onConcluir(projeto.id)}
-                              title="Concluir"
+                              aria-label={`Concluir ${projeto.nome}`}
                             >
-                              <CheckCircle className="h-4 w-4" />
+                              <CheckCircle className="h-4 w-4" aria-hidden="true" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => handleCancelar(projeto.id)}
-                              title="Cancelar"
+                              onClick={() => {
+                                setCancelarId(projeto.id);
+                                setMotivoCancelamento('');
+                              }}
+                              aria-label={`Cancelar ${projeto.nome}`}
                               disabled={cancelarMutation.isPending}
                             >
-                              <XCircle className="h-4 w-4" />
+                              <XCircle className="h-4 w-4" aria-hidden="true" />
                             </Button>
                           </>
                         )}
@@ -195,6 +204,47 @@ export function ProjetoGrid({ searchTerm, onEdit, onConcluir }: ProjetoGridProps
             </TableBody>
           </Table>
         </ResponsiveTable>
+
+        {/* Dialog de Cancelamento de Projeto */}
+        <Dialog open={!!cancelarId} onOpenChange={(o) => { if (!o) { setCancelarId(null); setMotivoCancelamento(''); } }}>
+          <DialogContent className="max-w-md" role="alertdialog" aria-describedby="cancelar-projeto-description">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <XCircle className="h-5 w-5" />
+                Cancelar Projeto
+              </DialogTitle>
+              <DialogDescription id="cancelar-projeto-description">
+                Esta ação não pode ser desfeita. O projeto será marcado como cancelado permanentemente.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 py-2">
+              <Label htmlFor="motivo-cancelamento-projeto">Motivo do cancelamento *</Label>
+              <Textarea
+                id="motivo-cancelamento-projeto"
+                value={motivoCancelamento}
+                onChange={(e) => setMotivoCancelamento(e.target.value)}
+                placeholder="Descreva o motivo do cancelamento (mínimo 10 caracteres)"
+                rows={3}
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground">
+                {motivoCancelamento.length}/10 caracteres mínimos
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCancelarId(null)}>
+                Voltar
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleCancelar} 
+                disabled={cancelarMutation.isPending || motivoCancelamento.length < 10}
+              >
+                {cancelarMutation.isPending ? 'Cancelando...' : 'Confirmar Cancelamento'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
@@ -377,6 +427,7 @@ export function ProjetoForm({ open, onClose, editingItem }: ProjetoFormProps) {
                   placeholder="OBRA-2025"
                   disabled={!!editingItem}
                   className={cn('font-mono', errors.codigo && 'border-destructive')}
+                  autoFocus={!editingItem}
                 />
                 {errors.codigo && <p className="text-xs text-destructive">{errors.codigo}</p>}
               </div>

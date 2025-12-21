@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, ResponsiveTable, TableCardView } from '@/components/ui/table';
 import { PageHeader } from '@/components/ui/page-header';
+import { QueryError } from '@/components/ui/query-error';
 import { trpc } from '@/lib/trpc';
 
 const actionLabels: Record<string, { label: string; icon: typeof Plus; color: string }> = {
@@ -28,7 +29,20 @@ function formatDateTime(date: Date | string): string {
 }
 
 export default function Audit() {
-  const { data: logs = [], isLoading } = trpc.audit.list.useQuery({ limit: 100 });
+  const { data: logs = [], isLoading, isError, error, refetch } = trpc.audit.list.useQuery({ limit: 100 });
+
+  if (isError) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <PageHeader
+          title="Auditoria"
+          description="Registro de todas as ações do sistema"
+          icon={<Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />}
+        />
+        <QueryError error={error} onRetry={() => refetch()} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">

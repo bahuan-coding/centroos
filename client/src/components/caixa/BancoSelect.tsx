@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronsUpDown, Building2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,6 +78,10 @@ export function BancoSelect({
 }: BancoSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   const selectedBanco = useMemo(
     () => BANCOS_FEBRABAN.find((b) => b.codigo === value),
@@ -94,16 +99,80 @@ export function BancoSelect({
     );
   }, [search]);
 
+  // Update dropdown position when opening
+  useEffect(() => {
+    if (open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownHeight = 350; // approximate height
+      
+      // Decide if dropdown should open above or below
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const openAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+      
+      setDropdownPosition({
+        top: openAbove ? rect.top - dropdownHeight - 4 : rect.bottom + 4,
+        left: rect.left,
+        width: Math.max(rect.width, 380),
+      });
+      
+      // Focus search input
+      setTimeout(() => searchInputRef.current?.focus(), 0);
+    }
+  }, [open]);
+
+  // Close on escape
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        setSearch('');
+        triggerRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [open]);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(e.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+        setSearch('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  const handleSelect = (banco: Banco) => {
+    onChange(banco.codigo === value ? null : banco);
+    setOpen(false);
+    setSearch('');
+    triggerRef.current?.focus();
+  };
+
   return (
-    <div className="relative">
+    <>
       <Button
+        ref={triggerRef}
         type="button"
         variant="outline"
         role="combobox"
         aria-expanded={open}
+        aria-haspopup="listbox"
         disabled={disabled}
         onClick={() => setOpen(!open)}
-        className={cn('w-full justify-between font-normal', className)}
+        className={cn('w-full h-12 justify-between font-normal text-base', className)}
       >
         {selectedBanco ? (
           <span className="flex items-center gap-2 truncate">
@@ -116,69 +185,91 @@ export function BancoSelect({
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
       
-      {open && (
-        <div className="absolute top-full left-0 z-50 mt-1 w-[350px] rounded-md border bg-popover shadow-lg">
-          <div className="p-2 border-b">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por código ou nome..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 h-9"
-                autoFocus
-              />
+      {/* Portal dropdown */}
+      {open && createPortal(
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-[100]" 
+            onClick={() => { setOpen(false); setSearch(''); }}
+          />
+          
+          {/* Dropdown */}
+          <div 
+            ref={dropdownRef}
+            className="fixed z-[101] rounded-xl border bg-popover shadow-2xl animate-in fade-in-0 zoom-in-95"
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+              width: dropdownPosition.width,
+              maxWidth: 'calc(100vw - 32px)',
+            }}
+            role="listbox"
+            aria-label="Lista de bancos"
+          >
+            {/* Search */}
+            <div className="p-3 border-b">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  ref={searchInputRef}
+                  placeholder="Buscar por código ou nome..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 h-10"
+                  aria-label="Buscar banco"
+                />
+              </div>
+            </div>
+            
+            {/* List */}
+            <div className="max-h-[280px] overflow-y-auto p-2">
+              {filteredBancos.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Nenhum banco encontrado para "{search}"
+                </p>
+              ) : (
+                filteredBancos.map((banco) => (
+                  <button
+                    key={banco.codigo}
+                    type="button"
+                    role="option"
+                    aria-selected={value === banco.codigo}
+                    onClick={() => handleSelect(banco)}
+                    className={cn(
+                      'flex w-full items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer',
+                      'hover:bg-accent transition-colors text-left',
+                      value === banco.codigo && 'bg-violet-50 hover:bg-violet-100'
+                    )}
+                  >
+                    <div className={cn(
+                      "flex items-center justify-center w-10 h-10 rounded-lg",
+                      value === banco.codigo ? "bg-violet-100" : "bg-muted"
+                    )}>
+                      <Building2 className={cn(
+                        "h-5 w-5",
+                        value === banco.codigo ? "text-violet-600" : "text-muted-foreground"
+                      )} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-muted-foreground">{banco.codigo}</span>
+                        <span className="font-medium">{banco.nomeReduzido}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{banco.nome}</p>
+                    </div>
+                    {value === banco.codigo && (
+                      <Check className="h-5 w-5 text-violet-600 shrink-0" />
+                    )}
+                  </button>
+                ))
+              )}
             </div>
           </div>
-          <div className="max-h-[280px] overflow-y-auto p-1">
-            {filteredBancos.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                Nenhum banco encontrado
-              </p>
-            ) : (
-              filteredBancos.map((banco) => (
-                <button
-                  key={banco.codigo}
-                  type="button"
-                  onClick={() => {
-                    onChange(banco.codigo === value ? null : banco);
-                    setOpen(false);
-                    setSearch('');
-                  }}
-                  className={cn(
-                    'flex w-full items-center gap-3 px-3 py-2 rounded-md cursor-pointer',
-                    'hover:bg-accent transition-colors text-left',
-                    value === banco.codigo && 'bg-accent'
-                  )}
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-muted-foreground">{banco.codigo}</span>
-                      <span className="font-medium text-sm">{banco.nomeReduzido}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">{banco.nome}</p>
-                  </div>
-                  {value === banco.codigo && (
-                    <Check className="h-4 w-4 text-primary shrink-0" />
-                  )}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
+        </>,
+        document.body
       )}
-      
-      {/* Backdrop to close dropdown */}
-      {open && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => { setOpen(false); setSearch(''); }}
-        />
-      )}
-    </div>
+    </>
   );
 }
 
@@ -186,4 +277,3 @@ export function BancoSelect({
 export function getBancoByCodigo(codigo: string): Banco | undefined {
   return BANCOS_FEBRABAN.find((b) => b.codigo === codigo);
 }
-

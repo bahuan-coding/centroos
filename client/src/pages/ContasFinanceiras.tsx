@@ -3,12 +3,12 @@ import { Plus, Building2, Wallet, PiggyBank, TrendingUp, CreditCard, Edit2, Powe
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip } from '@/components/ui/tooltip-help';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState, EMPTY_STATES } from '@/components/ui/empty-state';
 import { QueryError } from '@/components/ui/query-error';
-import { ContaFinanceiraForm, InativarContaModal } from '@/components/caixa';
+import { InativarContaModal } from '@/components/caixa';
+import { ContaFinanceiraWizard } from '@/components/caixa/ContaFinanceiraWizard';
 import { cn } from '@/lib/utils';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
@@ -343,28 +343,22 @@ export default function ContasFinanceiras() {
         </div>
       )}
 
-      {/* Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingConta ? 'Editar Conta' : 'Nova Conta Financeira'}</DialogTitle>
-          </DialogHeader>
-          <ContaFinanceiraForm
-            contaId={editingConta?.id}
-            initialData={editingConta ? {
-              tipo: editingConta.tipo,
-              nome: editingConta.nome,
-              bancoCodigo: editingConta.bancoCodigo,
-              bancoNome: editingConta.bancoNome,
-              agencia: editingConta.agencia,
-              contaNumero: editingConta.contaNumero,
-            } : undefined}
-            mode={editingConta ? 'edit' : 'create'}
-            onSuccess={() => setDialogOpen(false)}
-            onCancel={() => setDialogOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Wizard Full-Screen */}
+      <ContaFinanceiraWizard
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        contaId={editingConta?.id}
+        initialData={editingConta ? {
+          tipo: editingConta.tipo,
+          nome: editingConta.nome,
+          bancoCodigo: editingConta.bancoCodigo,
+          bancoNome: editingConta.bancoNome,
+          agencia: editingConta.agencia,
+          contaNumero: editingConta.contaNumero,
+        } : undefined}
+        mode={editingConta ? 'edit' : 'create'}
+        onSuccess={() => setDialogOpen(false)}
+      />
 
       {/* Inativar Modal */}
       <InativarContaModal

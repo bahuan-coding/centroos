@@ -11,6 +11,7 @@ export type { FileType } from './FileDropzone';
 
 // Formulários principais
 export { ContaFinanceiraForm } from './ContaFinanceiraForm';
+export { ContaFinanceiraWizard } from './ContaFinanceiraWizard';
 export { ExtratoImportForm } from './ExtratoImportForm';
 
 // Conciliação

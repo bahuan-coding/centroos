@@ -2076,93 +2076,50 @@ const pessoasRouter = router({
 
   // Listar inconsistências entre rawdata e banco de dados
   inconsistencias: publicProcedure.query(async () => {
-    const db = await getDb();
-    
-    // Buscar todas as pessoas cadastradas para match
-    const todasPessoas = await db.execute(sql`
-      SELECT id, nome, UPPER(TRIM(nome)) as nome_normalizado
-      FROM pessoa WHERE deleted_at IS NULL
-    `);
-    
-    const pessoasMap = new Map<string, { id: string; nome: string }>();
-    for (const p of todasPessoas.rows as any[]) {
-      pessoasMap.set(p.nome_normalizado, { id: p.id, nome: p.nome });
+    try {
+      const db = await getDb();
+      
+      // Buscar títulos sem pessoa_id
+      const titulosSemPessoa = await db.execute(sql`
+        SELECT t.id, t.descricao, t.valor_liquido, t.data_competencia, t.natureza
+        FROM titulo t
+        WHERE t.deleted_at IS NULL 
+          AND t.tipo = 'receber'
+          AND t.pessoa_id IS NULL
+        ORDER BY t.data_competencia DESC
+        LIMIT 50
+      `);
+      
+      // Contagem simples
+      const countTitulosSemPessoa = await db.execute(sql`
+        SELECT COUNT(*) as total FROM titulo 
+        WHERE deleted_at IS NULL AND tipo = 'receber' AND pessoa_id IS NULL
+      `);
+      
+      const countPessoasSemTitulo = await db.execute(sql`
+        SELECT COUNT(*) as total FROM pessoa p
+        WHERE p.deleted_at IS NULL 
+          AND NOT EXISTS (SELECT 1 FROM titulo t WHERE t.pessoa_id = p.id AND t.deleted_at IS NULL)
+      `);
+      
+      return {
+        titulosSemPessoa: titulosSemPessoa.rows.map((t: any) => ({
+          id: t.id,
+          descricao: t.descricao,
+          valor: parseFloat(t.valor_liquido || '0'),
+          dataCompetencia: t.data_competencia,
+          natureza: t.natureza,
+        })),
+        pessoasSemDoacoes: [],
+        stats: {
+          titulosSemPessoa: Number((countTitulosSemPessoa.rows[0] as any)?.total) || 0,
+          pessoasSemTitulo: Number((countPessoasSemTitulo.rows[0] as any)?.total) || 0,
+        },
+      };
+    } catch (error) {
+      console.error('Erro em inconsistencias:', error);
+      return { titulosSemPessoa: [], pessoasSemDoacoes: [], stats: { titulosSemPessoa: 0, pessoasSemTitulo: 0 } };
     }
-    
-    // Buscar títulos sem pessoa_id ou com pessoa não encontrada
-    const titulosSemPessoa = await db.execute(sql`
-      SELECT t.id, t.descricao, t.valor_liquido, t.data_competencia, t.natureza,
-             p.id as pessoa_id, p.nome as pessoa_nome
-      FROM titulo t
-      LEFT JOIN pessoa p ON t.pessoa_id = p.id
-      WHERE t.deleted_at IS NULL 
-        AND t.tipo = 'receber'
-        AND (t.pessoa_id IS NULL OR p.id IS NULL)
-      ORDER BY t.data_competencia DESC
-      LIMIT 100
-    `);
-    
-    // Buscar títulos que podem ter match de nome incorreto
-    // (título tem pessoa, mas descrição contém nome diferente)
-    const titulosComNomeDiferente = await db.execute(sql`
-      SELECT t.id, t.descricao, t.valor_liquido, t.data_competencia, t.natureza,
-             p.id as pessoa_id, p.nome as pessoa_nome
-      FROM titulo t
-      LEFT JOIN pessoa p ON t.pessoa_id = p.id
-      WHERE t.deleted_at IS NULL 
-        AND t.tipo = 'receber'
-        AND t.pessoa_id IS NOT NULL
-      ORDER BY t.data_competencia DESC
-      LIMIT 500
-    `);
-    
-    // Identificar pessoas que nunca doaram (cadastradas mas sem títulos)
-    const pessoasSemDoacoes = await db.execute(sql`
-      SELECT p.id, p.nome, p.tipo,
-             CASE WHEN a.id IS NOT NULL THEN true ELSE false END as is_associado
-      FROM pessoa p
-      LEFT JOIN associado a ON a.pessoa_id = p.id
-      LEFT JOIN titulo t ON t.pessoa_id = p.id AND t.deleted_at IS NULL AND t.tipo = 'receber'
-      WHERE p.deleted_at IS NULL AND t.id IS NULL
-      ORDER BY p.nome
-      LIMIT 50
-    `);
-    
-    // Estatísticas
-    const statsResult = await db.execute(sql`
-      SELECT 
-        COUNT(DISTINCT CASE WHEN t.pessoa_id IS NULL THEN t.id END) as titulos_sem_pessoa,
-        COUNT(DISTINCT p.id) FILTER (WHERE NOT EXISTS (
-          SELECT 1 FROM titulo t2 WHERE t2.pessoa_id = p.id AND t2.deleted_at IS NULL
-        )) as pessoas_sem_titulo
-      FROM pessoa p
-      LEFT JOIN titulo t ON t.pessoa_id = p.id AND t.deleted_at IS NULL
-      WHERE p.deleted_at IS NULL
-    `);
-    
-    const statsRow = statsResult.rows[0] as any;
-    
-    return {
-      titulosSemPessoa: titulosSemPessoa.rows.map((t: any) => ({
-        id: t.id,
-        descricao: t.descricao,
-        valor: parseFloat(t.valor_liquido),
-        dataCompetencia: t.data_competencia,
-        natureza: t.natureza,
-        pessoaId: t.pessoa_id,
-        pessoaNome: t.pessoa_nome,
-      })),
-      pessoasSemDoacoes: pessoasSemDoacoes.rows.map((p: any) => ({
-        id: p.id,
-        nome: p.nome,
-        tipo: p.tipo,
-        isAssociado: p.is_associado,
-      })),
-      stats: {
-        titulosSemPessoa: Number(statsRow?.titulos_sem_pessoa) || 0,
-        pessoasSemTitulo: Number(statsRow?.pessoas_sem_titulo) || 0,
-      },
-    };
   }),
 
   // Buscar pessoas similares para sugestão de vinculação

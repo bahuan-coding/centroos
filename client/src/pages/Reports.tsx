@@ -1,58 +1,100 @@
 import { useState } from 'react';
-import { FileBarChart, FileCheck, FileSpreadsheet, Download, Loader2, TrendingUp, Building2, Shield, Terminal, Copy } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileBarChart, FileCheck, FileSpreadsheet, Download, Loader2, TrendingUp, Building2, Shield, Terminal, Copy, ChevronRight, Calculator, Scale, CheckCircle2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { formatPeriod } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/ui/page-header';
 
-const reports = [
-  {
-    id: 'financial_monthly',
-    title: 'Relatório Financeiro Mensal',
-    description: 'Demonstrativo completo de receitas, despesas e balanço',
-    icon: FileBarChart,
-    color: 'text-blue-600 bg-blue-100',
-  },
-  {
-    id: 'nfc_compliance',
-    title: 'Relatório Nota Fiscal Cidadã',
-    description: 'Demonstrativo de aplicação de recursos (70% projeto / 30% custeio)',
-    icon: FileCheck,
-    color: 'text-purple-600 bg-purple-100',
-  },
+type Category = 'contabil' | 'fiscal' | 'auditoria';
+
+interface Report {
+  id: string;
+  title: string;
+  description: string;
+  icon: any;
+  category: Category;
+  color: string;
+  gradient: string;
+  includes: string[];
+  isCli?: boolean;
+}
+
+const reports: Report[] = [
   {
     id: 'balancete',
     title: 'Balancete Mensal',
     description: 'Saldos de todas as contas contábeis no período',
     icon: FileSpreadsheet,
-    color: 'text-green-600 bg-green-100',
+    category: 'contabil',
+    color: 'text-emerald-600',
+    gradient: 'from-emerald-500 to-teal-600',
+    includes: ['Saldos iniciais e finais', 'Movimentação débito/crédito', 'Todas as contas do plano', 'Totalizadores por grupo'],
   },
   {
     id: 'dre',
     title: 'Demonstração do Resultado (DRE)',
     description: 'Resultado do exercício com receitas e despesas agrupadas',
     icon: TrendingUp,
-    color: 'text-orange-600 bg-orange-100',
+    category: 'contabil',
+    color: 'text-orange-600',
+    gradient: 'from-orange-500 to-amber-600',
+    includes: ['Receitas por natureza', 'Despesas detalhadas', 'Resultado do período', 'Comparativo com anterior'],
   },
   {
     id: 'balanco_patrimonial',
     title: 'Balanço Patrimonial',
     description: 'Demonstrativo de ativos, passivos e patrimônio social',
     icon: Building2,
-    color: 'text-indigo-600 bg-indigo-100',
+    category: 'contabil',
+    color: 'text-indigo-600',
+    gradient: 'from-indigo-500 to-violet-600',
+    includes: ['Ativo circulante e não circulante', 'Passivo e obrigações', 'Patrimônio social', 'Notas explicativas'],
+  },
+  {
+    id: 'financial_monthly',
+    title: 'Relatório Financeiro Mensal',
+    description: 'Demonstrativo completo de receitas, despesas e balanço',
+    icon: FileBarChart,
+    category: 'fiscal',
+    color: 'text-blue-600',
+    gradient: 'from-blue-500 to-cyan-600',
+    includes: ['Resumo de entradas', 'Resumo de saídas', 'Fluxo de caixa', 'Posição de contas bancárias'],
+  },
+  {
+    id: 'nfc_compliance',
+    title: 'Nota Fiscal Cidadã (NFC)',
+    description: 'Demonstrativo de aplicação de recursos conforme regras NFC',
+    icon: FileCheck,
+    category: 'fiscal',
+    color: 'text-purple-600',
+    gradient: 'from-purple-500 to-fuchsia-600',
+    includes: ['70% aplicação em projetos', '30% custeio administrativo', 'Detalhamento de gastos', 'Conformidade SEFAZ'],
   },
   {
     id: 'audit_contabil',
     title: 'Auditoria Contábil',
-    description: 'Validação completa: rawdata, duplicatas, ITG 2002, NFC, SEFAZ',
+    description: 'Validação completa de integridade e conformidade',
     icon: Shield,
-    color: 'text-rose-600 bg-rose-100',
+    category: 'auditoria',
+    color: 'text-rose-600',
+    gradient: 'from-rose-500 to-pink-600',
+    includes: ['Verificação rawdata vs DB', 'Detecção de duplicatas', 'Conformidade ITG 2002', 'Validação partidas dobradas'],
     isCli: true,
   },
+];
+
+const categories = [
+  { id: 'all' as const, label: 'Todos', icon: '📊', count: reports.length },
+  { id: 'contabil' as const, label: 'Contábeis', icon: '📒', count: reports.filter(r => r.category === 'contabil').length },
+  { id: 'fiscal' as const, label: 'Fiscais', icon: '📋', count: reports.filter(r => r.category === 'fiscal').length },
+  { id: 'auditoria' as const, label: 'Auditoria', icon: '🛡️', count: reports.filter(r => r.category === 'auditoria').length },
 ];
 
 function downloadPDF(base64: string, filename: string) {
@@ -71,11 +113,180 @@ function downloadPDF(base64: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+// Category Filter Component
+function CategoryFilter({ selected, onSelect }: { selected: 'all' | Category; onSelect: (cat: 'all' | Category) => void }) {
+  return (
+    <div className="grid grid-cols-4 gap-2">
+      {categories.map(cat => (
+        <button
+          key={cat.id}
+          onClick={() => onSelect(cat.id)}
+          className={cn(
+            'p-3 rounded-xl text-center transition-all duration-200',
+            selected === cat.id
+              ? 'bg-gradient-to-br from-violet-100 to-indigo-100 ring-2 ring-violet-500 shadow-md'
+              : 'bg-slate-50 hover:bg-slate-100 hover:shadow-sm'
+          )}
+        >
+          <span className="text-xl block">{cat.icon}</span>
+          <p className="text-lg font-bold mt-1">{cat.count}</p>
+          <p className="text-[10px] text-muted-foreground font-medium">{cat.label}</p>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Report Card Component
+function ReportCard({ report, isSelected, onSelect }: { report: Report; isSelected: boolean; onSelect: () => void }) {
+  const Icon = report.icon;
+  return (
+    <button
+      onClick={onSelect}
+      className={cn(
+        'w-full p-4 rounded-xl text-left transition-all duration-200 group',
+        'hover:shadow-lg hover:-translate-y-0.5',
+        isSelected
+          ? 'bg-gradient-to-br from-violet-50 to-indigo-50 ring-2 ring-violet-500 shadow-lg'
+          : 'bg-white border border-slate-200 hover:border-violet-300'
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <div className={cn('p-2.5 rounded-lg bg-gradient-to-br text-white shrink-0', report.gradient)}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-sm truncate">{report.title}</h3>
+            {report.isCli && (
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">CLI</Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{report.description}</p>
+        </div>
+        <ChevronRight className={cn(
+          'h-4 w-4 text-slate-300 shrink-0 transition-all',
+          isSelected && 'text-violet-500 rotate-90',
+          'group-hover:text-violet-400'
+        )} />
+      </div>
+    </button>
+  );
+}
+
+// Empty Preview Component
+function EmptyPreview() {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center p-8">
+      <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 flex items-center justify-center mb-6 shadow-lg">
+        <FileBarChart className="h-14 w-14 text-violet-500" />
+      </div>
+      <h3 className="text-xl font-semibold text-slate-800 mb-2">Selecione um Relatório</h3>
+      <p className="text-sm text-muted-foreground max-w-xs">
+        Escolha um relatório na lista ao lado para ver detalhes, configurar parâmetros e gerar o PDF.
+      </p>
+    </div>
+  );
+}
+
+// Report Preview Component
+function ReportPreview({ 
+  report, 
+  periods, 
+  periodId, 
+  setPeriodId,
+  onGenerate,
+  isPending 
+}: { 
+  report: Report;
+  periods: any[];
+  periodId: string;
+  setPeriodId: (id: string) => void;
+  onGenerate: () => void;
+  isPending: boolean;
+}) {
+  const Icon = report.icon;
+  const categoryLabel = categories.find(c => c.id === report.category)?.label || '';
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header com gradiente */}
+      <div className={cn('p-6 bg-gradient-to-br text-white rounded-t-xl', report.gradient)}>
+        <div className="flex items-start gap-4">
+          <div className="p-4 rounded-xl bg-white/20 backdrop-blur-sm">
+            <Icon className="h-10 w-10" />
+          </div>
+          <div className="flex-1">
+            <Badge className="bg-white/20 text-white border-0 mb-2">{categoryLabel}</Badge>
+            <h2 className="text-2xl font-bold">{report.title}</h2>
+            <p className="text-white/80 mt-1">{report.description}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Conteúdo */}
+      <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+        {/* O que inclui */}
+        <div>
+          <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            O que este relatório inclui
+          </h4>
+          <ul className="space-y-2">
+            {report.includes.map((item, idx) => (
+              <li key={idx} className="flex items-center gap-2 text-sm text-slate-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Seletor de período (se não for CLI) */}
+        {!report.isCli && (
+          <div className="bg-slate-50 rounded-xl p-4">
+            <Label className="text-sm font-semibold text-slate-700 mb-2 block">Período do Relatório</Label>
+            <Select value={periodId} onValueChange={setPeriodId}>
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Selecione o período" />
+              </SelectTrigger>
+              <SelectContent>
+                {periods.map((p) => (
+                  <SelectItem key={p.id} value={p.id.toString()}>
+                    {formatPeriod(p.month, p.year)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+
+      {/* Botão de ação */}
+      <div className="p-6 border-t bg-slate-50/50">
+        <Button 
+          onClick={onGenerate} 
+          disabled={isPending || (!report.isCli && !periodId)}
+          className={cn('w-full h-12 text-base font-semibold bg-gradient-to-r shadow-lg hover:shadow-xl transition-all', report.gradient)}
+        >
+          {isPending ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-5 w-5" />
+          )}
+          {report.isCli ? 'Ver Comandos CLI' : 'Gerar PDF'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Main Component
 export default function Reports() {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [auditDialogOpen, setAuditDialogOpen] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<'all' | Category>('all');
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [periodId, setPeriodId] = useState<string>('');
+  const [auditDialogOpen, setAuditDialogOpen] = useState(false);
 
   const { data: periods = [] } = trpc.periods.list.useQuery();
   const financialMutation = trpc.reports.generateFinancial.useMutation();
@@ -86,15 +297,16 @@ export default function Reports() {
 
   const isPending = financialMutation.isPending || nfcMutation.isPending || balanceteMutation.isPending || dreMutation.isPending || balancoMutation.isPending;
 
-  const openDialog = (reportId: string) => {
-    if (reportId === 'audit_contabil') {
-      setAuditDialogOpen(true);
-      return;
-    }
-    setSelectedReport(reportId);
-    setPeriodId(periods[0]?.id.toString() || '');
-    setDialogOpen(true);
-  };
+  const filteredReports = selectedCategory === 'all' 
+    ? reports 
+    : reports.filter(r => r.category === selectedCategory);
+
+  const selectedReport = reports.find(r => r.id === selectedReportId);
+
+  // Set default period when periods load
+  if (periods.length > 0 && !periodId) {
+    setPeriodId(periods[0].id.toString());
+  }
 
   const copyCommand = (cmd: string) => {
     navigator.clipboard.writeText(cmd);
@@ -102,7 +314,14 @@ export default function Reports() {
   };
 
   const handleGenerate = async () => {
-    if (!periodId || !selectedReport) return;
+    if (!selectedReport) return;
+
+    if (selectedReport.isCli) {
+      setAuditDialogOpen(true);
+      return;
+    }
+
+    if (!periodId) return;
 
     try {
       const pid = parseInt(periodId);
@@ -110,7 +329,7 @@ export default function Reports() {
       const periodName = period ? formatPeriod(period.month, period.year).replace(/ /g, '_') : pid;
 
       let result;
-      switch (selectedReport) {
+      switch (selectedReport.id) {
         case 'financial_monthly':
           result = await financialMutation.mutateAsync(pid);
           downloadPDF(result.pdf, `relatorio_financeiro_${periodName}.pdf`);
@@ -134,97 +353,84 @@ export default function Reports() {
       }
 
       toast.success('Relatório gerado com sucesso!');
-      setDialogOpen(false);
     } catch (error) {
       toast.error('Erro ao gerar relatório');
     }
   };
 
-  const selectedReportInfo = reports.find((r) => r.id === selectedReport);
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Relatórios</h1>
-        <p className="text-muted-foreground">Gere relatórios contábeis e de compliance em PDF</p>
+    <div className="h-[calc(100vh-theme(spacing.16)-theme(spacing.8))] lg:h-[calc(100vh-theme(spacing.8))] flex flex-col">
+      {/* Header */}
+      <div className="mb-4 shrink-0">
+        <PageHeader
+          title="Relatórios"
+          description="Gere relatórios contábeis, fiscais e de auditoria em PDF"
+          icon={<span className="text-3xl">📊</span>}
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {reports.map((report) => (
-          <Card key={report.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-lg ${report.color}`}>
-                  <report.icon className="h-6 w-6" />
-                </div>
-                <CardTitle className="text-lg">{report.title}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>{report.description}</CardDescription>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full" onClick={() => openDialog(report.id)}>
-                <Download className="mr-2 h-4 w-4" />
-                Gerar PDF
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+      {/* Category Filter */}
+      <div className="mb-4 shrink-0">
+        <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedReportInfo && (
-                <>
-                  <div className={`p-2 rounded-lg ${selectedReportInfo.color}`}>
-                    <selectedReportInfo.icon className="h-4 w-4" />
-                  </div>
-                  {selectedReportInfo.title}
-                </>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Período</Label>
-              <Select value={periodId} onValueChange={setPeriodId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o período" />
-                </SelectTrigger>
-                <SelectContent>
-                  {periods.map((p) => (
-                    <SelectItem key={p.id} value={p.id.toString()}>
-                      {formatPeriod(p.month, p.year)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Master-Detail Layout */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-0">
+        {/* Lista de Relatórios */}
+        <Card className="lg:col-span-5 xl:col-span-4 flex flex-col overflow-hidden">
+          <CardContent className="flex-1 overflow-y-auto p-3 space-y-2">
+            {filteredReports.map(report => (
+              <ReportCard
+                key={report.id}
+                report={report}
+                isSelected={selectedReportId === report.id}
+                onSelect={() => setSelectedReportId(report.id)}
+              />
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Preview Panel */}
+        <Card className="hidden lg:flex lg:col-span-7 xl:col-span-8 flex-col overflow-hidden">
+          {selectedReport ? (
+            <ReportPreview
+              report={selectedReport}
+              periods={periods}
+              periodId={periodId}
+              setPeriodId={setPeriodId}
+              onGenerate={handleGenerate}
+              isPending={isPending}
+            />
+          ) : (
+            <EmptyPreview />
+          )}
+        </Card>
+      </div>
+
+      {/* Mobile: Show preview as modal when report selected */}
+      {selectedReport && (
+        <Dialog open={!!selectedReportId} onOpenChange={(open) => !open && setSelectedReportId(null)}>
+          <DialogContent className="lg:hidden max-w-lg p-0 overflow-hidden">
+            <div className="max-h-[80vh] overflow-y-auto">
+              <ReportPreview
+                report={selectedReport}
+                periods={periods}
+                periodId={periodId}
+                setPeriodId={setPeriodId}
+                onGenerate={handleGenerate}
+                isPending={isPending}
+              />
             </div>
-            {selectedReportInfo && (
-              <p className="text-sm text-muted-foreground">{selectedReportInfo.description}</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleGenerate} disabled={isPending || !periodId}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Gerar PDF
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Dialog de Auditoria Contábil (CLI) */}
       <Dialog open={auditDialogOpen} onOpenChange={setAuditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-lg text-rose-600 bg-rose-100">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
                 <Shield className="h-4 w-4" />
               </div>
               Auditoria Contábil
@@ -240,7 +446,7 @@ export default function Reports() {
               <div>
                 <Label className="text-xs text-muted-foreground">Auditoria completa (todos os meses)</Label>
                 <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 bg-muted px-3 py-2 rounded-md text-sm font-mono">
+                  <code className="flex-1 bg-slate-900 text-emerald-400 px-3 py-2 rounded-lg text-sm font-mono">
                     npx tsx scripts/audit-runner.ts --ano 2025 --todos
                   </code>
                   <Button size="icon" variant="outline" onClick={() => copyCommand('npx tsx scripts/audit-runner.ts --ano 2025 --todos')}>
@@ -252,7 +458,7 @@ export default function Reports() {
               <div>
                 <Label className="text-xs text-muted-foreground">Auditoria de um mês específico</Label>
                 <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 bg-muted px-3 py-2 rounded-md text-sm font-mono">
+                  <code className="flex-1 bg-slate-900 text-emerald-400 px-3 py-2 rounded-lg text-sm font-mono">
                     npx tsx scripts/audit-runner.ts --ano 2025 --mes novembro
                   </code>
                   <Button size="icon" variant="outline" onClick={() => copyCommand('npx tsx scripts/audit-runner.ts --ano 2025 --mes novembro')}>
@@ -264,7 +470,7 @@ export default function Reports() {
               <div>
                 <Label className="text-xs text-muted-foreground">Gerar relatório em Markdown</Label>
                 <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 bg-muted px-3 py-2 rounded-md text-sm font-mono">
+                  <code className="flex-1 bg-slate-900 text-emerald-400 px-3 py-2 rounded-lg text-sm font-mono">
                     npx tsx scripts/audit-runner.ts --ano 2025 --todos --formato md --output audit.md
                   </code>
                   <Button size="icon" variant="outline" onClick={() => copyCommand('npx tsx scripts/audit-runner.ts --ano 2025 --todos --formato md --output audit.md')}>
@@ -272,32 +478,19 @@ export default function Reports() {
                   </Button>
                 </div>
               </div>
-
-              <div>
-                <Label className="text-xs text-muted-foreground">Ver ajuda completa</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 bg-muted px-3 py-2 rounded-md text-sm font-mono">
-                    npx tsx scripts/audit-runner.ts --help
-                  </code>
-                  <Button size="icon" variant="outline" onClick={() => copyCommand('npx tsx scripts/audit-runner.ts --help')}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
             </div>
 
-            <div className="bg-muted/50 rounded-lg p-3 text-sm">
-              <div className="flex items-center gap-2 font-medium mb-2">
+            <div className="bg-slate-50 rounded-xl p-4 text-sm">
+              <div className="flex items-center gap-2 font-semibold mb-3">
                 <Terminal className="h-4 w-4" />
                 Módulos disponíveis
               </div>
-              <ul className="text-muted-foreground space-y-1 text-xs">
-                <li><strong>pessoas:</strong> Duplicatas, CPF/CNPJ, contatos</li>
-                <li><strong>doacoes:</strong> Rawdata, títulos, contribuições</li>
-                <li><strong>contabil:</strong> Partidas dobradas, períodos</li>
-                <li><strong>fiscal:</strong> ITG 2002, NFC 70/30, SEFAZ</li>
-                <li><strong>conciliacao:</strong> Extratos vs títulos</li>
-              </ul>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-2"><span className="text-violet-500">●</span> <strong>pessoas:</strong> Duplicatas, CPF</div>
+                <div className="flex items-center gap-2"><span className="text-emerald-500">●</span> <strong>doacoes:</strong> Rawdata, títulos</div>
+                <div className="flex items-center gap-2"><span className="text-blue-500">●</span> <strong>contabil:</strong> Partidas dobradas</div>
+                <div className="flex items-center gap-2"><span className="text-orange-500">●</span> <strong>fiscal:</strong> ITG 2002, NFC</div>
+              </div>
             </div>
           </div>
           <DialogFooter>

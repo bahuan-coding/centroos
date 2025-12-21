@@ -1,26 +1,14 @@
 import { useState, useMemo } from 'react';
-import { Plus, ChevronRight, ChevronDown, Search, FolderTree, TrendingUp, TrendingDown, Scale, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, Search, FolderTree, CheckCircle2, X } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/ui/page-header';
 import { ContaDetail } from '@/components/accounts';
+import { PlanoContasWizard } from '@/components/planoContas';
 import { trpc } from '@/lib/trpc';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-
-const typeLabels: Record<string, string> = {
-  ativo: 'Ativo',
-  passivo: 'Passivo',
-  patrimonio_social: 'Patrimônio',
-  receita: 'Receita',
-  despesa: 'Despesa',
-};
 
 const typeColors: Record<string, { bg: string; text: string; border: string }> = {
   ativo: { bg: 'bg-blue-100', text: 'text-blue-600', border: 'border-blue-500' },
@@ -28,14 +16,6 @@ const typeColors: Record<string, { bg: string; text: string; border: string }> =
   patrimonio_social: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-500' },
   receita: { bg: 'bg-emerald-100', text: 'text-emerald-600', border: 'border-emerald-500' },
   despesa: { bg: 'bg-rose-100', text: 'text-rose-600', border: 'border-rose-500' },
-};
-
-const typeEmojis: Record<string, string> = {
-  ativo: '📈',
-  passivo: '📉',
-  patrimonio_social: '⚖️',
-  receita: '💰',
-  despesa: '💸',
 };
 
 interface PlanoContaItem {
@@ -322,8 +302,7 @@ function EmptySelection({ onNewConta }: { onNewConta: () => void }) {
 
 // Main Component
 export default function Accounts() {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ code: '', name: '', type: 'despesa', parentId: '', description: '' });
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<string | undefined>(undefined);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -335,18 +314,6 @@ export default function Accounts() {
   const { data: stats } = trpc.accounts.planoContasStats.useQuery();
   const { data: tree = [], isLoading } = trpc.accounts.planoContasTree.useQuery();
   const { data: insights } = trpc.accounts.planoContasInsights.useQuery();
-  const { data: accounts = [] } = trpc.accounts.list.useQuery();
-
-  const createMutation = trpc.accounts.create.useMutation({ 
-    onSuccess: () => { 
-      utils.accounts.list.invalidate();
-      utils.accounts.planoContasTree.invalidate();
-      utils.accounts.planoContasStats.invalidate();
-      setDialogOpen(false); 
-      toast.success('Conta criada com sucesso'); 
-    },
-    onError: (error: any) => toast.error('Erro ao criar conta', { description: error?.message })
-  });
 
   // Filtered tree
   const filteredTree = useMemo(() => {
@@ -361,23 +328,12 @@ export default function Accounts() {
     });
   }, [tree, filtroTipo, searchTerm]);
 
-  const handleNew = () => { 
-    setForm({ code: '', name: '', type: 'despesa', parentId: '', description: '' }); 
-    setDialogOpen(true); 
-  };
-
-  const handleSubmit = () => {
-    if (!form.code.trim() || !form.name.trim()) {
-      toast.error('Preencha o código e o nome da conta');
-      return;
-    }
-    createMutation.mutate({ 
-      code: form.code, 
-      name: form.name, 
-      type: form.type as any, 
-      parentId: form.parentId ? parseInt(form.parentId) : undefined, 
-      description: form.description || undefined 
-    });
+  const handleNew = () => setWizardOpen(true);
+  
+  const handleWizardSuccess = () => {
+    utils.accounts.planoContasTree.invalidate();
+    utils.accounts.planoContasStats.invalidate();
+    utils.accounts.planoContasInsights.invalidate();
   };
 
   const toggleExpand = (id: string) => {
@@ -500,82 +456,12 @@ export default function Accounts() {
         </div>
       )}
 
-      {/* Dialog Nova Conta */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Nova Conta</DialogTitle>
-            <DialogDescription>Preencha os dados para criar uma nova conta contábil.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">Código *</Label>
-                <Input 
-                  id="code"
-                  value={form.code} 
-                  onChange={(e) => setForm({ ...form, code: e.target.value })} 
-                  placeholder="1.1.1.001"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="type">Tipo</Label>
-                <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
-                  <SelectTrigger id="type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(typeLabels).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{typeEmojis[k]} {v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome *</Label>
-              <Input 
-                id="name"
-                value={form.name} 
-                onChange={(e) => setForm({ ...form, name: e.target.value })} 
-                placeholder="Nome da conta"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="parentId">Conta Pai (opcional)</Label>
-              <Select value={form.parentId || 'none'} onValueChange={(v) => setForm({ ...form, parentId: v === 'none' ? '' : v })}>
-                <SelectTrigger id="parentId">
-                  <SelectValue placeholder="Selecionar..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  {accounts.map((a) => (
-                    <SelectItem key={a.id} value={a.id.toString()}>
-                      {a.code} - {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição (opcional)</Label>
-              <Textarea 
-                id="description"
-                value={form.description} 
-                onChange={(e) => setForm({ ...form, description: e.target.value })} 
-                placeholder="Observações..."
-                rows={2}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Criando...' : 'Criar Conta'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Wizard Nova Conta */}
+      <PlanoContasWizard 
+        open={wizardOpen} 
+        onOpenChange={setWizardOpen}
+        onSuccess={handleWizardSuccess}
+      />
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PageHeader, Pagination } from '@/components/ui/page-header';
 import { LabelWithHelp } from '@/components/ui/tooltip-help';
 import { FormSection, FormRow, FormField } from '@/components/ui/form-section';
+import { PlanoContasWizard } from '@/components/planoContas/PlanoContasWizard';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -387,22 +388,11 @@ function PlanoContasTab() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [selectedContaId, setSelectedContaId] = useState<string | null>(null);
   const [showMobileDetail, setShowMobileDetail] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editConta, setEditConta] = useState<any>(null);
-  const [form, setForm] = useState({ codigo: '', nome: '', tipo: 'despesa', naturezaSaldo: 'devedora', classificacao: 'analitica', contaPaiId: '', descricao: '' });
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const utils = trpc.useUtils();
   const { data: tree = [], isLoading } = trpc.accounts.planoContasTree.useQuery();
-  const { data: hierarchy = [] } = trpc.accounts.planoContasHierarchy.useQuery();
   
-  const createMutation = trpc.accounts.planoContasCreate.useMutation({
-    onSuccess: () => { utils.accounts.planoContasTree.invalidate(); setDialogOpen(false); toast.success('Conta criada'); },
-    onError: (e) => toast.error(e.message),
-  });
-  const updateMutation = trpc.accounts.planoContasUpdate.useMutation({
-    onSuccess: () => { utils.accounts.planoContasTree.invalidate(); setDialogOpen(false); toast.success('Conta atualizada'); },
-    onError: (e) => toast.error(e.message),
-  });
   const toggleAtivoMutation = trpc.accounts.planoContasToggleAtivo.useMutation({
     onSuccess: (data) => { utils.accounts.planoContasTree.invalidate(); toast.success(data.ativo ? 'Conta ativada' : 'Conta desativada'); },
     onError: (e) => toast.error(e.message),
@@ -436,45 +426,16 @@ function PlanoContasTab() {
   };
 
   const handleNew = () => {
-    setEditConta(null);
-    const nat = ['ativo', 'despesa'].includes('despesa') ? 'devedora' : 'credora';
-    setForm({ codigo: '', nome: '', tipo: 'despesa', naturezaSaldo: nat, classificacao: 'analitica', contaPaiId: '', descricao: '' });
-    setDialogOpen(true);
-  };
-
-  const handleEdit = (conta?: any) => {
-    const c = conta || selectedConta;
-    if (!c) return;
-    setEditConta(c);
-    setForm({ codigo: c.codigo, nome: c.nome, tipo: c.tipo, naturezaSaldo: c.naturezaSaldo, classificacao: c.classificacao, contaPaiId: c.contaPaiId || '', descricao: '' });
-    setDialogOpen(true);
-  };
-
-  const handleSubmit = () => {
-    if (!form.codigo.trim() || !form.nome.trim()) { toast.error('Preencha os campos obrigatórios'); return; }
-    if (editConta) {
-      updateMutation.mutate({ id: editConta.id, nome: form.nome, descricao: form.descricao || undefined });
-    } else {
-      createMutation.mutate({
-        codigo: form.codigo,
-        nome: form.nome,
-        tipo: form.tipo as any,
-        naturezaSaldo: form.naturezaSaldo as any,
-        classificacao: form.classificacao as any,
-        contaPaiId: form.contaPaiId || undefined,
-        descricao: form.descricao || undefined,
-      });
-    }
-  };
-
-  const handleTypeChange = (tipo: string) => {
-    const nat = ['ativo', 'despesa'].includes(tipo) ? 'devedora' : 'credora';
-    setForm(f => ({ ...f, tipo, naturezaSaldo: nat }));
+    setWizardOpen(true);
   };
 
   const handleCloseMobileDetail = () => {
     setShowMobileDetail(false);
     setSelectedContaId(null);
+  };
+  
+  const handleWizardSuccess = () => {
+    utils.accounts.planoContasTree.invalidate();
   };
 
   return (
@@ -568,7 +529,7 @@ function PlanoContasTab() {
             <ContaDetail 
               conta={selectedConta}
               onClose={() => setSelectedContaId(null)}
-              onEdit={() => handleEdit()}
+              onEdit={handleNew}
               onToggleAtivo={() => toggleAtivoMutation.mutate({ id: selectedConta.id })}
               isToggling={toggleAtivoMutation.isPending}
             />
@@ -584,7 +545,7 @@ function PlanoContasTab() {
           <ContaDetail 
             conta={selectedConta}
             onClose={handleCloseMobileDetail}
-            onEdit={() => handleEdit()}
+            onEdit={handleNew}
             onToggleAtivo={() => toggleAtivoMutation.mutate({ id: selectedConta.id })}
             isToggling={toggleAtivoMutation.isPending}
             isMobile
@@ -592,87 +553,12 @@ function PlanoContasTab() {
         </div>
       )}
 
-      {/* Dialog Nova/Editar Conta */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editConta ? 'Editar Conta' : 'Nova Conta Contábil'}</DialogTitle>
-            <DialogDescription>{editConta ? 'Altere nome e descrição da conta.' : 'Preencha os dados conforme ITG 2002.'}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <FormSection title="Identificação" icon="🔢">
-              <FormRow>
-                <FormField>
-                  <LabelWithHelp label="Código" help="Código hierárquico. Ex: 1.1.1.01" required />
-                  <Input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value }))} disabled={!!editConta} placeholder="1.1.1.01" />
-                </FormField>
-                <FormField>
-                  <LabelWithHelp label="Nome" help="Nome descritivo da conta" required />
-                  <Input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} placeholder="Nome da conta" />
-                </FormField>
-              </FormRow>
-            </FormSection>
-
-            <FormSection title="Classificação" icon="📊">
-              <FormRow>
-                <FormField>
-                  <LabelWithHelp label="Tipo" help="Grupo principal a que pertence" required />
-                  <Select value={form.tipo} onValueChange={handleTypeChange} disabled={!!editConta}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-                  </Select>
-                </FormField>
-                <FormField>
-                  <LabelWithHelp label="Natureza" help="Devedora = aumenta com débitos (Ativo, Despesa)" required />
-                  <Select value={form.naturezaSaldo} onValueChange={v => setForm(f => ({ ...f, naturezaSaldo: v }))} disabled>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="devedora">Devedora</SelectItem>
-                      <SelectItem value="credora">Credora</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-              </FormRow>
-              <FormRow>
-                <FormField>
-                  <LabelWithHelp label="Classificação" help="Sintética agrupa, Analítica recebe lançamentos" required />
-                  <Select value={form.classificacao} onValueChange={v => setForm(f => ({ ...f, classificacao: v }))} disabled={!!editConta}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sintetica">Sintética (agrupa)</SelectItem>
-                      <SelectItem value="analitica">Analítica (lançamentos)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                {!editConta && (
-                  <FormField>
-                    <LabelWithHelp label="Conta Pai" help="Conta de nível superior (opcional)" />
-                    <Select value={form.contaPaiId || 'none'} onValueChange={v => setForm(f => ({ ...f, contaPaiId: v === 'none' ? '' : v }))}>
-                      <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhuma (raiz)</SelectItem>
-                        {hierarchy.filter(h => h.classificacao === 'sintetica' && h.tipo === form.tipo).map(h => (
-                          <SelectItem key={h.id} value={h.id}>{h.codigo} - {h.nome}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormField>
-                )}
-              </FormRow>
-            </FormSection>
-
-            <FormSection title="Observações" icon="📝">
-              <Textarea value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} placeholder="Detalhamento de quando usar esta conta..." rows={2} />
-            </FormSection>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
-              {createMutation.isPending || updateMutation.isPending ? 'Salvando...' : editConta ? 'Salvar' : 'Criar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Wizard Nova Conta Contábil */}
+      <PlanoContasWizard 
+        open={wizardOpen} 
+        onOpenChange={setWizardOpen} 
+        onSuccess={handleWizardSuccess}
+      />
     </div>
   );
 }

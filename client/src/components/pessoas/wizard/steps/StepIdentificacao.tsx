@@ -9,10 +9,13 @@ import { cn } from '@/lib/utils';
 import { formatDocument } from '@/lib/validators';
 import { toast } from 'sonner';
 
-const DOCUMENTO_LABELS: Record<string, string> = {
+const DOCUMENTO_FISICA: Record<string, string> = {
   cpf: 'CPF',
-  cnpj: 'CNPJ',
   rg: 'RG',
+};
+
+const DOCUMENTO_JURIDICA: Record<string, string> = {
+  cnpj: 'CNPJ',
 };
 
 export function StepIdentificacao() {
@@ -36,11 +39,9 @@ export function StepIdentificacao() {
   
   const handleTipoChange = (tipo: 'fisica' | 'juridica') => {
     updateField('tipo', tipo);
-    // Reset documento principal ao trocar tipo
+    // Reset documentos ao trocar tipo (tipos incompatíveis)
     const docPrincipal = tipo === 'fisica' ? 'cpf' : 'cnpj';
-    if (form.documentos.length === 0) {
-      setForm(f => ({ ...f, documentos: [{ tipo: docPrincipal, numero: '' }] }));
-    }
+    setForm(f => ({ ...f, documentos: [{ tipo: docPrincipal, numero: '' }] }));
   };
   
   const addDocumento = () => {
@@ -205,7 +206,7 @@ export function StepIdentificacao() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(DOCUMENTO_LABELS).map(([k, v]) => (
+                    {Object.entries(form.tipo === 'fisica' ? DOCUMENTO_FISICA : DOCUMENTO_JURIDICA).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
                     ))}
                   </SelectContent>

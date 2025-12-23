@@ -1063,6 +1063,40 @@ export const configuracaoSistema = pgTable(
 );
 
 // ============================================================================
+// MÓDULO H: Integrações Fiscais
+// ============================================================================
+
+export const certificadoTipoEnum = pgEnum('certificado_tipo', ['e_cnpj_a1', 'e_cnpj_a3']);
+export const certificadoStatusEnum = pgEnum('certificado_status', ['ativo', 'expirado', 'revogado']);
+
+export const certificadoDigital = pgTable(
+  'certificado_digital',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tipo: certificadoTipoEnum('tipo').notNull(),
+    cnpj: varchar('cnpj', { length: 14 }).notNull(),
+    razaoSocial: varchar('razao_social', { length: 255 }).notNull(),
+    validadeInicio: date('validade_inicio').notNull(),
+    validadeFim: date('validade_fim').notNull(),
+    serialNumber: varchar('serial_number', { length: 100 }).notNull(),
+    emissor: varchar('emissor', { length: 255 }).notNull(),
+    arquivoCriptografado: text('arquivo_criptografado').notNull(),
+    senhaCriptografada: text('senha_criptografada').notNull(),
+    arquivoHash: varchar('arquivo_hash', { length: 64 }).notNull(),
+    status: certificadoStatusEnum('status').notNull().default('ativo'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    createdBy: uuid('created_by'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedBy: uuid('updated_by'),
+  },
+  (table) => ({
+    cnpjIdx: index('idx_certificado_cnpj').on(table.cnpj),
+    statusIdx: index('idx_certificado_status').on(table.status),
+    validadeIdx: index('idx_certificado_validade').on(table.validadeFim),
+  })
+);
+
+// ============================================================================
 // LEGACY TABLES - Re-exportados do arquivo separado para melhor inferência de tipos
 // ============================================================================
 export {
@@ -1184,6 +1218,10 @@ export type EventoAuditoria = typeof eventoAuditoria.$inferSelect;
 export type InsertEventoAuditoria = typeof eventoAuditoria.$inferInsert;
 export type ConfiguracaoSistema = typeof configuracaoSistema.$inferSelect;
 export type InsertConfiguracaoSistema = typeof configuracaoSistema.$inferInsert;
+
+// Módulo H
+export type CertificadoDigital = typeof certificadoDigital.$inferSelect;
+export type InsertCertificadoDigital = typeof certificadoDigital.$inferInsert;
 
 // Legacy types (para compatibilidade) - Re-exportados do arquivo separado
 export type {

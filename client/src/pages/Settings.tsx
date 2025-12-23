@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Settings as SettingsIcon, Building2, DollarSign, Calculator, Bell, FileUp,
-  ChevronRight, Save, RefreshCw, Check, AlertCircle, Plus, Trash2, Edit2
+  ChevronRight, Save, RefreshCw, Check, AlertCircle, Plus, Trash2, Edit2,
+  ShieldCheck, Upload, X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ import { cn } from '@/lib/utils';
 // TYPES & CONSTANTS
 // ============================================================================
 
-type CategoryId = 'entidade' | 'financeiro' | 'contabilidade' | 'notificacoes' | 'importacao';
+type CategoryId = 'entidade' | 'certificado' | 'financeiro' | 'contabilidade' | 'notificacoes' | 'importacao';
 
 interface Category {
   id: CategoryId;
@@ -34,6 +35,7 @@ interface Category {
 
 const CATEGORIES: Category[] = [
   { id: 'entidade', label: 'Entidade', description: 'Dados da organização', icon: Building2, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+  { id: 'certificado', label: 'Certificado Digital', description: 'e-CNPJ para NFS-e', icon: ShieldCheck, color: 'text-teal-600', bgColor: 'bg-teal-100' },
   { id: 'financeiro', label: 'Financeiro', description: 'Parâmetros financeiros', icon: DollarSign, color: 'text-emerald-600', bgColor: 'bg-emerald-100' },
   { id: 'contabilidade', label: 'Contabilidade', description: 'Regime e exercício', icon: Calculator, color: 'text-violet-600', bgColor: 'bg-violet-100' },
   { id: 'notificacoes', label: 'Notificações', description: 'Alertas e emails', icon: Bell, color: 'text-amber-600', bgColor: 'bg-amber-100' },
@@ -554,6 +556,258 @@ function NotificacoesForm() {
 }
 
 // ============================================================================
+// CERTIFICADO DIGITAL FORM
+// ============================================================================
+
+function CertificadoForm() {
+  const [showUpload, setShowUpload] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [senha, setSenha] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+
+  const utils = trpc.useUtils();
+  const { data: cert, isLoading } = trpc.certificado.get.useQuery();
+  const { data: validation } = trpc.certificado.validate.useQuery();
+
+  const uploadMutation = trpc.certificado.upload.useMutation({
+    onSuccess: () => {
+      toast.success('Certificado carregado com sucesso');
+      utils.certificado.get.invalidate();
+      utils.certificado.validate.invalidate();
+      setShowUpload(false);
+      setFile(null);
+      setSenha('');
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const deleteMutation = trpc.certificado.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Certificado removido');
+      utils.certificado.get.invalidate();
+      utils.certificado.validate.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleFileChange = useCallback((selectedFile: File | null) => {
+    if (selectedFile && selectedFile.name.endsWith('.pfx')) {
+      setFile(selectedFile);
+    } else if (selectedFile) {
+      toast.error('Apenas arquivos .pfx são aceitos');
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const droppedFile = e.dataTransfer.files[0];
+    handleFileChange(droppedFile);
+  }, [handleFileChange]);
+
+  const handleUpload = async () => {
+    if (!file || !senha) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      uploadMutation.mutate({ arquivo: base64, senha, tipo: 'e_cnpj_a1' });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const getStatusBadge = () => {
+    if (!cert) return null;
+    const hoje = new Date();
+    const validade = new Date(cert.validadeFim);
+    const diasRestantes = Math.ceil((validade.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diasRestantes < 0) return <Badge className="bg-red-100 text-red-700">Expirado</Badge>;
+    if (diasRestantes <= 30) return <Badge className="bg-amber-100 text-amber-700">Expira em {diasRestantes}d</Badge>;
+    return <Badge className="bg-emerald-100 text-emerald-700">Ativo</Badge>;
+  };
+
+  if (isLoading) return <FormSkeleton />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-teal-600" />
+            Certificado Digital
+          </h2>
+          <p className="text-sm text-muted-foreground">e-CNPJ A1 para emissão de NFS-e e assinatura de documentos fiscais</p>
+        </div>
+        {!cert && (
+          <Button onClick={() => setShowUpload(true)} size="sm" className="gap-1">
+            <Upload className="h-4 w-4" />
+            Carregar
+          </Button>
+        )}
+      </div>
+
+      {cert ? (
+        <div className="space-y-4">
+          <div className="p-4 rounded-lg border bg-muted/30">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3 flex-1">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-8 w-8 text-teal-600" />
+                  <div>
+                    <p className="font-medium">{cert.razaoSocial}</p>
+                    <p className="text-sm text-muted-foreground">CNPJ: {cert.cnpj?.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')}</p>
+                  </div>
+                  {getStatusBadge()}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Tipo</p>
+                    <p className="font-medium">{cert.tipo === 'e_cnpj_a1' ? 'e-CNPJ A1' : 'e-CNPJ A3'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Validade</p>
+                    <p className="font-medium">{new Date(cert.validadeFim).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Emissor</p>
+                    <p className="font-medium">{cert.emissor}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Nº Série</p>
+                    <p className="font-medium font-mono text-xs">{cert.serialNumber?.slice(0, 20)}...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-4 pt-4 border-t">
+              <Button variant="outline" size="sm" onClick={() => setShowUpload(true)}>
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Substituir
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-destructive hover:text-destructive"
+                onClick={() => cert.id && deleteMutation.mutate(cert.id)}
+                disabled={deleteMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Remover
+              </Button>
+            </div>
+          </div>
+
+          {validation && !validation.valid && (
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <span className="text-sm text-red-700">{validation.error}</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div 
+          className={cn(
+            'border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer',
+            dragOver ? 'border-teal-500 bg-teal-50' : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+          )}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => setShowUpload(true)}
+        >
+          <ShieldCheck className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+          <p className="text-sm text-muted-foreground">Nenhum certificado configurado</p>
+          <p className="text-xs text-muted-foreground mt-1">Clique ou arraste um arquivo .pfx</p>
+        </div>
+      )}
+
+      {/* Dialog Upload */}
+      <Dialog open={showUpload} onOpenChange={setShowUpload}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Carregar Certificado Digital
+            </DialogTitle>
+            <DialogDescription>
+              Selecione o arquivo .pfx do seu e-CNPJ A1 e informe a senha
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div
+              className={cn(
+                'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
+                dragOver ? 'border-teal-500 bg-teal-50' : 'border-muted-foreground/25'
+              )}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
+              {file ? (
+                <div className="flex items-center justify-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-teal-600" />
+                  <span className="text-sm font-medium">{file.name}</span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setFile(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                  <p className="text-sm text-muted-foreground">Arraste o arquivo .pfx aqui</p>
+                  <label className="mt-2 inline-block">
+                    <span className="text-sm text-teal-600 hover:underline cursor-pointer">ou selecione</span>
+                    <input 
+                      type="file" 
+                      accept=".pfx" 
+                      className="hidden" 
+                      onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </>
+              )}
+            </div>
+
+            <div>
+              <Label>Senha do Certificado</Label>
+              <Input
+                type="password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="Digite a senha do certificado"
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowUpload(false); setFile(null); setSenha(''); }}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleUpload}
+              disabled={!file || !senha || uploadMutation.isPending}
+            >
+              {uploadMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Validando...
+                </>
+              ) : (
+                'Carregar Certificado'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ============================================================================
 // IMPORTACAO/REGRAS FORM
 // ============================================================================
 
@@ -840,6 +1094,8 @@ export default function Settings() {
     switch (activeCategory) {
       case 'entidade':
         return <EntidadeForm />;
+      case 'certificado':
+        return <CertificadoForm />;
       case 'financeiro':
         return <FinanceiroForm />;
       case 'contabilidade':

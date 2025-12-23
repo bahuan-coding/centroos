@@ -8302,6 +8302,193 @@ const patrimonioRouter = router({
 });
 
 // ==================== MAIN ROUTER ====================
+// ==================== MÓDULO H: CERTIFICADO DIGITAL ROUTER ====================
+import forge from 'node-forge';
+import crypto from 'crypto';
+
+const CERT_ENCRYPTION_KEY = process.env.CERTIFICATE_ENCRYPTION_KEY || 'default-dev-key-change-in-prod-32ch';
+
+function encryptData(data: string): string {
+  const key = crypto.scryptSync(CERT_ENCRYPTION_KEY, 'salt', 32);
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  let encrypted = cipher.update(data, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag().toString('hex');
+  return `${iv.toString('hex')}:${authTag}:${encrypted}`;
+}
+
+function decryptData(encryptedData: string): string {
+  const [ivHex, authTagHex, encrypted] = encryptedData.split(':');
+  const key = crypto.scryptSync(CERT_ENCRYPTION_KEY, 'salt', 32);
+  const iv = Buffer.from(ivHex, 'hex');
+  const authTag = Buffer.from(authTagHex, 'hex');
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(authTag);
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
+
+function parsePfxCertificate(pfxBase64: string, password: string) {
+  const pfxDer = forge.util.decode64(pfxBase64);
+  const pfxAsn1 = forge.asn1.fromDer(pfxDer);
+  const p12 = forge.pkcs12.pkcs12FromAsn1(pfxAsn1, password);
+  
+  const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
+  const certBag = certBags[forge.pki.oids.certBag]?.[0];
+  if (!certBag?.cert) throw new Error('Certificado não encontrado no arquivo PFX');
+  
+  const cert = certBag.cert;
+  const subject = cert.subject.attributes.reduce((acc: any, attr: any) => {
+    acc[attr.shortName || attr.name] = attr.value;
+    return acc;
+  }, {});
+  
+  const issuer = cert.issuer.attributes.reduce((acc: any, attr: any) => {
+    acc[attr.shortName || attr.name] = attr.value;
+    return acc;
+  }, {});
+  
+  // Extrai CNPJ do CN ou do OID específico
+  let cnpj = '';
+  const cn = subject.CN || '';
+  const cnpjMatch = cn.match(/(\d{14})/);
+  if (cnpjMatch) cnpj = cnpjMatch[1];
+  
+  return {
+    cnpj,
+    razaoSocial: subject.CN || subject.O || '',
+    validadeInicio: cert.validity.notBefore.toISOString().split('T')[0],
+    validadeFim: cert.validity.notAfter.toISOString().split('T')[0],
+    serialNumber: cert.serialNumber,
+    emissor: issuer.CN || issuer.O || '',
+  };
+}
+
+const certificadoRouter = router({
+  get: protectedProcedure.query(async () => {
+    const db = await getDb();
+    const [cert] = await db.select({
+      id: schema.certificadoDigital.id,
+      tipo: schema.certificadoDigital.tipo,
+      cnpj: schema.certificadoDigital.cnpj,
+      razaoSocial: schema.certificadoDigital.razaoSocial,
+      validadeInicio: schema.certificadoDigital.validadeInicio,
+      validadeFim: schema.certificadoDigital.validadeFim,
+      serialNumber: schema.certificadoDigital.serialNumber,
+      emissor: schema.certificadoDigital.emissor,
+      status: schema.certificadoDigital.status,
+      createdAt: schema.certificadoDigital.createdAt,
+    }).from(schema.certificadoDigital).where(eq(schema.certificadoDigital.status, 'ativo')).limit(1);
+    return cert || null;
+  }),
+
+  upload: adminProcedure
+    .input(z.object({
+      arquivo: z.string(), // base64 do .pfx
+      senha: z.string().min(1),
+      tipo: z.enum(['e_cnpj_a1', 'e_cnpj_a3']).default('e_cnpj_a1'),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      
+      // Valida e extrai metadados do certificado
+      let certInfo;
+      try {
+        certInfo = parsePfxCertificate(input.arquivo, input.senha);
+      } catch (e: any) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: `Erro ao ler certificado: ${e.message}. Verifique a senha.` });
+      }
+      
+      // Verifica validade
+      const hoje = new Date().toISOString().split('T')[0];
+      if (certInfo.validadeFim < hoje) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Certificado expirado.' });
+      }
+      
+      // Criptografa arquivo e senha
+      const arquivoCriptografado = encryptData(input.arquivo);
+      const senhaCriptografada = encryptData(input.senha);
+      const arquivoHash = crypto.createHash('sha256').update(input.arquivo).digest('hex');
+      
+      // Remove certificados antigos ativos
+      await db.update(schema.certificadoDigital)
+        .set({ status: 'revogado', updatedAt: new Date() })
+        .where(eq(schema.certificadoDigital.status, 'ativo'));
+      
+      // Insere novo certificado
+      const [novo] = await db.insert(schema.certificadoDigital).values({
+        tipo: input.tipo,
+        cnpj: certInfo.cnpj,
+        razaoSocial: certInfo.razaoSocial,
+        validadeInicio: certInfo.validadeInicio,
+        validadeFim: certInfo.validadeFim,
+        serialNumber: certInfo.serialNumber,
+        emissor: certInfo.emissor,
+        arquivoCriptografado,
+        senhaCriptografada,
+        arquivoHash,
+        status: 'ativo',
+        createdBy: await getVisitorId(ctx.user.email),
+      }).returning({ id: schema.certificadoDigital.id });
+      
+      // Auditoria
+      await createAuditEvent({
+        ctx,
+        entidadeTipo: 'certificado_digital',
+        entidadeId: novo.id,
+        acao: 'criar',
+        dadosNovos: { cnpj: certInfo.cnpj, razaoSocial: certInfo.razaoSocial, validadeFim: certInfo.validadeFim },
+      });
+      
+      return { success: true, id: novo.id };
+    }),
+
+  delete: adminProcedure
+    .input(z.string().uuid())
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      const [cert] = await db.select().from(schema.certificadoDigital).where(eq(schema.certificadoDigital.id, input));
+      if (!cert) throw new TRPCError({ code: 'NOT_FOUND', message: 'Certificado não encontrado' });
+      
+      await db.delete(schema.certificadoDigital).where(eq(schema.certificadoDigital.id, input));
+      
+      await createAuditEvent({
+        ctx,
+        entidadeTipo: 'certificado_digital',
+        entidadeId: input,
+        acao: 'excluir',
+        dadosAnteriores: { cnpj: cert.cnpj, razaoSocial: cert.razaoSocial },
+      });
+      
+      return { success: true };
+    }),
+
+  validate: protectedProcedure.query(async () => {
+    const db = await getDb();
+    const [cert] = await db.select().from(schema.certificadoDigital).where(eq(schema.certificadoDigital.status, 'ativo')).limit(1);
+    if (!cert) return { valid: false, error: 'Nenhum certificado configurado' };
+    
+    const hoje = new Date().toISOString().split('T')[0];
+    if (cert.validadeFim < hoje) {
+      await db.update(schema.certificadoDigital).set({ status: 'expirado' }).where(eq(schema.certificadoDigital.id, cert.id));
+      return { valid: false, error: 'Certificado expirado' };
+    }
+    
+    // Testa decriptação
+    try {
+      decryptData(cert.arquivoCriptografado);
+      decryptData(cert.senhaCriptografada);
+    } catch {
+      return { valid: false, error: 'Erro ao decriptografar certificado' };
+    }
+    
+    return { valid: true, expiresIn: Math.ceil((new Date(cert.validadeFim).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) };
+  }),
+});
+
+// ==================== MAIN ROUTER ====================
 export const appRouter = router({
   accounts: accountsRouter,
   periods: periodsRouter,
@@ -8339,6 +8526,8 @@ export const appRouter = router({
   aprovacoes: aprovacoesRouter,
   configSistema: configSistemaRouter,
   auditoria: auditoriaRouter,
+  // Módulo H: Integrações Fiscais
+  certificado: certificadoRouter,
 });
 
 export type AppRouter = typeof appRouter;

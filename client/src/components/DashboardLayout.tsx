@@ -1,11 +1,10 @@
 import { Link, useLocation } from 'wouter';
-import { Menu, LogOut, RefreshCw } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-import { OrgSwitcher } from './OrgSwitcher';
 import { getUserEmail, logout } from '@/lib/auth';
-import { clearOrg, getOrg } from '@/lib/org';
+import { getOrg } from '@/lib/org';
 import { toast } from 'sonner';
 import { APP_VERSION } from '@/lib/version';
 import { menuSections } from '@/lib/menu';
@@ -18,11 +17,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     logout();
     toast.success('Logout realizado com sucesso');
     setLocation('/login');
-  };
-
-  const handleSwitchOrg = () => {
-    clearOrg();
-    setLocation('/org-select');
   };
 
   const org = getOrg();
@@ -38,7 +32,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <span className="font-semibold">CentrOS</span>
         </div>
         <div className="flex items-center gap-2">
-          <OrgSwitcher />
+          <span className="text-sm font-medium text-muted-foreground truncate max-w-[120px]">
+            {org?.name}
+          </span>
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
             <Menu className="h-5 w-5" />
           </Button>
@@ -62,11 +58,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <h1 className="font-semibold">CentrOS</h1>
               <p className="text-[10px] text-muted-foreground">Gestão Financeira</p>
             </div>
-          </div>
-
-          {/* Org Switcher Desktop */}
-          <div className="hidden lg:block px-3 py-2 border-b">
-            <OrgSwitcher />
           </div>
 
           {/* Navigation */}
@@ -116,21 +107,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <p className="text-[10px] text-muted-foreground truncate">{org?.name || 'Sem empresa'}</p>
               </div>
             </div>
-            <div className="flex gap-1.5">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1 h-8 text-xs text-muted-foreground"
-                onClick={handleSwitchOrg}
-              >
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                Trocar
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={handleLogout}>
-                <LogOut className="h-3.5 w-3.5 mr-1.5" />
-                Sair
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" className="w-full h-8 text-xs" onClick={handleLogout}>
+              <LogOut className="h-3.5 w-3.5 mr-1.5" />
+              Sair
+            </Button>
             <p className="text-[9px] text-muted-foreground text-center mt-2">v{APP_VERSION}</p>
           </div>
         </div>

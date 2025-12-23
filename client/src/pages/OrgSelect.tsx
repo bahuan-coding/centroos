@@ -79,7 +79,7 @@ export default function OrgSelect() {
       </div>
 
       <p className="text-xs text-muted-foreground mt-12 animate-fade-in stagger-5">
-        Você poderá trocar de empresa a qualquer momento
+        A empresa selecionada ficará ativa durante toda a sessão
       </p>
     </div>
   );

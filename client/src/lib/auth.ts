@@ -10,10 +10,13 @@ export function getUserRole(): string | null {
   return localStorage.getItem('user_role');
 }
 
+import { clearOrgOnLogout } from './org';
+
 export function logout(): void {
   localStorage.removeItem('auth_token');
   localStorage.removeItem('user_email');
   localStorage.removeItem('user_role');
+  clearOrgOnLogout(); // Clear org selection on logout
 }
 
 export function requireAuth(): boolean {
@@ -22,6 +25,8 @@ export function requireAuth(): boolean {
   }
   return true;
 }
+
+
 
 
 

@@ -8488,6 +8488,40 @@ const certificadoRouter = router({
   }),
 });
 
+// ==================== MÓDULO H: NFS-e ROUTER ====================
+import { 
+  listarNfse as listarNfseService, 
+  consultarNfse as consultarNfseService, 
+  validarConexaoNfse 
+} from './integrations/fiscal';
+
+const nfseRouter = router({
+  // Validate NFS-e connection and certificate
+  validar: protectedProcedure.query(async () => {
+    return validarConexaoNfse();
+  }),
+
+  // List NFS-e by period
+  listar: protectedProcedure
+    .input(z.object({
+      cnpjPrestador: z.string().min(14).max(18),
+      dataInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      dataFim: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      pagina: z.number().optional().default(1),
+      tamanhoPagina: z.number().optional().default(50),
+    }))
+    .query(async ({ input }) => {
+      return listarNfseService(input);
+    }),
+
+  // Consult single NFS-e by access key
+  consultar: protectedProcedure
+    .input(z.string().min(44).max(50))
+    .query(async ({ input }) => {
+      return consultarNfseService(input);
+    }),
+});
+
 // ==================== MAIN ROUTER ====================
 export const appRouter = router({
   accounts: accountsRouter,
@@ -8528,6 +8562,7 @@ export const appRouter = router({
   auditoria: auditoriaRouter,
   // Módulo H: Integrações Fiscais
   certificado: certificadoRouter,
+  nfse: nfseRouter,
 });
 
 export type AppRouter = typeof appRouter;

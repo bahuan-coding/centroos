@@ -37,10 +37,18 @@ export function setOrg(orgId: string): Organization | null {
 }
 
 /**
- * Clear the selected organization
+ * Clear the selected organization (internal use only - logout)
+ * Not exported to prevent unauthorized org switching within the app
  */
-export function clearOrg(): void {
+function clearOrg(): void {
   localStorage.removeItem(STORAGE_KEY);
+}
+
+/**
+ * Clear org on logout - the only authorized way to reset org selection
+ */
+export function clearOrgOnLogout(): void {
+  clearOrg();
 }
 
 /**

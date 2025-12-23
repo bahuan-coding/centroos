@@ -8495,6 +8495,11 @@ import {
   validarConexaoNfse,
   importNfseForOrganization,
   importSingleNfse,
+  // São Paulo (Nota Fiscal Paulistana)
+  consultarNFSePeriodo as consultarNFSePeriodoSP,
+  consultarNFSePorNumero as consultarNFSePorNumeroSP,
+  cancelarNFSe as cancelarNFSeSP,
+  validarConexaoSP,
 } from './integrations/fiscal';
 
 const nfseRouter = router({
@@ -8640,6 +8645,120 @@ const nfseRouter = router({
       } as any).returning();
       
       return { success: true, nota };
+    }),
+
+  // ==================== SÃO PAULO (NOTA FISCAL PAULISTANA) ====================
+  
+  // Validar conexão com API de São Paulo
+  spValidar: protectedProcedure.query(async () => {
+    return validarConexaoSP();
+  }),
+
+  // Consultar NFS-e por período (São Paulo)
+  spConsultarPeriodo: protectedProcedure
+    .input(z.object({
+      dataInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      dataFim: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      pagina: z.number().optional().default(1),
+    }))
+    .query(async ({ input }) => {
+      return consultarNFSePeriodoSP(input.dataInicio, input.dataFim, input.pagina);
+    }),
+
+  // Consultar NFS-e por número (São Paulo)
+  spConsultarNota: protectedProcedure
+    .input(z.string().min(1))
+    .query(async ({ input }) => {
+      return consultarNFSePorNumeroSP(input);
+    }),
+
+  // Cancelar NFS-e (São Paulo)
+  spCancelar: protectedProcedure
+    .input(z.string().min(1))
+    .mutation(async ({ input }) => {
+      return cancelarNFSeSP(input);
+    }),
+
+  // Importar NFS-e de São Paulo para o banco de dados
+  spImportar: protectedProcedure
+    .input(z.object({
+      dataInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      dataFim: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const org = ctx.organization;
+      if (!org?.id || !org?.tax_id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Organização não selecionada ou sem CNPJ' });
+      }
+      
+      // Fetch from SP API
+      const result = await consultarNFSePeriodoSP(input.dataInicio, input.dataFim);
+      
+      if (!result.sucesso) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: result.mensagemErro || 'Erro ao consultar NFS-e' });
+      }
+      
+      const db = await getDb();
+      let imported = 0;
+      let skipped = 0;
+      const errors: string[] = [];
+      
+      for (const nota of result.notas) {
+        try {
+          // Generate unique key
+          const chaveAcesso = `SP-${nota.numeroNFe}-${nota.codigoVerificacao}`;
+          
+          // Check if exists
+          const [existing] = await db.select().from(schema.notaFiscal)
+            .where(eq(schema.notaFiscal.chaveAcesso, chaveAcesso)).limit(1);
+          
+          if (existing) {
+            skipped++;
+            continue;
+          }
+          
+          // Insert
+          await db.insert(schema.notaFiscal).values({
+            organizationId: org.id,
+            chaveAcesso,
+            numero: nota.numeroNFe,
+            tipo: 'nfse',
+            dataEmissao: nota.dataEmissao,
+            competencia: nota.dataEmissao.substring(0, 7),
+            valorServico: String(nota.valorServicos),
+            valorLiquido: String(nota.valorServicos - nota.valorDeducoes),
+            valorIss: String(nota.valorISS),
+            aliquotaIss: String(nota.aliquotaServicos),
+            issRetido: nota.issRetido,
+            descricaoServico: nota.discriminacaoServicos,
+            prestadorCnpj: org.tax_id,
+            prestadorRazaoSocial: org.legal_name || org.name,
+            tomadorCpfCnpj: nota.cpfCnpjTomador || null,
+            tomadorRazaoSocial: nota.razaoSocialTomador || null,
+            tomadorEmail: nota.emailTomador || null,
+            pisRetido: String(nota.valorPIS),
+            cofinsRetido: String(nota.valorCOFINS),
+            csllRetido: String(nota.valorCSLL),
+            irrfRetido: String(nota.valorIR),
+            inssRetido: String(nota.valorINSS),
+            status: nota.statusNFe === 'C' ? 'cancelada' : 'normal',
+            importadoEm: new Date(),
+            importadoPor: ctx.user?.id || null,
+          } as any);
+          
+          imported++;
+        } catch (err: any) {
+          errors.push(`Nota ${nota.numeroNFe}: ${err.message}`);
+        }
+      }
+      
+      return {
+        success: true,
+        imported,
+        skipped,
+        total: result.notas.length,
+        errors,
+      };
     }),
 });
 

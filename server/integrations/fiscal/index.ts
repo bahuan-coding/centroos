@@ -32,3 +32,21 @@ export {
   type ImportResult,
 } from './import-nfse';
 
+// NFS-e São Paulo (Nota Fiscal Paulistana)
+export {
+  consultarNFSePeriodo,
+  consultarNFSePorNumero,
+  cancelarNFSe,
+  validarConexaoSP,
+  type NFSeConsultaSP,
+  type NFSeListResultSP,
+} from './nfse-sp';
+
+// SOAP Client utilities
+export {
+  soapRequest,
+  buildSOAPEnvelope,
+  type SOAPRequest,
+  type SOAPResponse,
+} from './soap-client';
+

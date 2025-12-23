@@ -72,3 +72,4 @@ Módulo de controle de acessos, aprovações e trilha de auditoria. Acesso basea
 - Componentes modulares por seção
 - Responsivo com dropdown mobile
 
+

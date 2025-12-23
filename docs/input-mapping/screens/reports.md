@@ -59,3 +59,4 @@
 - Suporte a período fiscal customizado
 - Agendamento de envio automático
 
+

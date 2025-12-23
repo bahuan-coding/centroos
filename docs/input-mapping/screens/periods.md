@@ -73,3 +73,4 @@ Detalhes do período selecionado:
 - URL query param `?selected=ID` para deep linking
 - Mobile: overlay para detalhes
 
+

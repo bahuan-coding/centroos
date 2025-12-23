@@ -890,3 +890,4 @@ NN                          = Not Null
 | users → user_roles | 1:N | user_roles.user_id |
 | roles → user_roles | 1:N | user_roles.role_id |
 
+

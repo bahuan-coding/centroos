@@ -64,3 +64,4 @@
 - Período: apenas períodos abertos para novos lançamentos
 - Badge NFC para identificar recursos da Nota Fiscal Cidadã
 
+

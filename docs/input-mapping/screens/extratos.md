@@ -31,3 +31,4 @@
 - Tela read-only para visualização de movimentações
 - Usada internamente pelo fluxo de contas financeiras
 
+

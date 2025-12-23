@@ -69,3 +69,4 @@ Tela principal do módulo contábil. Exibe demonstrativos e permite navegação 
 - Competência vs Caixa: sistema suporta ambos regimes
 - Exportação PDF/Excel disponível
 
+

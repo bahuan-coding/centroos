@@ -603,3 +603,4 @@
 | `chart_of_accounts` | `balance_type` | enum | Natureza saldo |
 | `chart_of_accounts` | `allows_entries` | boolean | Controle analítica |
 
+

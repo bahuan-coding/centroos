@@ -340,3 +340,4 @@
 | Q7 | Campos espíritas | BAIXA | BAIXO | Product Owner | - |
 | Q9 | Estratégia legacy | ALTA | ALTO | Tech Lead | - |
 
+

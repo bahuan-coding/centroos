@@ -44,3 +44,4 @@
 - Matching por valor exato e data aproximada
 - Indicador visual de divergências
 
+

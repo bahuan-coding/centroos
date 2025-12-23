@@ -28,3 +28,4 @@
 - Autenticação é mock (sem backend real)
 - Aceita qualquer email/senha não vazios
 
+

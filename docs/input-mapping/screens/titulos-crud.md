@@ -63,3 +63,4 @@ Mesmas queries de `titulos.*`
 - Suporta seleção múltipla para baixa em lote
 - Filtros rápidos por status de vencimento
 
+

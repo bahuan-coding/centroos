@@ -387,3 +387,4 @@ grupo_estudo_id uuid
 1. Mover campos espíritas de `pessoa` para `ext_center_mediumship_profiles`
 2. Criar namespace de extensões: `ext_center_*`, `ext_fintech_*`
 
+

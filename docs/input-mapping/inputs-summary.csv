@@ -98,3 +98,4 @@ ModuloE,/modulo-e,ModuloE.tsx,nome,text,Sim,,"min 3 chars",centro/projeto/fundo.
 ModuloE,/modulo-e,ModuloE.tsx,tipo,select,Sim,,restrito/irrestrito,fundo.tipo
 ModuloE,/modulo-e,ModuloE.tsx,ativo,switch,Não,true,,centro/fundo.ativo
 
+

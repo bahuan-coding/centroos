@@ -63,3 +63,4 @@ type TipoConta = 'caixa' | 'conta_corrente' | 'poupanca' | 'aplicacao' | 'cartao
 - Banner de rascunho quando há draft no localStorage
 - Saldo calculado automaticamente baseado em movimentações
 
+

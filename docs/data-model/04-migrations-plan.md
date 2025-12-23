@@ -1912,3 +1912,4 @@ DROP TYPE IF EXISTS organization_type;
 - [ ] Medir tempo de execução
 - [ ] Documentar qualquer erro
 
+

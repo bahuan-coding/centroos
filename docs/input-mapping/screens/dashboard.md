@@ -33,3 +33,4 @@
 - Período exibido: mês atual (baseado em data de competência)
 - Gráficos: Chart.js (Line, Doughnut)
 
+

@@ -871,3 +871,4 @@ CREATE INDEX idx_coa_analytical_only ON chart_of_accounts(organization_id, code)
 | `organization_settings` | `organizations` | Expandir campos |
 | `pessoa` | `persons` + `ext_center_mediumship_profiles` | Separar campos espíritas |
 
+

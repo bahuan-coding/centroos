@@ -119,3 +119,4 @@ Lista de consumos pendentes de aprovação.
 - Atalho `/` para busca, `Esc` para fechar
 - Health stats: % ativos, com saldo, em andamento
 
+

@@ -53,3 +53,4 @@
 - Detecção automática de encoding
 - Log de erros por linha
 
+

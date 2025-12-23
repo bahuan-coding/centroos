@@ -22,6 +22,8 @@ O objetivo é mapear todas as APIs e serviços oficiais que permitem automação
 
 ## Estrutura da Documentação
 
+### Documentos Base
+
 | Arquivo | Conteúdo |
 |---------|----------|
 | [01-panorama-rfb-e-autenticacao-icp.md](01-panorama-rfb-e-autenticacao-icp.md) | ICP-Brasil, certificados digitais, e-CNPJ, procurações e-CAC |
@@ -30,6 +32,19 @@ O objetivo é mapear todas as APIs e serviços oficiais que permitem automação
 | [04-plano-implementacao-por-ondas.md](04-plano-implementacao-por-ondas.md) | Roadmap P0/P1/P2 com critérios de aceite |
 | [05-riscos-conformidade-lgpd-sigilo.md](05-riscos-conformidade-lgpd-sigilo.md) | LGPD, sigilo fiscal, auditoria e retenção de dados |
 | [06-checklist-homologacao-e-testes.md](06-checklist-homologacao-e-testes.md) | Como testar integrações sem produção |
+
+### Templates e Especificações
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| [TEMPLATE-INTEGRACAO.md](TEMPLATE-INTEGRACAO.md) | **Template universal** para documentar novas integrações |
+| [SPEC-NFSE-NACIONAL.md](SPEC-NFSE-NACIONAL.md) | **Especificação completa** da integração piloto NFS-e Nacional |
+
+### Documentos Relacionados
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| [../architecture/menu-structure.md](../architecture/menu-structure.md) | Nova estrutura do menu com seção Integrações (futuro) |
 
 ---
 
@@ -135,9 +150,30 @@ server/
 
 ## Próximos Passos
 
+### Para Entender o Contexto
 1. Ler [01-panorama-rfb-e-autenticacao-icp.md](01-panorama-rfb-e-autenticacao-icp.md) para entender certificação digital
 2. Consultar [02-catalogo-apis-e-servicos.md](02-catalogo-apis-e-servicos.md) para detalhes técnicos
-3. Seguir [04-plano-implementacao-por-ondas.md](04-plano-implementacao-por-ondas.md) para execução
+3. Seguir [04-plano-implementacao-por-ondas.md](04-plano-implementacao-por-ondas.md) para roadmap
+
+### Para Implementar uma Nova Integração
+1. Copiar [TEMPLATE-INTEGRACAO.md](TEMPLATE-INTEGRACAO.md) para `SPEC-[NOME].md`
+2. Preencher todas as seções obrigatórias
+3. Usar [SPEC-NFSE-NACIONAL.md](SPEC-NFSE-NACIONAL.md) como referência
+
+### Para a Primeira Integração (NFS-e Nacional)
+1. Revisar [SPEC-NFSE-NACIONAL.md](SPEC-NFSE-NACIONAL.md) - especificação completa
+2. Verificar [06-checklist-homologacao-e-testes.md](06-checklist-homologacao-e-testes.md) antes de produção
+
+---
+
+## Status das Integrações
+
+| Integração | Status | Especificação |
+|------------|--------|---------------|
+| **NFS-e Nacional** | 📋 Especificada | [SPEC-NFSE-NACIONAL.md](SPEC-NFSE-NACIONAL.md) |
+| Consulta CNPJ (Serpro) | ⏳ Aguardando | - |
+| NFS-e Paulistana | ⏳ Aguardando | - |
+| NF-e SEFAZ | ⏳ Aguardando | - |
 
 ---
 

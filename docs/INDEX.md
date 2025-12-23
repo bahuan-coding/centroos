@@ -94,6 +94,8 @@ Mapeamento de campos por tela do sistema.
 | [system.md](architecture/system.md) | Stack técnica (Vite, React, tRPC, Drizzle, Neon) |
 | [org-selection.md](architecture/org-selection.md) | Sistema de seleção de organização |
 
+**Menu:** Implementado em [`client/src/lib/menu.ts`](../client/src/lib/menu.ts)
+
 ## Business
 
 | Arquivo | Descrição |
@@ -119,6 +121,8 @@ Mapeamento de campos por tela do sistema.
 
 Documentação completa para integrações com órgãos fiscais brasileiros.
 
+### Documentos Base
+
 | Arquivo | Descrição |
 |---------|-----------|
 | [README.md](integracoes_fiscais/README.md) | Visão geral das integrações |
@@ -128,6 +132,13 @@ Documentação completa para integrações com órgãos fiscais brasileiros.
 | [04-plano-implementacao-por-ondas.md](integracoes_fiscais/04-plano-implementacao-por-ondas.md) | Roadmap P0/P1/P2 |
 | [05-riscos-conformidade-lgpd-sigilo.md](integracoes_fiscais/05-riscos-conformidade-lgpd-sigilo.md) | LGPD, sigilo fiscal |
 | [06-checklist-homologacao-e-testes.md](integracoes_fiscais/06-checklist-homologacao-e-testes.md) | Testes em homologação |
+
+### Templates e Especificações
+
+| Arquivo | Descrição |
+|---------|-----------|
+| [TEMPLATE-INTEGRACAO.md](integracoes_fiscais/TEMPLATE-INTEGRACAO.md) | **Template universal** para novas integrações |
+| [SPEC-NFSE-NACIONAL.md](integracoes_fiscais/SPEC-NFSE-NACIONAL.md) | **NFS-e Nacional** - Especificação completa (P0) |
 
 ---
 

@@ -66,8 +66,10 @@ MÓDULOS:
 
 ## Fontes de Referência
 
-- **Schema atual**: Neon project `gentle-salad-37180890`
+- **Schema atual**: Neon project `centroos`
 - **Mapeamento de inputs**: `/docs/input-mapping/`
 - **Schema Drizzle**: `/drizzle/schema.ts`
+
+
 
 

@@ -1,7 +1,7 @@
 # Diagnóstico do Schema Atual - CentrOS
 
 > **Data**: 2025-12-23  
-> **Projeto Neon**: `gentle-salad-37180890`  
+> **Projeto Neon**: `centroos`  
 > **Database**: `neondb`  
 > **PostgreSQL**: 17
 
@@ -386,5 +386,7 @@ grupo_estudo_id uuid
 
 1. Mover campos espíritas de `pessoa` para `ext_center_mediumship_profiles`
 2. Criar namespace de extensões: `ext_center_*`, `ext_fintech_*`
+
+
 
 

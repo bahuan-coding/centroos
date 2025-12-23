@@ -1,5 +1,25 @@
 # Regras de Negócio e Fluxos de Trabalho - Sistema de Gestão Financeira
 
+> **Atualizado:** Dezembro 2024 - Schema modular (Módulos A-G)
+
+## Arquitetura de Dados
+
+O sistema utiliza um schema modular organizado em 7 módulos funcionais:
+
+| Módulo | Nome | Tabelas Principais |
+|--------|------|-------------------|
+| **A** | Identidades | `pessoa`, `associado`, `pessoaPapel`, `consentimentoLgpd` |
+| **B** | Dinheiro/Caixa | `contaFinanceira`, `extratoBancario`, `extratoLinha`, `conciliacao` |
+| **C** | Contas a Pagar/Receber | `titulo`, `tituloBaixa`, `anexo` |
+| **D** | Contabilidade | `planoContas`, `periodoContabil`, `lancamentoContabil`, `lancamentoLinha` |
+| **E** | Projetos e Fundos | `centroCusto`, `projeto`, `fundo`, `fundoRegra` |
+| **F** | Patrimônio | `bemPatrimonial`, `bemDepreciacao`, `bemTransferencia` |
+| **G** | Governança | `usuario`, `papel`, `permissao`, `aprovacao`, `eventoAuditoria` |
+
+**Schema completo:** [drizzle/schema.ts](../../drizzle/schema.ts)
+
+---
+
 ## 1. REGRAS FUNDAMENTAIS DO SISTEMA
 
 ### 1.1 Regime Contábil
@@ -10,7 +30,7 @@ O sistema opera exclusivamente em **regime de competência**, conforme exigido p
 
 **Implicações Práticas:**
 - Lançamentos são registrados pela **data da transação**, não pela data de pagamento
-- Cada lançamento deve estar associado a um **período contábil específico** (mês/ano)
+- Cada lançamento deve estar associado a um **período contábil específico** (mês/ano) via tabela `periodoContabil`
 - Períodos são **mensais** e devem ser gerenciados sequencialmente
 - Não é permitido criar lançamentos em períodos futuros
 - Lançamentos em períodos fechados requerem reabertura formal
@@ -18,13 +38,13 @@ O sistema opera exclusivamente em **regime de competência**, conforme exigido p
 **Validação no Sistema:**
 ```typescript
 // Regra: Data de transação não pode ser futura
-if (transactionDate > new Date()) {
+if (dataLancamento > new Date()) {
   throw new Error("Não é permitido criar lançamentos com data futura");
 }
 
-// Regra: Período deve estar aberto
-const period = await getPeriodByDate(transactionDate);
-if (period.status !== "open") {
+// Regra: Período deve estar aberto (tabela: periodoContabil)
+const periodo = await getPeriodoByDate(dataLancamento);
+if (periodo.status !== "aberto") {
   throw new Error("O período está fechado. Reabra o período para criar lançamentos");
 }
 ```
@@ -70,15 +90,19 @@ if (parentId) {
 
 ### 1.3 Tipos de Conta e Natureza
 
-**Classificação Contábil:**
+**Classificação Contábil (tabela `planoContas`, enum `contaTipoEnum`):**
 
 | Tipo | Natureza | Saldo Normal | Uso |
 |------|----------|--------------|-----|
-| **asset** (Ativo) | Devedora | Débito | Bens e direitos |
-| **liability** (Passivo) | Credora | Crédito | Obrigações |
-| **revenue** (Receita) | Credora | Crédito | Entradas de recursos |
-| **expense** (Despesa) | Devedora | Débito | Saídas de recursos |
-| **fixed_asset** (Imobilizado) | Devedora | Débito | Investimentos permanentes |
+| **ativo** | Devedora | Débito | Bens e direitos |
+| **passivo** | Credora | Crédito | Obrigações |
+| **patrimonio_social** | Credora | Crédito | Patrimônio líquido |
+| **receita** | Credora | Crédito | Entradas de recursos |
+| **despesa** | Devedora | Débito | Saídas de recursos |
+
+**Enums relacionados:**
+- `naturezaSaldoEnum`: `devedora`, `credora`
+- `classificacaoContaEnum`: `sintetica`, `analitica`
 
 **Regras de Lançamento:**
 - **Receitas**: Sempre **crédito** (aumenta receita)
@@ -106,21 +130,24 @@ function suggestEntryType(accountType: AccountType): "debit" | "credit" {
 
 ### 1.4 Períodos Contábeis
 
+**Tabela:** `periodoContabil` (Módulo D - Contabilidade)
+
 **Ciclo de Vida do Período:**
 
 ```
-[Criado] → [Aberto] → [Em Revisão] → [Fechado]
+[Criado] → [aberto] → [em_revisao] → [fechado]
                 ↑___________|
-                (Reabertura com justificativa)
+                (Reabertura → [reaberto])
 ```
 
-**Estados:**
+**Estados (enum `periodoStatusEnum`):**
 
 | Status | Descrição | Ações Permitidas |
 |--------|-----------|------------------|
-| **open** | Período aberto para lançamentos | Criar, editar, excluir lançamentos |
-| **under_review** | Período em processo de fechamento | Apenas visualização e ajustes finais |
-| **closed** | Período fechado | Apenas visualização (reabertura requer admin) |
+| **aberto** | Período aberto para lançamentos | Criar, editar, excluir lançamentos |
+| **em_revisao** | Período em processo de fechamento | Apenas visualização e ajustes finais |
+| **fechado** | Período fechado | Apenas visualização (reabertura requer admin) |
+| **reaberto** | Período reaberto após fechamento | Igual a aberto, com auditoria |
 
 **Regras de Fechamento:**
 
@@ -142,52 +169,35 @@ function suggestEntryType(accountType: AccountType): "debit" | "credit" {
 
 **Validação:**
 ```typescript
-async function closePeriod(periodId: number, userId: number, closingBalance: number, notes?: string) {
-  const period = await getPeriodById(periodId);
+async function fecharPeriodo(periodoId: string, usuarioId: string, observacoes?: string) {
+  const periodo = await getPeriodoById(periodoId);
   
   // Validação: Período já fechado
-  if (period.status === "closed") {
+  if (periodo.status === "fechado") {
     throw new Error("Período já está fechado");
   }
   
-  // Validação: Verificar lançamentos não classificados
-  const unclassified = await getUnclassifiedEntries(periodId);
-  if (unclassified.length > 0) {
-    throw new Error(`Existem ${unclassified.length} lançamentos não classificados`);
+  // Validação: Verificar lançamentos pendentes
+  const lancamentosPendentes = await getLancamentosRascunho(periodoId);
+  if (lancamentosPendentes.length > 0) {
+    throw new Error(`Existem ${lancamentosPendentes.length} lançamentos em rascunho`);
   }
   
-  // Calcular totais
-  const revenues = await sumEntries(periodId, "revenue");
-  const expenses = await sumEntries(periodId, "expense");
-  const balance = revenues - expenses;
-  
-  // Atualizar período
-  await updatePeriod(periodId, {
-    status: "closed",
-    closingBalance,
-    closedBy: userId,
-    closedAt: new Date(),
-    notes,
+  // Atualizar período (tabela: periodoContabil)
+  await updatePeriodo(periodoId, {
+    status: "fechado",
+    fechadoPor: usuarioId,
+    fechadoEm: new Date(),
+    observacoes,
   });
   
-  // Criar próximo período com saldo de abertura
-  const nextMonth = period.month === 12 ? 1 : period.month + 1;
-  const nextYear = period.month === 12 ? period.year + 1 : period.year;
-  
-  await createPeriod({
-    month: nextMonth,
-    year: nextYear,
-    openingBalance: closingBalance,
-    status: "open",
-  });
-  
-  // Auditoria
-  await createAuditLog({
-    userId,
-    entityType: "period",
-    entityId: periodId,
-    action: "close",
-    newValues: { status: "closed", closingBalance, notes },
+  // Auditoria (tabela: eventoAuditoria)
+  await createEventoAuditoria({
+    usuarioId,
+    entidadeTipo: "periodo_contabil",
+    entidadeId: periodoId,
+    acao: "fechar",
+    dadosNovos: { status: "fechado", observacoes },
   });
 }
 ```
@@ -1182,14 +1192,19 @@ async function validateAccountCodeUnique(code: string, excludeId?: number): Prom
 
 **Todas as operações críticas devem ser registradas:**
 
-| Entidade | Ações Auditadas | Informações Registradas |
-|----------|-----------------|-------------------------|
-| **Entry** | create, update, delete | Valores antigos e novos, usuário, timestamp |
-| **Account** | create, update, delete | Código, nome, tipo, hierarquia |
-| **Period** | create, close, reopen | Status, saldo, usuário que fechou |
-| **BankImport** | create, process, complete | Arquivo, transações, classificações |
-| **ClassificationRule** | create, update, delete | Pattern, conta, prioridade |
-| **Settings** | update | Configurações alteradas |
+| Entidade | Tabela | Ações Auditadas |
+|----------|--------|-----------------|
+| **Lançamento Contábil** | `lancamentoContabil` | criar, atualizar, excluir, estornar |
+| **Plano de Contas** | `planoContas` | criar, atualizar, excluir |
+| **Período Contábil** | `periodoContabil` | criar, fechar, reabrir |
+| **Extrato Bancário** | `extratoBancario` | criar, processar, concluir |
+| **Título** | `titulo` | criar, atualizar, aprovar, baixar, cancelar |
+| **Pessoa** | `pessoa` | criar, atualizar, excluir |
+| **Bem Patrimonial** | `bemPatrimonial` | criar, atualizar, baixar, transferir |
+| **Configurações** | `configuracaoSistema` | atualizar |
+
+**Tabela de Auditoria:** `eventoAuditoria` (Módulo G - Governança)
+**Enum de Ações:** `auditoriaAcaoEnum` - `criar`, `atualizar`, `excluir`, `visualizar`, `exportar`, `fechar`, `reabrir`, `aprovar`, `rejeitar`
 
 ### 5.2 Estrutura do Log
 
@@ -1428,7 +1443,44 @@ async function deleteEntry(entryId: number, userId: number): Promise<void> {
 
 ---
 
+## Referência de Tabelas por Módulo
+
+### Módulo A - Identidades
+- `pessoa`, `pessoaDocumento`, `pessoaContato`, `pessoaEndereco`
+- `associado`, `associadoHistorico`
+- `consentimentoLgpd`, `grupoEstudo`
+- `pessoaPapel`, `captadorDoacao`, `administradorFinanceiro`
+
+### Módulo B - Dinheiro/Caixa
+- `contaFinanceira`
+- `extratoBancario`, `extratoLinha`
+- `conciliacao`
+
+### Módulo C - Contas a Pagar/Receber
+- `titulo`, `tituloBaixa`
+- `anexo`
+
+### Módulo D - Contabilidade
+- `planoContas`
+- `periodoContabil`
+- `lancamentoContabil`, `lancamentoLinha`
+- `saldoContaPeriodo`
+
+### Módulo E - Projetos e Fundos
+- `centroCusto`, `projeto`
+- `fundo`, `fundoRegra`, `fundoAlocacao`, `fundoConsumo`
+
+### Módulo F - Patrimônio
+- `bemPatrimonial`, `bemDepreciacao`, `bemTransferencia`
+
+### Módulo G - Governança
+- `usuario`, `papel`, `permissao`, `papelPermissao`, `usuarioPapel`
+- `aprovacao`, `eventoAuditoria`
+- `configuracaoSistema`
+
+---
+
 **Documento elaborado em:** Dezembro 2024  
-**Versão:** 1.0  
-**Autor:** Manus AI  
-**Base Normativa:** ITG 2002 (R1), NBC T-10.19, Legislação NFC
+**Última atualização:** Dezembro 2024 (Schema modular A-G)  
+**Base Normativa:** ITG 2002 (R1), NBC T-10.19, Legislação NFC  
+**Schema:** [drizzle/schema.ts](../../drizzle/schema.ts)

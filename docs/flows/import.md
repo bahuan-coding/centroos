@@ -1,153 +1,127 @@
 # Guia de Importação e Classificação Automática de Extratos Bancários
 
+> **Atualizado:** Dezembro 2024  
+> **Módulo:** B - Dinheiro/Caixa
+
 ## 1. VISÃO GERAL
 
 ### 1.1 Objetivo
 
-O módulo de importação automatiza a extração de transações de extratos bancários em diferentes formatos (PDF, CSV, OFX) e sugere classificações contábeis baseadas em regras e aprendizado de máquina, reduzindo drasticamente o trabalho manual de lançamento.
+O módulo de importação automatiza a extração de transações de extratos bancários em diferentes formatos (CSV, OFX, TXT) e sugere classificações contábeis baseadas em regras, reduzindo o trabalho manual de lançamento.
 
 **Benefícios:**
 - **Economia de tempo**: Importação de dezenas de transações em minutos
 - **Redução de erros**: Eliminação de digitação manual
 - **Consistência**: Classificação padronizada baseada em regras
 - **Rastreabilidade**: Vínculo direto entre extrato e lançamentos
-- **Aprendizado**: Sistema aprende com classificações manuais
 
-### 1.2 Bancos Suportados
+### 1.2 Arquitetura de Parsers
 
-| Banco | Formatos | Status | Observações |
-|-------|----------|--------|-------------|
-| **Banco do Brasil** | PDF, CSV, OFX | ✅ Implementado | Parser específico para layout BB |
-| **Caixa Econômica Federal** | PDF, CSV | ✅ Implementado | Parser específico para layout CEF |
-| **Outros Bancos** | CSV, OFX | ⚠️ Genérico | Parser genérico, pode requerer ajustes |
+**Localização:** `server/parsers/`
 
-### 1.3 Fluxo Geral
+| Arquivo | Descrição |
+|---------|-----------|
+| `index.ts` | Entry point - função `parseStatement(buffer, fileType)` |
+| `types.ts` | Interfaces `ParsedTransaction` e `ParseResult` |
+| `csv-parser.ts` | Parser para arquivos CSV |
+| `ofx-parser.ts` | Parser para arquivos OFX (padrão bancário) |
+| `txt-parser.ts` | Parser para arquivos TXT |
+
+### 1.3 Formatos Suportados
+
+| Formato | Extensão | Status | Observações |
+|---------|----------|--------|-------------|
+| **OFX** | `.ofx` | ✅ Recomendado | Padrão Open Financial Exchange |
+| **CSV** | `.csv` | ✅ Implementado | Parser genérico com detecção de colunas |
+| **TXT** | `.txt` | ✅ Implementado | Parser para extratos em texto |
+
+### 1.4 Tabelas do Schema
+
+| Tabela | Descrição |
+|--------|-----------|
+| `extratoBancario` | Arquivo importado com metadados |
+| `extratoLinha` | Linhas individuais do extrato |
+| `conciliacao` | Vínculo entre linha e título/lançamento |
+
+### 1.5 Fluxo Geral
 
 ```
-Upload → Parsing → Detecção de Duplicatas → Classificação Automática → Revisão Manual → Criação de Lançamentos
+Upload → Parsing → Detecção de Duplicatas → Classificação → Revisão Manual → Conciliação
 ```
+
+**Rota do Frontend:** `/import`
 
 ---
 
 ## 2. FORMATOS DE ARQUIVO
 
-### 2.1 PDF (Banco do Brasil e Caixa)
+### 2.1 Tipos de Dados
 
-**Características:**
-- Formato mais comum para extratos bancários
-- Requer OCR ou parsing de texto estruturado
-- Layout específico por banco
-- Pode conter múltiplas páginas
-
-**Estrutura Típica - Banco do Brasil:**
-```
-BANCO DO BRASIL S.A.
-Agência: 1234-5  Conta: 12345-6
-
-Extrato de Conta Corrente
-Período: 01/12/2024 a 31/12/2024
-
-Data        Histórico                           Valor (R$)    Saldo (R$)
-15/12/2024  PIX RECEBIDO - JOAO SILVA           500,00 C      5.500,00
-14/12/2024  DEBITO AUTOMATICO - CEMIG           250,00 D      5.000,00
-13/12/2024  TRANSFERENCIA RECEBIDA              1.200,00 C    5.250,00
-            NOTA FISCAL CIDADA
-12/12/2024  TARIFA BANCARIA                     15,00 D       4.050,00
-```
-
-**Parsing Strategy:**
-1. Identificar seção de transações (regex patterns)
-2. Extrair linhas de transação
-3. Parsear cada linha: data, descrição, valor, tipo (C/D)
-4. Calcular saldo se não fornecido
-5. Validar consistência de saldos
-
-**Implementação:**
+**Interface ParsedTransaction (`server/parsers/types.ts`):**
 ```typescript
-// server/parsers/banco-brasil-pdf.ts
-import pdf from "pdf-parse";
-
-interface Transaction {
+export interface ParsedTransaction {
   date: Date;
   description: string;
   amountCents: number;
-  type: "credit" | "debit";
+  type: 'credit' | 'debit';
   balance?: number;
+  fitId?: string;  // Identificador único do banco (OFX)
 }
 
-export async function parseBancoBrasilPDF(fileBuffer: Buffer): Promise<Transaction[]> {
-  // Extrair texto do PDF
-  const data = await pdf(fileBuffer);
-  const text = data.text;
-  
-  // Identificar seção de transações
-  const transactionSection = extractTransactionSection(text);
-  
-  // Parsear linhas
-  const lines = transactionSection.split("\n");
-  const transactions: Transaction[] = [];
-  
-  for (const line of lines) {
-    const transaction = parseTransactionLine(line);
-    if (transaction) {
-      transactions.push(transaction);
-    }
+export interface ParseResult {
+  transactions: ParsedTransaction[];
+  startDate?: Date;
+  endDate?: Date;
+  bank?: string;
+  account?: string;
+}
+```
+
+**Entry Point (`server/parsers/index.ts`):**
+```typescript
+export async function parseStatement(buffer: Buffer, fileType: string): Promise<ParseResult> {
+  switch (fileType.toLowerCase()) {
+    case 'ofx':
+      return parseOFX(buffer);
+    case 'csv':
+      return parseCSV(buffer);
+    case 'txt':
+      return parseTXT(buffer);
+    default:
+      throw new Error(`Formato não suportado: ${fileType}. Use CSV, OFX ou TXT.`);
   }
-  
-  return transactions;
 }
+```
 
-function parseTransactionLine(line: string): Transaction | null {
-  // Regex para linha de transação BB
-  // Formato: DD/MM/YYYY  DESCRICAO...  VALOR,CC X  SALDO,CC
-  const regex = /(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([\d.]+,\d{2})\s+([CD])\s+([\d.]+,\d{2})/;
-  
-  const match = line.match(regex);
-  if (!match) return null;
-  
-  const [, dateStr, description, valueStr, typeChar, balanceStr] = match;
-  
-  // Parsear data
-  const [day, month, year] = dateStr.split("/").map(Number);
-  const date = new Date(year, month - 1, day);
-  
-  // Parsear valor (converter de "1.234,56" para centavos)
-  const value = parseFloat(valueStr.replace(/\./g, "").replace(",", "."));
-  const amountCents = Math.round(value * 100);
-  
-  // Parsear saldo
-  const balance = parseFloat(balanceStr.replace(/\./g, "").replace(",", "."));
-  
-  // Tipo
-  const type = typeChar === "C" ? "credit" : "debit";
-  
-  return {
-    date,
-    description: description.trim(),
-    amountCents,
-    type,
-    balance: Math.round(balance * 100),
-  };
-}
+### 2.2 OFX (Recomendado)
 
-function extractTransactionSection(text: string): string {
-  // Identificar início da seção de transações
-  const startMarker = /Data\s+Histórico\s+Valor.*Saldo/i;
-  const endMarker = /Saldo Final|Total de Lançamentos/i;
-  
-  const startMatch = text.search(startMarker);
-  const endMatch = text.search(endMarker);
-  
-  if (startMatch === -1) {
-    throw new Error("Não foi possível identificar a seção de transações");
-  }
-  
-  const section = text.substring(
-    startMatch,
-    endMatch === -1 ? text.length : endMatch
-  );
-  
-  return section;
+**Características:**
+- Padrão Open Financial Exchange
+- Formato mais confiável e estruturado
+- Contém metadados do banco e conta
+- Identificador único por transação (FITID)
+
+**Arquivo:** `server/parsers/ofx-parser.ts`
+
+### 2.3 CSV
+
+**Características:**
+- Formato genérico exportado por diversos bancos
+- Requer detecção de colunas
+- Separadores: vírgula, ponto-e-vírgula, tab
+
+**Arquivo:** `server/parsers/csv-parser.ts`
+
+### 2.4 TXT
+
+**Características:**
+- Extratos em texto plano
+- Parsing baseado em padrões de linha
+- Menos confiável que OFX
+
+**Arquivo:** `server/parsers/txt-parser.ts`
+
+### 2.5 Exemplo de Parsing (Conceitual)
 }
 ```
 

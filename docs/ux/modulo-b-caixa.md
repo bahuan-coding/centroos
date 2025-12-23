@@ -1,8 +1,31 @@
 # UX Specification - Módulo B: Caixa, Bancos e Conciliação
 
-> **Versão:** 1.0  
-> **Data:** Dezembro 2025  
-> **Status:** Aprovado para implementação
+> **Versão:** 2.0  
+> **Data:** Dezembro 2024  
+> **Status:** Implementado
+
+---
+
+## Schema de Dados (Módulo B)
+
+| Tabela | Descrição | Campos Principais |
+|--------|-----------|-------------------|
+| `contaFinanceira` | Contas bancárias e caixa | `tipo`, `nome`, `bancoCodigo`, `agencia`, `contaNumero`, `pixChave`, `saldoInicial` |
+| `extratoBancario` | Arquivos importados | `arquivoNome`, `arquivoTipo`, `status`, `dataInicio`, `dataFim`, `totalLinhas` |
+| `extratoLinha` | Linhas do extrato | `dataMovimento`, `tipo`, `valor`, `descricaoOriginal`, `status` |
+| `conciliacao` | Vínculos de conciliação | `tipoVinculo`, `tituloId`, `lancamentoId`, `metodo`, `confianca` |
+
+**Enums relevantes:**
+- `contaFinanceiraTipoEnum`: `caixa`, `conta_corrente`, `poupanca`, `aplicacao`, `cartao`
+- `extratoStatusEnum`: `pendente`, `processando`, `processado`, `erro`
+- `linhaExtratoStatusEnum`: `pendente`, `conciliado`, `ignorado`, `duplicado`
+- `conciliacaoMetodoEnum`: `automatico`, `manual`, `sugerido`
+
+**Rotas do Frontend:**
+- `/contas` - Lista de contas financeiras
+- `/extratos` - Lista de extratos
+- `/conciliacao` - Conciliação bancária
+- `/import` - Importar extrato
 
 ---
 

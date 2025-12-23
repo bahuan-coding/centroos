@@ -1,4 +1,44 @@
-# UX Design Guide - Sistema de Gestão Financeira para Centros Espíritas
+# UX Design Guide - CentrOS
+
+> **Sistema de Gestão Financeira Multi-Tenant**  
+> Atualizado: Dezembro 2024
+
+## Arquitetura de Navegação
+
+O sistema utiliza um layout com sidebar fixa e suporte a múltiplas organizações (multi-tenant).
+
+**Componentes principais:**
+- `DashboardLayout` - Layout principal com sidebar ([client/src/components/DashboardLayout.tsx](../../client/src/components/DashboardLayout.tsx))
+- `OrgSwitcher` - Seletor de organização ([client/src/components/OrgSwitcher.tsx](../../client/src/components/OrgSwitcher.tsx))
+
+**Rotas do Sistema:**
+
+| Rota | Página | Módulo | Ícone |
+|------|--------|--------|-------|
+| `/` | Dashboard | Geral | `LayoutDashboard` |
+| `/pessoas` | Pessoas | A - Identidades | `Users` |
+| `/contas` | Contas Financeiras | B - Dinheiro | `Building2` |
+| `/pagar-receber` | Títulos CRUD | C - Contas | `Receipt` |
+| `/titulos` | Lista de Títulos | C - Contas | `TrendingUp` |
+| `/contabilidade` | Lançamentos Contábeis | D - Contabilidade | `BookOpen` |
+| `/accounts` | Plano de Contas | D - Contabilidade | `FolderTree` |
+| `/patrimonio` | Bens Patrimoniais | F - Patrimônio | `Boxes` |
+| `/projetos-fundos` | Projetos e Fundos | E - Projetos | `Layers` |
+| `/periods` | Períodos Contábeis | D - Contabilidade | `Calendar` |
+| `/conciliacao` | Conciliação Bancária | B - Dinheiro | `ArrowLeftRight` |
+| `/import` | Importar Extrato | B - Dinheiro | `Upload` |
+| `/reports` | Relatórios | Geral | `BarChart3` |
+| `/governanca` | Governança | G - Governança | `Shield` |
+| `/settings` | Configurações | Geral | `Settings` |
+
+**Fluxo de Autenticação e Organização:**
+```
+[Login] → [OrgSelect] → [Dashboard]
+              ↓
+        [OrgSwitcher] ← Troca de empresa a qualquer momento
+```
+
+---
 
 ## 1. PRINCÍPIOS DE DESIGN
 
@@ -231,16 +271,30 @@ O sistema deve ser **didático, transparente e acessível**, refletindo os valor
 - Active state destacado
 - Agrupamento por categoria
 
-**Itens de Navegação:**
+**Itens de Navegação (conforme DashboardLayout.tsx):**
 ```
-📊 Dashboard
-📁 Plano de Contas
-📝 Lançamentos
-📅 Períodos
-📤 Importar Extrato
-📊 Relatórios
-⚙️ Configurações
+📊 Dashboard          → /
+👥 Pessoas            → /pessoas
+🏦 Contas Financeiras → /contas
+🧾 Pagar/Receber      → /pagar-receber
+📈 Títulos            → /titulos
+📖 Contabilidade      → /contabilidade
+📁 Plano de Contas    → /accounts
+📦 Patrimônio         → /patrimonio
+📂 Projetos e Fundos  → /projetos-fundos
+📅 Períodos           → /periods
+🔄 Conciliação        → /conciliacao
+📤 Importar Extrato   → /import
+📊 Relatórios         → /reports
+🛡️ Governança         → /governanca
+⚙️ Configurações      → /settings
 ```
+
+**Componente OrgSwitcher:**
+- Localizado no topo da sidebar (desktop) e no header (mobile)
+- Permite trocar entre organizações sem logout
+- Limpa cache do React Query ao trocar
+- Redireciona para Dashboard após troca
 
 ### 3.2 Cards e Containers
 

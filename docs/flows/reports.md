@@ -1,5 +1,8 @@
 # Guia de Geração de Relatórios e Compliance Contábil
 
+> **Atualizado:** Dezembro 2024  
+> **Rota do Frontend:** `/reports`
+
 ## 1. VISÃO GERAL
 
 ### 1.1 Objetivo
@@ -13,7 +16,21 @@ O módulo de relatórios automatiza a geração de demonstrações contábeis e 
 - **Transparência**: Relatórios prontos para prestação de contas
 - **Profissionalismo**: Layout padronizado e apresentação clara
 
-### 1.2 Tipos de Relatório
+### 1.2 Arquitetura de Serviços
+
+**Localização:** `server/services/`
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `reports.ts` | Serviço principal de geração de relatórios |
+| `pdf/theme.ts` | Constantes de cores, layout e formatação |
+| `pdf/components.ts` | Componentes reutilizáveis de PDF |
+
+**Dependências:**
+- `jsPDF` - Geração de PDF
+- `jspdf-autotable` - Tabelas automáticas em PDF
+
+### 1.3 Tipos de Relatório
 
 | Relatório | Periodicidade | Obrigatório | Finalidade |
 |-----------|---------------|-------------|------------|
@@ -24,6 +41,18 @@ O módulo de relatórios automatiza a geração de demonstrações contábeis e 
 | **Demonstração de Fluxo de Caixa** | Anual | Obrigatório (ITG 2002) | Prestação de contas |
 | **Relatório Nota Fiscal Cidadã** | Anual | Obrigatório (SEFAZ) | Prestação de contas NFC |
 | **Demonstração de Mutações do Patrimônio** | Anual | Obrigatório (ITG 2002) | Prestação de contas |
+
+### 1.4 Interface de Opções
+
+```typescript
+// server/services/reports.ts
+export interface FinancialReportOptions {
+  periodId: number;
+  isDraft?: boolean;
+  includeDetails?: boolean;
+  includeInstitutionalFooter?: boolean;
+}
+```
 
 ---
 

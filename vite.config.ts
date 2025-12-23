@@ -26,5 +26,7 @@ export default defineConfig({
     outDir: '../dist/client',
     emptyOutDir: true,
   },
+  // Environment variables:
+  // VITE_USE_MOCKS=true - Enable mock data provider (for testing multi-tenant isolation)
+  envPrefix: 'VITE_',
 });
-

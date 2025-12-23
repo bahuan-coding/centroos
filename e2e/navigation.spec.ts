@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Default organization ID for tests
+const DEFAULT_ORG_ID = '4408ed21-65d4-44b9-95fa-b537851e9b99';
+
 // All routes in the application
 const ROUTES = [
   { path: '/', name: 'Dashboard', requiresAuth: true },
@@ -23,19 +26,30 @@ const ROUTES = [
   { path: '/audit', name: 'Auditoria', requiresAuth: true },
 ];
 
-// Helper to login
-async function login(page: import('@playwright/test').Page) {
+// Helper to login and set organization
+async function loginWithOrg(page: import('@playwright/test').Page) {
   await page.goto('/login');
   await page.fill('input[type="email"]', 'test@test.com');
   await page.fill('input[type="password"]', '123456');
   await page.click('button[type="submit"]');
-  await page.waitForURL('/');
+  
+  // Set organization in localStorage
+  await page.evaluate((orgId) => {
+    localStorage.setItem('selected_org_id', orgId);
+  }, DEFAULT_ORG_ID);
+  
+  // Wait for redirect or manual navigation
+  await page.waitForURL('/', { timeout: 5000 }).catch(() => {
+    // If we're on org-select, select the org
+    if (page.url().includes('org-select')) {
+      page.click('button:has-text("Paycubed")');
+    }
+  });
 }
 
 test.describe('Navigation - No White Screen', () => {
   test.beforeEach(async ({ page }) => {
-    // Login before each test
-    await login(page);
+    await loginWithOrg(page);
   });
 
   for (const route of ROUTES.filter(r => r.requiresAuth)) {
@@ -69,7 +83,7 @@ test.describe('Navigation - No White Screen', () => {
 
 test.describe('Navigation - Direct URL Access (Refresh)', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await loginWithOrg(page);
   });
 
   test('Dashboard refresh works', async ({ page }) => {
@@ -95,7 +109,7 @@ test.describe('Navigation - Direct URL Access (Refresh)', () => {
 
 test.describe('Navigation - 404 Page', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await loginWithOrg(page);
   });
 
   test('Invalid route shows 404 page', async ({ page }) => {
@@ -126,7 +140,7 @@ test.describe('Navigation - Auth Redirect', () => {
 
 test.describe('Navigation - Browser History', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await loginWithOrg(page);
   });
 
   test('Back/forward navigation works', async ({ page }) => {
@@ -165,16 +179,15 @@ test.describe('Login Flow', () => {
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
     
-    await page.waitForURL('/');
+    // May redirect to org-select first if no org is set
+    await page.waitForURL(/\/(org-select)?$/, { timeout: 5000 });
+    
+    // If on org-select, select an org
+    if (page.url().includes('org-select')) {
+      await page.click('button:has-text("Paycubed")');
+      await page.waitForURL('/');
+    }
+    
     await expect(page.locator('h1')).toContainText(/Bom dia|Boa tarde|Boa noite/);
   });
 });
-
-
-
-
-
-
-
-
-

@@ -1,51 +1,73 @@
-export type OrgType = 'spiritist_center' | 'fintech';
+/**
+ * Organization state management for multi-tenant support
+ * Stores selected organization in localStorage and provides helpers
+ */
 
-export interface Org {
-  id: string;
-  type: OrgType;
-  displayName: string;
-  createdAt: string;
+import { Organization, ORGANIZATIONS, getOrganizationById, getDefaultOrganization } from './organizations';
+
+const STORAGE_KEY = 'selected_org_id';
+
+/**
+ * Get the currently selected organization
+ */
+export function getOrg(): Organization | null {
+  const orgId = localStorage.getItem(STORAGE_KEY);
+  if (!orgId) return null;
+  return getOrganizationById(orgId) || null;
 }
 
-const STORAGE_KEY = 'selected_org';
+/**
+ * Get the current organization ID (for API calls)
+ */
+export function getOrgId(): string | null {
+  return localStorage.getItem(STORAGE_KEY);
+}
 
-const ORG_CONFIGS: Record<OrgType, Omit<Org, 'id' | 'createdAt'>> = {
-  spiritist_center: {
-    type: 'spiritist_center',
-    displayName: 'Centro Espírita',
-  },
-  fintech: {
-    type: 'fintech',
-    displayName: 'Fintech',
-  },
-};
-
-export function getOrg(): Org | null {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return null;
-  try {
-    return JSON.parse(stored) as Org;
-  } catch {
+/**
+ * Set the selected organization by ID
+ */
+export function setOrg(orgId: string): Organization | null {
+  const org = getOrganizationById(orgId);
+  if (!org) {
+    console.warn(`Organization with id ${orgId} not found`);
     return null;
   }
-}
-
-export function setOrg(type: OrgType): Org {
-  const org: Org = {
-    id: `${type}_${Date.now()}`,
-    ...ORG_CONFIGS[type],
-    createdAt: new Date().toISOString(),
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(org));
+  localStorage.setItem(STORAGE_KEY, orgId);
   return org;
 }
 
+/**
+ * Clear the selected organization
+ */
 export function clearOrg(): void {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+/**
+ * Check if an organization is selected
+ */
 export function hasOrg(): boolean {
   return getOrg() !== null;
 }
 
+/**
+ * Get all available organizations
+ */
+export function getAvailableOrgs(): Organization[] {
+  return ORGANIZATIONS;
+}
 
+/**
+ * Set default organization if none selected
+ */
+export function ensureOrg(): Organization {
+  const current = getOrg();
+  if (current) return current;
+  
+  const defaultOrg = getDefaultOrganization();
+  setOrg(defaultOrg.id);
+  return defaultOrg;
+}
+
+// Re-export types for convenience
+export type { Organization, OrgType } from './organizations';

@@ -3,6 +3,7 @@ import { LayoutDashboard, FolderTree, FileText, Calendar, Upload, BarChart3, Set
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
+import { OrgSwitcher } from './OrgSwitcher';
 import { getUserEmail, logout } from '@/lib/auth';
 import { clearOrg, getOrg } from '@/lib/org';
 import { toast } from 'sonner';
@@ -53,9 +54,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
           <span className="font-semibold text-lg">CentrOS</span>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <Menu className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <OrgSwitcher />
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Sidebar */}
@@ -76,21 +80,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1">
+          {/* Organization Switcher - Desktop */}
+          <div className="hidden lg:block px-4 py-3 border-b">
+            <OrgSwitcher />
+          </div>
+
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href));
               return (
-                <Link key={item.href} href={item.href}>
-                  <a
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                      isActive ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'
-                    )}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    {item.label}
-                  </a>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    isActive ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'
+                  )}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
                 </Link>
               );
             })}
@@ -103,7 +112,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{getUserEmail() || 'Usuário'}</p>
-                <p className="text-xs text-muted-foreground">{org?.displayName || 'Admin'}</p>
+                <p className="text-xs text-muted-foreground truncate">{org?.name || 'Sem empresa'}</p>
               </div>
             </div>
             <div className="space-y-2">
@@ -137,4 +146,3 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

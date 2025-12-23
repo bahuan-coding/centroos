@@ -256,9 +256,11 @@ function ContasList({
   if (rootContas.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        <span className="text-5xl">🔍</span>
-        <p className="mt-3 text-sm">Nenhuma conta encontrada</p>
-        <p className="text-xs mt-1">Tente outros termos de busca ou limpe os filtros</p>
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-3">
+          <Search className="h-8 w-8 opacity-40" />
+        </div>
+        <p className="text-sm font-medium">Nenhuma conta encontrada</p>
+        <p className="text-xs mt-1">Tente outros termos ou limpe os filtros</p>
       </div>
     );
   }

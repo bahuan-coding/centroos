@@ -1,4 +1,4 @@
-import { Building2, Layers, Wallet, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Building2, Layers, Wallet, ChevronRight, AlertTriangle, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -94,9 +94,11 @@ export function ModuloEList({ items, selectedId, onSelect, isLoading }: ModuloEL
   if (items.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        <span className="text-5xl">🔍</span>
-        <p className="mt-3 text-sm">Nenhum item encontrado</p>
-        <p className="text-xs mt-1">Tente outros termos de busca ou limpe os filtros</p>
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-3">
+          <Search className="h-8 w-8 opacity-40" />
+        </div>
+        <p className="text-sm font-medium">Nenhum item encontrado</p>
+        <p className="text-xs mt-1">Tente outros termos ou limpe os filtros</p>
       </div>
     );
   }
@@ -160,4 +162,8 @@ export function ModuloEList({ items, selectedId, onSelect, isLoading }: ModuloEL
     </div>
   );
 }
+
+
+
+
 

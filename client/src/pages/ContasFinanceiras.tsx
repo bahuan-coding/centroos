@@ -92,8 +92,10 @@ function ContasList({
   if (contas.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        <span className="text-5xl">🏦</span>
-        <p className="mt-3 text-sm">Nenhuma conta encontrada</p>
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-3">
+          <Building2 className="h-8 w-8 opacity-40" />
+        </div>
+        <p className="text-sm font-medium">Nenhuma conta encontrada</p>
         <p className="text-xs mt-1">Tente outros termos de busca</p>
       </div>
     );
@@ -425,18 +427,20 @@ export default function ContasFinanceiras() {
 
               {/* Busca */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
-                  placeholder="Buscar por nome ou banco..."
+                  placeholder="Buscar por nome, banco ou número..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10 h-9"
-                  aria-label="Buscar contas"
+                  aria-label="Buscar contas financeiras"
                 />
                 {search && (
                   <button 
                     onClick={() => setSearch('')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Limpar busca"
+                    type="button"
                   >
                     <X className="h-4 w-4" />
                   </button>

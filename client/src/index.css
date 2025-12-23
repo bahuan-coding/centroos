@@ -27,9 +27,9 @@
     --secondary: 220 20% 96%;
     --secondary-foreground: 222 47% 11%;
     
-    /* Muted */
+    /* Muted - improved contrast for WCAG AA */
     --muted: 220 20% 96%;
-    --muted-foreground: 220 10% 46%;
+    --muted-foreground: 220 12% 40%;
     
     /* Accent - Violeta Transmutação */
     --accent: 270 60% 60%;
@@ -310,6 +310,21 @@
   .stagger-6 { animation-delay: 300ms; }
   .stagger-7 { animation-delay: 350ms; }
   .stagger-8 { animation-delay: 400ms; }
+}
+
+/* ========================================
+   ACCESSIBILITY: REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ========================================

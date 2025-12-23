@@ -216,7 +216,9 @@ export default function Titulos() {
   const [page, setPage] = useState(1);
   const [filtroTipo, setFiltroTipo] = useState<'pagar' | 'receber' | undefined>(undefined);
   const [filtroStatus, setFiltroStatus] = useState<string | undefined>(undefined);
-  const [mesAno, setMesAno] = useState<string | undefined>(undefined);
+  // Default: mês atual para melhor performance
+  const mesAtual = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+  const [mesAno, setMesAno] = useState<string | undefined>(mesAtual);
   const [selectedTituloId, setSelectedTituloId] = useState<string | null>(null);
   const [showNovoModal, setShowNovoModal] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
@@ -354,17 +356,20 @@ export default function Titulos() {
             <div className="space-y-3">
               {/* Busca */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
                   placeholder="Buscar por descrição ou pessoa..."
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   className="pl-10 h-9"
+                  aria-label="Buscar títulos por descrição ou pessoa"
                 />
                 {search && (
                   <button 
                     onClick={() => setSearch('')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Limpar busca"
+                    type="button"
                   >
                     <X className="h-4 w-4" />
                   </button>

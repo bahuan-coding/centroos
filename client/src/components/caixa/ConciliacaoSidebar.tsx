@@ -121,7 +121,7 @@ export function ConciliacaoSidebar({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="font-semibold text-sm">Conciliar Linha</h3>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Fechar painel">
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -360,6 +360,10 @@ export function ConciliacaoSidebar({
     </div>
   );
 }
+
+
+
+
 
 
 

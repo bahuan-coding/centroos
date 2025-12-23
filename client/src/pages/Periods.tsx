@@ -146,8 +146,10 @@ function PeriodsList({
   if (periods.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        <span className="text-5xl">📅</span>
-        <p className="mt-3 text-sm">Nenhum período encontrado</p>
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-3">
+          <Calendar className="h-8 w-8 opacity-40" />
+        </div>
+        <p className="text-sm font-medium">Nenhum período encontrado</p>
         <p className="text-xs mt-1">Crie um novo período para começar</p>
       </div>
     );

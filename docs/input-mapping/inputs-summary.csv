@@ -1,0 +1,100 @@
+screen,route,file,input_name,input_type,required,default,validation,destination
+Login,/login,Login.tsx,email,email,Sim,,"type=""email""",localStorage: user_email
+Login,/login,Login.tsx,password,password,Sim,,,
+Dashboard,/,Dashboard.tsx,,,,,,read-only (KPIs)
+Pessoas,/pessoas,Pessoas.tsx,search,text,Não,,,Query filter
+Pessoas,/pessoas,Pessoas.tsx,nome,text,Sim,,"min 3 chars",pessoas.nome
+Pessoas,/pessoas,Pessoas.tsx,documento,text,Não,,CPF/CNPJ,pessoas.documento
+Pessoas,/pessoas,Pessoas.tsx,email,email,Não,,formato email,pessoas.email
+Pessoas,/pessoas,Pessoas.tsx,telefone,text,Não,,,pessoas.telefone
+Pessoas,/pessoas,Pessoas.tsx,endereco,textarea,Não,,,pessoas.endereco
+Pessoas,/pessoas,Pessoas.tsx,isAssociado,checkbox,Não,false,,pessoas.isAssociado
+Pessoas,/pessoas,Pessoas.tsx,ativo,switch,Não,true,,pessoas.ativo
+ContasFinanceiras,/contas,ContasFinanceiras.tsx,search,text,Não,,,Filtro local
+ContasFinanceiras,/contas,ContasFinanceiras.tsx,tipo,select,Sim,,"enum TipoConta",contasFinanceiras.tipo
+ContasFinanceiras,/contas,ContasFinanceiras.tsx,nome,text,Sim,,,contasFinanceiras.nome
+ContasFinanceiras,/contas,ContasFinanceiras.tsx,bancoCodigo,select,Condicional,,"se tipo !== 'caixa'",contasFinanceiras.bancoCodigo
+Extratos,/extratos/:id,Extratos.tsx,,,,,,read-only (extrato)
+Titulos,/titulos,Titulos.tsx,search,text,Não,,,Filtro local
+Titulos,/titulos,Titulos.tsx,periodoInicio,date,Não,,,Query filter
+Titulos,/titulos,Titulos.tsx,periodoFim,date,Não,,,Query filter
+Titulos,/titulos,Titulos.tsx,tipo,radio,Sim,,receita/despesa,titulos.tipo
+Titulos,/titulos,Titulos.tsx,descricao,text,Sim,,"min 3 chars",titulos.descricao
+Titulos,/titulos,Titulos.tsx,valor,number,Sim,,> 0,titulos.valor
+Titulos,/titulos,Titulos.tsx,competencia,date,Sim,,,titulos.competencia
+Titulos,/titulos,Titulos.tsx,vencimento,date,Não,,,titulos.vencimento
+Titulos,/titulos,Titulos.tsx,contaId,select,Sim,,,titulos.contaId
+Titulos,/titulos,Titulos.tsx,pessoaId,combobox,Não,,,titulos.pessoaId
+Titulos,/titulos,Titulos.tsx,contaContabilId,select,Não,,,titulos.contaContabilId
+TitulosCrud,/pagar-receber,TitulosCrud.tsx,search,text,Não,,,Filtro local
+TitulosCrud,/pagar-receber,TitulosCrud.tsx,periodoInicio,date,Não,,,Query filter
+TitulosCrud,/pagar-receber,TitulosCrud.tsx,periodoFim,date,Não,,,Query filter
+TitulosCrud,/pagar-receber,TitulosCrud.tsx,dataBaixa,date,Sim,,"<= hoje",baixa.dataBaixa
+TitulosCrud,/pagar-receber,TitulosCrud.tsx,valorPago,number,Sim,,> 0,baixa.valorPago
+TitulosCrud,/pagar-receber,TitulosCrud.tsx,contaId,select,Sim,,,baixa.contaId
+TitulosCrud,/pagar-receber,TitulosCrud.tsx,observacao,textarea,Não,,,baixa.observacao
+Contabilidade,/contabilidade,Contabilidade.tsx,ano,select,Sim,ano atual,,Query filter
+Contabilidade,/contabilidade,Contabilidade.tsx,mes,select,Não,,,Query filter
+Contabilidade,/contabilidade,Contabilidade.tsx,data,date,Sim,,,lancamentos.data
+Contabilidade,/contabilidade,Contabilidade.tsx,contaDebitoId,select,Sim,,,lancamentos.contaDebitoId
+Contabilidade,/contabilidade,Contabilidade.tsx,contaCreditoId,select,Sim,,,lancamentos.contaCreditoId
+Contabilidade,/contabilidade,Contabilidade.tsx,valor,number,Sim,,> 0,lancamentos.valor
+Contabilidade,/contabilidade,Contabilidade.tsx,historico,text,Sim,,"min 5 chars",lancamentos.historico
+Contabilidade,/contabilidade,Contabilidade.tsx,documento,text,Não,,,lancamentos.documento
+Contabilidade,/contabilidade,Contabilidade.tsx,competencia,date,Não,,,lancamentos.competencia
+Accounts,/accounts,Accounts.tsx,search,text,Não,,,Filtro local
+Accounts,/accounts,Accounts.tsx,codigo,text,Sim,,formato X.X.X,accounts.codigo
+Accounts,/accounts,Accounts.tsx,nome,text,Sim,,"min 3 chars",accounts.nome
+Accounts,/accounts,Accounts.tsx,tipo,select,Sim,,analitica/sintetica,accounts.tipo
+Accounts,/accounts,Accounts.tsx,natureza,select,Sim,,1-4,accounts.natureza
+Accounts,/accounts,Accounts.tsx,contaPaiId,select,Condicional,,se nivel > 1,accounts.contaPaiId
+Accounts,/accounts,Accounts.tsx,ativo,switch,Não,true,,accounts.ativo
+Accounts,/accounts,Accounts.tsx,descricao,textarea,Não,,,accounts.descricao
+Entries,/entries,Entries.tsx,periodFilter,select,Não,todos,,Query filter
+Entries,/entries,Entries.tsx,periodId,select,Sim,período atual,,entries.periodId
+Entries,/entries,Entries.tsx,transactionDate,date,Sim,hoje,,entries.transactionDate
+Entries,/entries,Entries.tsx,accountId,select,Sim,,,entries.accountId
+Entries,/entries,Entries.tsx,type,select,Sim,debit,debit/credit,entries.type
+Entries,/entries,Entries.tsx,amountCents,text,Sim,,> 0,entries.amountCents
+Entries,/entries,Entries.tsx,description,text,Sim,,,entries.description
+Entries,/entries,Entries.tsx,isNfc,checkbox,Não,false,,entries.isNfc
+Entries,/entries,Entries.tsx,nfcCategory,select,Condicional,,se isNfc && debit,entries.nfcCategory
+Entries,/entries,Entries.tsx,notes,textarea,Não,,,entries.notes
+Periods,/periods,Periods.tsx,filtroAno,select,Não,ano atual,,Filtro local
+Periods,/periods,Periods.tsx,year,select,Sim,,,periods.year
+Periods,/periods,Periods.tsx,month,select,Sim,,,periods.month
+Conciliacao,/conciliacao,Conciliacao.tsx,contaId,select,Sim,,,Query filter
+Conciliacao,/conciliacao,Conciliacao.tsx,periodo,select,Não,,,Query filter
+Import,/import,Import.tsx,file,file,Sim,,csv/ofx/xlsx,Parser
+Import,/import,Import.tsx,tipoImportacao,select,Sim,,,Parser config
+Reports,/reports,Reports.tsx,tipoRelatorio,select,Sim,,,Query filter
+Reports,/reports,Reports.tsx,periodoInicio,date,Sim,,,Query filter
+Reports,/reports,Reports.tsx,periodoFim,date,Sim,,>= inicio,Query filter
+Reports,/reports,Reports.tsx,formato,select,Não,pdf,pdf/xlsx/csv,Exportação
+Governanca,/governanca,Governanca.tsx,nome,text,Sim,,"min 3 chars",usuarios.nome
+Governanca,/governanca,Governanca.tsx,email,email,Sim,,formato email,usuarios.email
+Governanca,/governanca,Governanca.tsx,papelId,select,Não,,,usuarios.papelId
+Governanca,/governanca,Governanca.tsx,ativo,switch,Não,true,,usuarios.ativo
+Settings,/settings,Settings.tsx,name,text,Sim,,,organization.name
+Settings,/settings,Settings.tsx,cnpj,text,Não,,formato CNPJ,organization.cnpj
+Settings,/settings,Settings.tsx,phone,text,Não,,,organization.phone
+Settings,/settings,Settings.tsx,email,email,Não,,formato email,organization.email
+Settings,/settings,Settings.tsx,address,textarea,Não,,,organization.address
+Settings,/settings,Settings.tsx,city,text,Não,,,organization.city
+Settings,/settings,Settings.tsx,state,text,Não,,"max 2 chars",organization.state
+Settings,/settings,Settings.tsx,zipCode,text,Não,,formato CEP,organization.zipCode
+Patrimonio,/patrimonio,Patrimonio.tsx,search,text,Não,,,Filtro local
+Patrimonio,/patrimonio,Patrimonio.tsx,codigo,text,Sim,,único,patrimonio.codigo
+Patrimonio,/patrimonio,Patrimonio.tsx,descricao,text,Sim,,"min 5 chars",patrimonio.descricao
+Patrimonio,/patrimonio,Patrimonio.tsx,categoria,select,Sim,,enum,patrimonio.categoria
+Patrimonio,/patrimonio,Patrimonio.tsx,dataAquisicao,date,Sim,,"<= hoje",patrimonio.dataAquisicao
+Patrimonio,/patrimonio,Patrimonio.tsx,valorAquisicao,number,Sim,,> 0,patrimonio.valorAquisicao
+Patrimonio,/patrimonio,Patrimonio.tsx,valorResidual,number,Não,,>= 0,patrimonio.valorResidual
+Patrimonio,/patrimonio,Patrimonio.tsx,vidaUtilMeses,number,Sim,,> 0,patrimonio.vidaUtilMeses
+Patrimonio,/patrimonio,Patrimonio.tsx,metodoDepreciacao,select,Sim,,linear/nenhum,patrimonio.metodoDepreciacao
+ModuloE,/modulo-e,ModuloE.tsx,search,text,Não,,,Filtro local
+ModuloE,/modulo-e,ModuloE.tsx,codigo,text,Sim,,único,centro/projeto/fundo.codigo
+ModuloE,/modulo-e,ModuloE.tsx,nome,text,Sim,,"min 3 chars",centro/projeto/fundo.nome
+ModuloE,/modulo-e,ModuloE.tsx,tipo,select,Sim,,restrito/irrestrito,fundo.tipo
+ModuloE,/modulo-e,ModuloE.tsx,ativo,switch,Não,true,,centro/fundo.ativo
+

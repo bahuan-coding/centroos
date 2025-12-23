@@ -105,9 +105,11 @@ function PessoasList({
   if (pessoas.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        <span className="text-5xl">🔍</span>
-        <p className="mt-3 text-sm">Nenhuma pessoa encontrada</p>
-        <p className="text-xs mt-1">Tente outros termos de busca ou limpe os filtros</p>
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-3">
+          <Search className="h-8 w-8 opacity-40" />
+        </div>
+        <p className="text-sm font-medium">Nenhum resultado</p>
+        <p className="text-xs mt-1">Tente outros termos ou limpe os filtros</p>
       </div>
     );
   }
@@ -143,7 +145,7 @@ function PessoasList({
                     <UserCheck className="h-2.5 w-2.5 mr-0.5" />Associado
                   </Badge>
                 ) : (
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Não Assoc.</Badge>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Doador</Badge>
                 )}
                 {pessoa.valorTotal > 0 && (
                   <span className="text-[10px] font-medium text-emerald-600">
@@ -209,7 +211,7 @@ function QuickStats({ stats, healthStats, filtroAssociados, setFiltroAssociados 
       >
         <span className="text-lg">👤</span>
         <p className="text-lg font-bold text-slate-600">{stats?.naoAssociados || 0}</p>
-        <p className="text-[10px] text-muted-foreground">Não Assoc.</p>
+        <p className="text-[10px] text-muted-foreground">Doadores</p>
       </button>
     </div>
   );
@@ -364,7 +366,7 @@ export default function Pessoas() {
                   {inconsistencias?.stats?.titulosSemPessoa} contribuições sem pessoa vinculada
                 </span>
               </div>
-              <Button size="sm" className="bg-amber-600 hover:bg-amber-700">Resolver</Button>
+              <Button size="sm" className="bg-amber-600 hover:bg-amber-700">Ver órfãos</Button>
             </div>
           </CardContent>
         </Card>

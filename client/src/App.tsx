@@ -21,8 +21,23 @@ import Patrimonio from './pages/Patrimonio';
 import ModuloE from './pages/ModuloE';
 import Governanca from './pages/Governanca';
 import Login from './pages/Login';
+import OrgSelect from './pages/OrgSelect';
 import NotFound from './pages/NotFound';
 import { isAuthenticated } from './lib/auth';
+import { hasOrg } from './lib/org';
+
+function OrgGuard({ children }: { children: React.ReactNode }) {
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!hasOrg()) {
+      setLocation('/org-select');
+    }
+  }, [setLocation]);
+
+  if (!hasOrg()) return null;
+  return <>{children}</>;
+}
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const [location, setLocation] = useLocation();
@@ -45,34 +60,36 @@ export default function App() {
     <>
       <Switch>
         <Route path="/login" component={Login} />
+        <Route path="/org-select" component={OrgSelect} />
         <Route path="*">
-          <DashboardLayout>
-            <Switch>
-              <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-              <Route path="/pessoas" component={() => <ProtectedRoute component={Pessoas} />} />
-              <Route path="/contas" component={() => <ProtectedRoute component={ContasFinanceiras} />} />
-              <Route path="/extratos" component={() => <ProtectedRoute component={Extratos} />} />
-              <Route path="/titulos" component={() => <ProtectedRoute component={Titulos} />} />
-              <Route path="/pagar-receber" component={() => <ProtectedRoute component={TitulosCrud} />} />
-              <Route path="/contabilidade" component={() => <ProtectedRoute component={Contabilidade} />} />
-              <Route path="/accounts" component={() => <ProtectedRoute component={Accounts} />} />
-              <Route path="/entries" component={() => <ProtectedRoute component={Entries} />} />
-              <Route path="/periods" component={() => <ProtectedRoute component={Periods} />} />
-              <Route path="/conciliacao" component={() => <ProtectedRoute component={Conciliacao} />} />
-              <Route path="/import" component={() => <ProtectedRoute component={Import} />} />
-              <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />
-              <Route path="/audit" component={() => <ProtectedRoute component={Audit} />} />
-              <Route path="/governanca" component={() => <ProtectedRoute component={Governanca} />} />
-              <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
-              <Route path="/patrimonio" component={() => <ProtectedRoute component={Patrimonio} />} />
-              <Route path="/projetos-fundos" component={() => <ProtectedRoute component={ModuloE} />} />
-              <Route path="/:rest*" component={NotFound} />
-            </Switch>
-          </DashboardLayout>
+          <OrgGuard>
+            <DashboardLayout>
+              <Switch>
+                <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
+                <Route path="/pessoas" component={() => <ProtectedRoute component={Pessoas} />} />
+                <Route path="/contas" component={() => <ProtectedRoute component={ContasFinanceiras} />} />
+                <Route path="/extratos" component={() => <ProtectedRoute component={Extratos} />} />
+                <Route path="/titulos" component={() => <ProtectedRoute component={Titulos} />} />
+                <Route path="/pagar-receber" component={() => <ProtectedRoute component={TitulosCrud} />} />
+                <Route path="/contabilidade" component={() => <ProtectedRoute component={Contabilidade} />} />
+                <Route path="/accounts" component={() => <ProtectedRoute component={Accounts} />} />
+                <Route path="/entries" component={() => <ProtectedRoute component={Entries} />} />
+                <Route path="/periods" component={() => <ProtectedRoute component={Periods} />} />
+                <Route path="/conciliacao" component={() => <ProtectedRoute component={Conciliacao} />} />
+                <Route path="/import" component={() => <ProtectedRoute component={Import} />} />
+                <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />
+                <Route path="/audit" component={() => <ProtectedRoute component={Audit} />} />
+                <Route path="/governanca" component={() => <ProtectedRoute component={Governanca} />} />
+                <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
+                <Route path="/patrimonio" component={() => <ProtectedRoute component={Patrimonio} />} />
+                <Route path="/projetos-fundos" component={() => <ProtectedRoute component={ModuloE} />} />
+                <Route path="/:rest*" component={NotFound} />
+              </Switch>
+            </DashboardLayout>
+          </OrgGuard>
         </Route>
       </Switch>
       <Toaster position="top-right" richColors />
     </>
   );
 }
-

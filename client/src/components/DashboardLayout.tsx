@@ -1,17 +1,19 @@
 import { Link, useLocation } from 'wouter';
-import { LayoutDashboard, FolderTree, FileText, Calendar, Upload, BarChart3, Settings, Menu, Users, Building2, ArrowLeftRight, LogOut, TrendingUp, Receipt, BookOpen, Layers, Boxes, Shield } from 'lucide-react';
+import { LayoutDashboard, FolderTree, FileText, Calendar, Upload, BarChart3, Settings, Menu, Users, Building2, ArrowLeftRight, LogOut, TrendingUp, Receipt, BookOpen, Layers, Boxes, Shield, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { getUserEmail, logout } from '@/lib/auth';
+import { clearOrg, getOrg } from '@/lib/org';
 import { toast } from 'sonner';
+import { APP_VERSION } from '@/lib/version';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/pessoas', label: 'Pessoas', icon: Users },
   { href: '/contas', label: 'Contas Financeiras', icon: Building2 },
   { href: '/pagar-receber', label: 'Pagar/Receber', icon: Receipt },
-  { href: '/titulos', label: 'Fluxo de Caixa', icon: TrendingUp },
+  { href: '/titulos', label: 'Títulos', icon: TrendingUp },
   { href: '/contabilidade', label: 'Contabilidade', icon: BookOpen },
   { href: '/accounts', label: 'Plano de Contas', icon: FolderTree },
   { href: '/patrimonio', label: 'Patrimônio', icon: Boxes },
@@ -33,6 +35,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     toast.success('Logout realizado com sucesso');
     setLocation('/login');
   };
+
+  const handleSwitchOrg = () => {
+    clearOrg();
+    setLocation('/org-select');
+  };
+
+  const org = getOrg();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -94,13 +103,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{getUserEmail() || 'Usuário'}</p>
-                <p className="text-xs text-muted-foreground">Admin</p>
+                <p className="text-xs text-muted-foreground">{org?.displayName || 'Admin'}</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
+            <div className="space-y-2">
+              <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={handleSwitchOrg}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Trocar Empresa
+              </Button>
+              <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">v{APP_VERSION}</p>
           </div>
         </div>
       </aside>

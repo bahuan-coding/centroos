@@ -80,9 +80,11 @@ function TituloSkeleton() {
 function EmptyList() {
   return (
     <div className="text-center py-12 text-muted-foreground">
-      <span className="text-5xl">📋</span>
-      <p className="mt-3 text-sm">Nenhum título encontrado</p>
-      <p className="text-xs mt-1">Tente outros filtros ou crie um novo título</p>
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-3">
+        <Clock className="h-8 w-8 opacity-40" />
+      </div>
+      <p className="text-sm font-medium">Nenhum título encontrado</p>
+      <p className="text-xs mt-1">Tente outros filtros ou crie um novo</p>
     </div>
   );
 }
@@ -225,4 +227,8 @@ export function TitulosList({ titulos, selectedId, onSelect, isLoading }: Titulo
     </div>
   );
 }
+
+
+
+
 

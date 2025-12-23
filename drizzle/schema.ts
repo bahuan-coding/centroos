@@ -1097,6 +1097,63 @@ export const certificadoDigital = pgTable(
 );
 
 // ============================================================================
+// MÓDULO I: Notas Fiscais Eletrônicas (NFSe/NFe)
+// ============================================================================
+export const nfTipoEnum = pgEnum('nf_tipo', ['nfse', 'nfe', 'nfce']);
+export const nfStatusEnum = pgEnum('nf_status', ['normal', 'cancelada', 'substituida', 'erro']);
+
+export const notaFiscal = pgTable(
+  'nota_fiscal',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    organizationId: uuid('organization_id').notNull(),
+    chaveAcesso: varchar('chave_acesso', { length: 100 }).notNull().unique(),
+    numero: varchar('numero', { length: 20 }).notNull(),
+    serie: varchar('serie', { length: 10 }),
+    tipo: varchar('tipo', { length: 10 }).notNull().default('nfse'),
+    dataEmissao: date('data_emissao').notNull(),
+    competencia: varchar('competencia', { length: 7 }),
+    valorServico: numeric('valor_servico', { precision: 18, scale: 2 }).notNull(),
+    valorLiquido: numeric('valor_liquido', { precision: 18, scale: 2 }).notNull(),
+    valorIss: numeric('valor_iss', { precision: 18, scale: 2 }).default('0'),
+    aliquotaIss: numeric('aliquota_iss', { precision: 5, scale: 2 }),
+    issRetido: boolean('iss_retido').default(false),
+    codigoServico: varchar('codigo_servico', { length: 20 }),
+    descricaoServico: text('descricao_servico'),
+    prestadorCnpj: varchar('prestador_cnpj', { length: 14 }).notNull(),
+    prestadorRazaoSocial: varchar('prestador_razao_social', { length: 255 }),
+    tomadorCpfCnpj: varchar('tomador_cpf_cnpj', { length: 14 }),
+    tomadorRazaoSocial: varchar('tomador_razao_social', { length: 255 }),
+    tomadorEmail: varchar('tomador_email', { length: 255 }),
+    tomadorPessoaId: uuid('tomador_pessoa_id'),
+    pisRetido: numeric('pis_retido', { precision: 18, scale: 2 }).default('0'),
+    cofinsRetido: numeric('cofins_retido', { precision: 18, scale: 2 }).default('0'),
+    csllRetido: numeric('csll_retido', { precision: 18, scale: 2 }).default('0'),
+    irrfRetido: numeric('irrf_retido', { precision: 18, scale: 2 }).default('0'),
+    inssRetido: numeric('inss_retido', { precision: 18, scale: 2 }).default('0'),
+    status: varchar('status', { length: 20 }).notNull().default('normal'),
+    notaSubstituidaId: uuid('nota_substituida_id'),
+    xmlOriginal: text('xml_original'),
+    xmlHash: varchar('xml_hash', { length: 64 }),
+    tituloId: uuid('titulo_id'),
+    lancamentoContabilId: uuid('lancamento_contabil_id'),
+    importadoEm: timestamp('importado_em', { withTimezone: true }).defaultNow(),
+    importadoPor: uuid('importado_por'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    chaveIdx: index('idx_nota_fiscal_chave').on(table.chaveAcesso),
+    numeroIdx: index('idx_nota_fiscal_numero').on(table.numero, table.serie),
+    prestadorIdx: index('idx_nota_fiscal_prestador').on(table.prestadorCnpj),
+    tomadorIdx: index('idx_nota_fiscal_tomador').on(table.tomadorCpfCnpj),
+    emissaoIdx: index('idx_nota_fiscal_emissao').on(table.dataEmissao),
+    competenciaIdx: index('idx_nota_fiscal_competencia').on(table.competencia),
+    orgIdx: index('idx_nota_fiscal_org').on(table.organizationId),
+  })
+);
+
+// ============================================================================
 // LEGACY TABLES - Re-exportados do arquivo separado para melhor inferência de tipos
 // ============================================================================
 export {
@@ -1222,6 +1279,10 @@ export type InsertConfiguracaoSistema = typeof configuracaoSistema.$inferInsert;
 // Módulo H
 export type CertificadoDigital = typeof certificadoDigital.$inferSelect;
 export type InsertCertificadoDigital = typeof certificadoDigital.$inferInsert;
+
+// Módulo I
+export type NotaFiscal = typeof notaFiscal.$inferSelect;
+export type InsertNotaFiscal = typeof notaFiscal.$inferInsert;
 
 // Legacy types (para compatibilidade) - Re-exportados do arquivo separado
 export type {

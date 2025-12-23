@@ -8492,7 +8492,9 @@ const certificadoRouter = router({
 import { 
   listarNfse as listarNfseService, 
   consultarNfse as consultarNfseService, 
-  validarConexaoNfse 
+  validarConexaoNfse,
+  importNfseForOrganization,
+  importSingleNfse,
 } from './integrations/fiscal';
 
 const nfseRouter = router({
@@ -8519,6 +8521,125 @@ const nfseRouter = router({
     .input(z.string().min(44).max(50))
     .query(async ({ input }) => {
       return consultarNfseService(input);
+    }),
+
+  // Import NFS-e for organization (bulk)
+  importar: protectedProcedure
+    .input(z.object({
+      dataInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      dataFim: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const org = ctx.organization;
+      if (!org?.id || !org?.tax_id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Organização não selecionada ou sem CNPJ' });
+      }
+      return importNfseForOrganization(org.id, org.tax_id, input.dataInicio, input.dataFim, ctx.user?.id);
+    }),
+
+  // Import single NFS-e by access key
+  importarNota: protectedProcedure
+    .input(z.string().min(44).max(50))
+    .mutation(async ({ input, ctx }) => {
+      const org = ctx.organization;
+      if (!org?.id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Organização não selecionada' });
+      }
+      return importSingleNfse(org.id, input, ctx.user?.id);
+    }),
+
+  // List imported NFS-e from database
+  listarImportadas: protectedProcedure
+    .input(z.object({
+      pagina: z.number().optional().default(1),
+      limite: z.number().optional().default(50),
+      status: z.enum(['normal', 'cancelada', 'substituida']).optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const org = ctx.organization;
+      if (!org?.id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Organização não selecionada' });
+      }
+      const db = await getDb();
+      const offset = (input.pagina - 1) * input.limite;
+      
+      const where = input.status 
+        ? and(eq(schema.notaFiscal.organizationId, org.id), eq(schema.notaFiscal.status, input.status))
+        : eq(schema.notaFiscal.organizationId, org.id);
+      
+      const [notas, countResult] = await Promise.all([
+        db.select().from(schema.notaFiscal).where(where).orderBy(desc(schema.notaFiscal.dataEmissao)).limit(input.limite).offset(offset),
+        db.select({ count: sql<number>`count(*)` }).from(schema.notaFiscal).where(where),
+      ]);
+      
+      return {
+        notas,
+        total: Number(countResult[0]?.count ?? 0),
+        pagina: input.pagina,
+        totalPaginas: Math.ceil(Number(countResult[0]?.count ?? 0) / input.limite),
+      };
+    }),
+
+  // Import NFS-e manually from JSON data (for testing or manual entry)
+  importarManual: protectedProcedure
+    .input(z.object({
+      chaveAcesso: z.string().min(10),
+      numero: z.string(),
+      serie: z.string().optional(),
+      dataEmissao: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      competencia: z.string().optional(),
+      valorServico: z.number().positive(),
+      valorLiquido: z.number().positive(),
+      valorIss: z.number().optional().default(0),
+      issRetido: z.boolean().optional().default(false),
+      codigoServico: z.string().optional(),
+      descricaoServico: z.string(),
+      tomadorCpfCnpj: z.string().optional(),
+      tomadorRazaoSocial: z.string().optional(),
+      tomadorEmail: z.string().email().optional(),
+      status: z.enum(['normal', 'cancelada', 'substituida']).optional().default('normal'),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const org = ctx.organization;
+      if (!org?.id || !org?.tax_id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Organização não selecionada ou sem CNPJ' });
+      }
+      
+      const db = await getDb();
+      
+      // Check if already exists
+      const [existing] = await db.select().from(schema.notaFiscal)
+        .where(eq(schema.notaFiscal.chaveAcesso, input.chaveAcesso)).limit(1);
+      
+      if (existing) {
+        throw new TRPCError({ code: 'CONFLICT', message: 'Nota fiscal já existe com esta chave de acesso' });
+      }
+      
+      const [nota] = await db.insert(schema.notaFiscal).values({
+        organizationId: org.id,
+        chaveAcesso: input.chaveAcesso,
+        numero: input.numero,
+        serie: input.serie || null,
+        tipo: 'nfse',
+        dataEmissao: input.dataEmissao,
+        competencia: input.competencia || input.dataEmissao.substring(0, 7),
+        valorServico: String(input.valorServico),
+        valorLiquido: String(input.valorLiquido),
+        valorIss: String(input.valorIss),
+        issRetido: input.issRetido,
+        codigoServico: input.codigoServico || null,
+        descricaoServico: input.descricaoServico,
+        prestadorCnpj: org.tax_id,
+        prestadorRazaoSocial: org.legal_name || org.name,
+        tomadorCpfCnpj: input.tomadorCpfCnpj || null,
+        tomadorRazaoSocial: input.tomadorRazaoSocial || null,
+        tomadorEmail: input.tomadorEmail || null,
+        status: input.status,
+        importadoEm: new Date(),
+        importadoPor: ctx.user?.id || null,
+      } as any).returning();
+      
+      return { success: true, nota };
     }),
 });
 

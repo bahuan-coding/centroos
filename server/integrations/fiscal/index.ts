@@ -24,3 +24,11 @@ export {
   type NfseListResult,
 } from './nfse';
 
+// Import Services
+export {
+  importNfseForOrganization,
+  importSingleNfse,
+  getImportStats,
+  type ImportResult,
+} from './import-nfse';
+

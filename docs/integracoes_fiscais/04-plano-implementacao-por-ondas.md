@@ -729,3 +729,6 @@ A definir conforme evolução da legislação e necessidades do negócio.
 
 **Próximo:** [05-riscos-conformidade-lgpd-sigilo.md](05-riscos-conformidade-lgpd-sigilo.md) - Riscos, LGPD e conformidade
 
+
+
+

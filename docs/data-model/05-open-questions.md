@@ -341,3 +341,6 @@
 | Q9 | Estratégia legacy | ALTA | ALTO | Tech Lead | - |
 
 
+
+
+

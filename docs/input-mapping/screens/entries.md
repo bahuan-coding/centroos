@@ -65,3 +65,6 @@
 - Badge NFC para identificar recursos da Nota Fiscal Cidadã
 
 
+
+
+

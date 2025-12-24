@@ -439,3 +439,6 @@ const xmlBackupPolicy = {
 
 **Próximo:** [06-checklist-homologacao-e-testes.md](06-checklist-homologacao-e-testes.md) - Como testar integrações sem produção
 
+
+
+

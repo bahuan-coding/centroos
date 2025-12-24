@@ -8499,7 +8499,9 @@ import {
   consultarNFSePeriodo as consultarNFSePeriodoSP,
   consultarNFSePorNumero as consultarNFSePorNumeroSP,
   cancelarNFSe as cancelarNFSeSP,
+  emitirRPS as emitirRPSSP,
   validarConexaoSP,
+  type EmissaoRPSParams,
 } from './integrations/fiscal';
 
 const nfseRouter = router({
@@ -8677,6 +8679,71 @@ const nfseRouter = router({
     .input(z.string().min(1))
     .mutation(async ({ input }) => {
       return cancelarNFSeSP(input);
+    }),
+
+  // Emitir RPS (São Paulo) - Converte em NFS-e
+  spEmitir: protectedProcedure
+    .input(z.object({
+      serieRPS: z.string().min(1).max(5),
+      numeroRPS: z.number().int().positive(),
+      dataEmissao: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      tributacao: z.enum(['T', 'F', 'A', 'B', 'M', 'N', 'X']),
+      valorServicos: z.number().positive(),
+      valorDeducoes: z.number().min(0).optional(),
+      codigoServico: z.string().min(1).max(10),
+      aliquota: z.number().min(0).max(1),
+      issRetido: z.boolean(),
+      discriminacao: z.string().min(1).max(2000),
+      tomador: z.object({
+        cpfCnpj: z.string().min(11).max(14),
+        razaoSocial: z.string().min(1).max(115).optional(),
+        inscricaoMunicipal: z.string().max(8).optional(),
+        inscricaoEstadual: z.number().optional(),
+        email: z.string().email().optional(),
+        endereco: z.object({
+          tipoLogradouro: z.string().max(3).optional(),
+          logradouro: z.string().max(125).optional(),
+          numeroEndereco: z.string().max(10).optional(),
+          complementoEndereco: z.string().max(30).optional(),
+          bairro: z.string().max(60).optional(),
+          cidade: z.number().optional(),
+          uf: z.string().length(2).optional(),
+          cep: z.number().optional(),
+        }).optional(),
+      }),
+      valorPIS: z.number().min(0).optional(),
+      valorCOFINS: z.number().min(0).optional(),
+      valorINSS: z.number().min(0).optional(),
+      valorIR: z.number().min(0).optional(),
+      valorCSLL: z.number().min(0).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const params: EmissaoRPSParams = {
+        serieRPS: input.serieRPS,
+        numeroRPS: input.numeroRPS,
+        dataEmissao: new Date(input.dataEmissao + 'T12:00:00Z'),
+        tributacao: input.tributacao,
+        valorServicos: input.valorServicos,
+        valorDeducoes: input.valorDeducoes,
+        codigoServico: input.codigoServico,
+        aliquota: input.aliquota,
+        issRetido: input.issRetido,
+        discriminacao: input.discriminacao,
+        tomador: {
+          cpfCnpj: input.tomador.cpfCnpj,
+          razaoSocial: input.tomador.razaoSocial,
+          inscricaoMunicipal: input.tomador.inscricaoMunicipal,
+          inscricaoEstadual: input.tomador.inscricaoEstadual,
+          email: input.tomador.email,
+          endereco: input.tomador.endereco,
+        },
+        valorPIS: input.valorPIS,
+        valorCOFINS: input.valorCOFINS,
+        valorINSS: input.valorINSS,
+        valorIR: input.valorIR,
+        valorCSLL: input.valorCSLL,
+      };
+      return emitirRPSSP(params);
     }),
 
   // Importar NFS-e de São Paulo para o banco de dados

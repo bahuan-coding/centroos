@@ -431,3 +431,6 @@ Produção:
 
 **Próximo:** [03-emissao-notas-rfb-vs-sefaz-vs-municipio.md](03-emissao-notas-rfb-vs-sefaz-vs-municipio.md) - Entendendo responsabilidades de cada órgão
 
+
+
+

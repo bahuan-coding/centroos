@@ -37,9 +37,14 @@ export {
   consultarNFSePeriodo,
   consultarNFSePorNumero,
   cancelarNFSe,
+  emitirRPS,
   validarConexaoSP,
   type NFSeConsultaSP,
   type NFSeListResultSP,
+  type EmissaoRPSParams,
+  type EmissaoRPSResult,
+  type EnderecoTomador,
+  type TipoTributacao,
 } from './nfse-sp';
 
 // SOAP Client utilities

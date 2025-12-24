@@ -45,3 +45,6 @@
 - Indicador visual de divergências
 
 
+
+
+

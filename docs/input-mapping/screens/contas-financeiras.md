@@ -64,3 +64,6 @@ type TipoConta = 'caixa' | 'conta_corrente' | 'poupanca' | 'aplicacao' | 'cartao
 - Saldo calculado automaticamente baseado em movimentações
 
 
+
+
+

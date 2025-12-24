@@ -382,3 +382,6 @@ async function checkCertificateExpiry() {
 
 **Próximo:** [02-catalogo-apis-e-servicos.md](02-catalogo-apis-e-servicos.md) - Catálogo completo de APIs e serviços fiscais
 
+
+
+

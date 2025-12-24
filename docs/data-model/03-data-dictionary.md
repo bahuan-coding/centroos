@@ -604,3 +604,6 @@
 | `chart_of_accounts` | `allows_entries` | boolean | Controle analítica |
 
 
+
+
+

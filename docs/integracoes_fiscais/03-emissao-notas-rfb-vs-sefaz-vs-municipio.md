@@ -336,3 +336,6 @@ Paycubed Stack Financeiro LTDA
 
 **Próximo:** [04-plano-implementacao-por-ondas.md](04-plano-implementacao-por-ondas.md) - Roadmap detalhado de implementação
 
+
+
+

@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Receipt,
   Layers,
+  FileText,
   BookOpen,
   FolderTree,
   Calendar,
@@ -46,6 +47,7 @@ export const menuSections: MenuSection[] = [
     items: [
       { href: '/titulos', label: 'Títulos', icon: TrendingUp },
       { href: '/pagar-receber', label: 'Pagar/Receber', icon: Receipt },
+      { href: '/nfse', label: 'NFS-e', icon: FileText },
       { href: '/projetos-fundos', label: 'Projetos e Fundos', icon: Layers },
     ],
   },
@@ -82,4 +84,7 @@ export const menuSections: MenuSection[] = [
     ],
   },
 ];
+
+
+
 

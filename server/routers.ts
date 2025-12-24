@@ -8502,6 +8502,16 @@ import {
   emitirRPS as emitirRPSSP,
   validarConexaoSP,
   type EmissaoRPSParams,
+  // NFS-e Nacional (ADN)
+  emitirNFSeNacional,
+  consultarNFSeNacional,
+  cancelarNFSeNacional,
+  consultarParametrosMunicipio,
+  consultarAliquotaServico,
+  consultarEventosNFSe,
+  baixarDANFSE,
+  validarConexaoNacional,
+  type DPSData,
 } from './integrations/fiscal';
 
 const nfseRouter = router({
@@ -8838,6 +8848,247 @@ const nfseRouter = router({
         total: result.notas.length,
         errors,
       };
+    }),
+
+  // ==================== NFS-e NACIONAL (ADN) ====================
+
+  // Validar conexão com API Nacional
+  nacionalValidar: protectedProcedure.query(async () => {
+    return validarConexaoNacional();
+  }),
+
+  // Consultar parâmetros do município
+  nacionalParametros: protectedProcedure
+    .input(z.object({
+      codigoMunicipio: z.string().length(7), // IBGE 7 dígitos
+    }))
+    .query(async ({ input }) => {
+      const params = await consultarParametrosMunicipio(input.codigoMunicipio);
+      if (!params) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Município não encontrado ou não conveniado' });
+      }
+      return params;
+    }),
+
+  // Consultar alíquotas de serviço do município
+  nacionalAliquotas: protectedProcedure
+    .input(z.object({
+      codigoMunicipio: z.string().length(7),
+      codigoServico: z.string().min(1).max(10),
+    }))
+    .query(async ({ input }) => {
+      const aliquota = await consultarAliquotaServico(input.codigoMunicipio, input.codigoServico);
+      if (!aliquota) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alíquota não encontrada' });
+      }
+      return aliquota;
+    }),
+
+  // Consultar NFS-e Nacional por chave de acesso
+  nacionalConsultar: protectedProcedure
+    .input(z.object({
+      chaveAcesso: z.string().min(44).max(50),
+    }))
+    .query(async ({ input }) => {
+      const result = await consultarNFSeNacional(input.chaveAcesso);
+      if (!result.sucesso) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: result.mensagem });
+      }
+      return result.nfse;
+    }),
+
+  // Consultar eventos de uma NFS-e Nacional
+  nacionalEventos: protectedProcedure
+    .input(z.object({
+      chaveAcesso: z.string().min(44).max(50),
+    }))
+    .query(async ({ input }) => {
+      return consultarEventosNFSe(input.chaveAcesso);
+    }),
+
+  // Baixar DANFSE (PDF)
+  nacionalDanfse: protectedProcedure
+    .input(z.object({
+      chaveAcesso: z.string().min(44).max(50),
+    }))
+    .query(async ({ input }) => {
+      const pdf = await baixarDANFSE(input.chaveAcesso);
+      if (!pdf) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'DANFSE não encontrado' });
+      }
+      return { pdf: pdf.toString('base64') };
+    }),
+
+  // Emitir NFS-e Nacional via DPS
+  nacionalEmitir: protectedProcedure
+    .input(z.object({
+      // Dados básicos da DPS
+      serie: z.string().min(1).max(5),
+      numero: z.string().min(1).max(15),
+      competencia: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      tipoEmitente: z.number().min(1).max(3) as z.ZodType<1 | 2 | 3>,
+      municipioEmissor: z.string().length(7),
+      
+      // Prestador
+      prestador: z.object({
+        cnpj: z.string().length(14).optional(),
+        cpf: z.string().length(11).optional(),
+        inscricaoMunicipal: z.string().optional(),
+        simplesNacional: z.number().min(1).max(3) as z.ZodType<1 | 2 | 3>,
+        regimeEspecial: z.number().min(0).max(6) as z.ZodType<0 | 1 | 2 | 3 | 4 | 5 | 6>,
+      }),
+      
+      // Tomador (opcional)
+      tomador: z.object({
+        cnpj: z.string().optional(),
+        cpf: z.string().optional(),
+        nome: z.string().min(1),
+        email: z.string().email().optional(),
+        endereco: z.object({
+          municipio: z.string().length(7),
+          cep: z.string().length(8),
+          logradouro: z.string(),
+          numero: z.string(),
+          bairro: z.string(),
+          complemento: z.string().optional(),
+        }).optional(),
+      }).optional(),
+      
+      // Serviço
+      servico: z.object({
+        codigoTributacaoNacional: z.string().length(6), // LC 116
+        descricao: z.string().min(1).max(2000),
+        municipioPrestacao: z.string().length(7).optional(),
+      }),
+      
+      // Valores
+      valores: z.object({
+        valorServico: z.number().positive(),
+        descontoIncondicionado: z.number().min(0).optional(),
+        descontoCondicionado: z.number().min(0).optional(),
+      }),
+      
+      // Tributação
+      tributacao: z.object({
+        tipoISSQN: z.number().min(1).max(4) as z.ZodType<1 | 2 | 3 | 4>,
+        tipoRetencao: z.number().min(1).max(3) as z.ZodType<1 | 2 | 3>,
+        aliquota: z.number().min(0).max(0.05).optional(), // 0-5%
+      }),
+      
+      // Substituição (opcional)
+      substituicao: z.object({
+        chaveSubstituida: z.string().min(44).max(50),
+        codigoMotivo: z.string(),
+        descricaoMotivo: z.string().optional(),
+      }).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      // Monta DPS a partir do input
+      const dps: DPSData = {
+        tpAmb: (process.env.NFSE_NACIONAL_AMBIENTE === 'producao' ? 1 : 2) as 1 | 2,
+        dhEmi: new Date().toISOString(),
+        verAplic: '1.0.0',
+        serie: input.serie.padStart(5, '0'),
+        nDPS: input.numero.padStart(15, '0'),
+        dCompet: input.competencia,
+        tpEmit: input.tipoEmitente,
+        cLocEmi: input.municipioEmissor,
+        prest: {
+          CNPJ: input.prestador.cnpj,
+          CPF: input.prestador.cpf,
+          IM: input.prestador.inscricaoMunicipal,
+          regTrib: {
+            opSimpNac: input.prestador.simplesNacional,
+            regEspTrib: input.prestador.regimeEspecial,
+          },
+        },
+        toma: input.tomador ? {
+          CNPJ: input.tomador.cnpj,
+          CPF: input.tomador.cpf,
+          xNome: input.tomador.nome,
+          email: input.tomador.email,
+          end: input.tomador.endereco ? {
+            endNac: {
+              cMun: input.tomador.endereco.municipio,
+              CEP: input.tomador.endereco.cep,
+              xLgr: input.tomador.endereco.logradouro,
+              nro: input.tomador.endereco.numero,
+              xBairro: input.tomador.endereco.bairro,
+              xCpl: input.tomador.endereco.complemento,
+            },
+          } : undefined,
+        } : undefined,
+        serv: {
+          locPrest: {
+            cLocPrestacao: input.servico.municipioPrestacao || input.municipioEmissor,
+          },
+          cServ: {
+            cTribNac: input.servico.codigoTributacaoNacional,
+            xDescServ: input.servico.descricao,
+          },
+        },
+        valores: {
+          vServPrest: {
+            vServ: input.valores.valorServico,
+          },
+          vDescCondIncond: (input.valores.descontoIncondicionado || input.valores.descontoCondicionado) ? {
+            vDescIncond: input.valores.descontoIncondicionado,
+            vDescCond: input.valores.descontoCondicionado,
+          } : undefined,
+          trib: {
+            tribMun: {
+              tribISSQN: input.tributacao.tipoISSQN,
+              tpRetISSQN: input.tributacao.tipoRetencao,
+              pAliq: input.tributacao.aliquota,
+            },
+            totTrib: {
+              indTotTrib: 0,
+            },
+          },
+        },
+        subst: input.substituicao ? {
+          chSubstda: input.substituicao.chaveSubstituida,
+          cMotivo: input.substituicao.codigoMotivo,
+          xMotivo: input.substituicao.descricaoMotivo,
+        } : undefined,
+      };
+      
+      const result = await emitirNFSeNacional(dps);
+      
+      if (!result.sucesso) {
+        throw new TRPCError({ 
+          code: 'BAD_REQUEST', 
+          message: result.mensagem,
+          cause: result.erros,
+        });
+      }
+      
+      return result.nfse;
+    }),
+
+  // Cancelar NFS-e Nacional
+  nacionalCancelar: protectedProcedure
+    .input(z.object({
+      chaveAcesso: z.string().min(44).max(50),
+      codigoMotivo: z.string().min(1),
+      descricaoMotivo: z.string().min(1).max(255),
+    }))
+    .mutation(async ({ input }) => {
+      const result = await cancelarNFSeNacional(
+        input.chaveAcesso,
+        input.codigoMotivo,
+        input.descricaoMotivo
+      );
+      
+      if (!result.sucesso) {
+        throw new TRPCError({ 
+          code: 'BAD_REQUEST', 
+          message: result.mensagem,
+          cause: result.erros,
+        });
+      }
+      
+      return result.evento;
     }),
 });
 

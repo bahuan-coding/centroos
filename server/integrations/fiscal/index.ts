@@ -55,3 +55,36 @@ export {
   type SOAPResponse,
 } from './soap-client';
 
+// NFS-e Nacional (ADN - Ambiente de Dados Nacional)
+export {
+  emitirNFSeNacional,
+  consultarNFSeNacional,
+  cancelarNFSeNacional,
+  verificarDPSExiste,
+  montarIdDPS,
+  consultarParametrosMunicipio,
+  consultarAliquotaServico,
+  consultarEventosNFSe,
+  baixarDANFSE,
+  validarConexaoNacional,
+  type DPSData,
+  type NFSeNacional,
+  type NFSeNacionalResult,
+  type NFSeListResultNacional,
+  type EventoNFSe,
+  type EventoResult,
+  type ParametrosMunicipais,
+  type AliquotaServico,
+  type TipoAmbiente,
+  type TipoEmitente,
+  type TipoSimplesNacional,
+  type TipoRegimeEspecial,
+  type TipoTributacaoISSQN,
+  type TipoRetencaoISSQN,
+  type TipoEvento,
+  type PrestadorDPS,
+  type TomadorDPS,
+  type ServicoDPS,
+  type ValoresDPS,
+} from './nfse-nacional';
+

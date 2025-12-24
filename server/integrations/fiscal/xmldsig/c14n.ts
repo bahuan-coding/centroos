@@ -405,3 +405,4 @@ export function canonicalizeSignedInfo(signedInfoXml: string): string {
   return canonicalize(signedInfoXml);
 }
 
+

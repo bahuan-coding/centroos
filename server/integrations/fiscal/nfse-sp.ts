@@ -34,7 +34,7 @@ const getEndpoint = () => {
  * Multi-tenant credentials lookup
  * 
  * For organization with code "PAYCUBED", looks for:
- * - NFSE_SP_PAYCUBED_CNPJ
+ * - PAYCUBED_CNPJ (global) or NFSE_SP_PAYCUBED_CNPJ
  * - NFSE_SP_PAYCUBED_CCM
  * - NFSE_SP_PAYCUBED_SENHA_WEB
  * 
@@ -47,7 +47,10 @@ const getCredentials = (orgCode?: string) => {
   // If orgCode provided, try org-specific env vars first
   if (orgCode) {
     const prefix = `NFSE_SP_${orgCode.toUpperCase()}_`;
-    const orgCnpj = process.env[`${prefix}CNPJ`];
+    // For PAYCUBED, also check the global PAYCUBED_CNPJ variable
+    const orgCnpj = orgCode.toUpperCase() === 'PAYCUBED' 
+      ? (process.env.PAYCUBED_CNPJ || process.env[`${prefix}CNPJ`])
+      : process.env[`${prefix}CNPJ`];
     const orgCcm = process.env[`${prefix}CCM`];
     const orgSenhaWeb = process.env[`${prefix}SENHA_WEB`];
     

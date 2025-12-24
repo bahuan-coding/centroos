@@ -16,7 +16,9 @@
  */
 
 import https from 'https';
+import forge from 'node-forge';
 import { loadActiveCertificate, type LoadedCertificate } from './certificates';
+import { signXml, type CertificateData } from './xmldsig';
 
 // =============================================================================
 // CONFIGURAÇÃO E ENDPOINTS
@@ -761,31 +763,247 @@ function parseEventoResponse(data: any): EventoNFSe {
 }
 
 // =============================================================================
-// ASSINATURA XML (STUBS - implementar com xmldsig)
+// ASSINATURA XML - IMPLEMENTAÇÃO REAL
 // =============================================================================
 
+const NFSE_NAMESPACE = 'http://www.sped.fazenda.gov.br/nfse';
+
+/**
+ * Converte LoadedCertificate para CertificateData (node-forge)
+ */
+function toCertificateData(loaded: LoadedCertificate): CertificateData {
+  const cert = forge.pki.certificateFromPem(loaded.cert);
+  const privateKey = forge.pki.privateKeyFromPem(loaded.key);
+  return { cert, privateKey };
+}
+
+/**
+ * Formata valor monetário para XML (2 casas decimais)
+ */
+function formatValor(valor?: number): string {
+  return valor !== undefined ? valor.toFixed(2) : '0.00';
+}
+
+/**
+ * Gera ID único para a DPS
+ * Formato: DPS + cLocEmi(7) + tpInsc(1) + inscFed(14) + serie(5) + nDPS(15)
+ */
+function gerarIdDPS(dps: DPSData): string {
+  const cLocEmi = dps.cLocEmi.padStart(7, '0');
+  const tpInsc = dps.prest.CNPJ ? '1' : '2';
+  const inscFed = (dps.prest.CNPJ || dps.prest.CPF || '').padStart(14, '0');
+  const serie = dps.serie.padStart(5, '0');
+  const nDPS = dps.nDPS.padStart(15, '0');
+  return `DPS${cLocEmi}${tpInsc}${inscFed}${serie}${nDPS}`;
+}
+
+/**
+ * Converte DPS para XML
+ */
+function dpsToXml(dps: DPSData): string {
+  const idDPS = gerarIdDPS(dps);
+  
+  // Prestador
+  let prestXml = '';
+  if (dps.prest.CNPJ) prestXml += `<CNPJ>${dps.prest.CNPJ}</CNPJ>`;
+  if (dps.prest.CPF) prestXml += `<CPF>${dps.prest.CPF}</CPF>`;
+  if (dps.prest.IM) prestXml += `<IM>${dps.prest.IM}</IM>`;
+  if (dps.prest.xNome) prestXml += `<xNome>${escapeXml(dps.prest.xNome)}</xNome>`;
+  if (dps.prest.email) prestXml += `<email>${escapeXml(dps.prest.email)}</email>`;
+  prestXml += `<regTrib>`;
+  prestXml += `<opSimpNac>${dps.prest.regTrib.opSimpNac}</opSimpNac>`;
+  prestXml += `<regEspTrib>${dps.prest.regTrib.regEspTrib}</regEspTrib>`;
+  prestXml += `</regTrib>`;
+  
+  // Tomador (opcional)
+  let tomaXml = '';
+  if (dps.toma) {
+    tomaXml = '<toma>';
+    if (dps.toma.CNPJ) tomaXml += `<CNPJ>${dps.toma.CNPJ}</CNPJ>`;
+    if (dps.toma.CPF) tomaXml += `<CPF>${dps.toma.CPF}</CPF>`;
+    tomaXml += `<xNome>${escapeXml(dps.toma.xNome)}</xNome>`;
+    if (dps.toma.email) tomaXml += `<email>${escapeXml(dps.toma.email)}</email>`;
+    if (dps.toma.end?.endNac) {
+      tomaXml += `<end><endNac>`;
+      tomaXml += `<cMun>${dps.toma.end.endNac.cMun}</cMun>`;
+      tomaXml += `<CEP>${dps.toma.end.endNac.CEP}</CEP>`;
+      tomaXml += `<xLgr>${escapeXml(dps.toma.end.endNac.xLgr)}</xLgr>`;
+      tomaXml += `<nro>${escapeXml(dps.toma.end.endNac.nro)}</nro>`;
+      if (dps.toma.end.endNac.xCpl) tomaXml += `<xCpl>${escapeXml(dps.toma.end.endNac.xCpl)}</xCpl>`;
+      tomaXml += `<xBairro>${escapeXml(dps.toma.end.endNac.xBairro)}</xBairro>`;
+      tomaXml += `</endNac></end>`;
+    }
+    tomaXml += '</toma>';
+  }
+  
+  // Serviço
+  let servXml = '<serv>';
+  servXml += '<locPrest>';
+  if (dps.serv.locPrest.cLocPrestacao) {
+    servXml += `<cLocPrestacao>${dps.serv.locPrest.cLocPrestacao}</cLocPrestacao>`;
+  }
+  if (dps.serv.locPrest.cPaisPrestacao) {
+    servXml += `<cPaisPrestacao>${dps.serv.locPrest.cPaisPrestacao}</cPaisPrestacao>`;
+  }
+  servXml += '</locPrest>';
+  servXml += '<cServ>';
+  servXml += `<cTribNac>${dps.serv.cServ.cTribNac}</cTribNac>`;
+  if (dps.serv.cServ.cTribMun) servXml += `<cTribMun>${dps.serv.cServ.cTribMun}</cTribMun>`;
+  servXml += `<xDescServ>${escapeXml(dps.serv.cServ.xDescServ)}</xDescServ>`;
+  if (dps.serv.cServ.cNBS) servXml += `<cNBS>${dps.serv.cServ.cNBS}</cNBS>`;
+  servXml += '</cServ>';
+  servXml += '</serv>';
+  
+  // Valores
+  let valoresXml = '<valores>';
+  valoresXml += '<vServPrest>';
+  valoresXml += `<vServ>${formatValor(dps.valores.vServPrest.vServ)}</vServ>`;
+  if (dps.valores.vServPrest.vReceb !== undefined) {
+    valoresXml += `<vReceb>${formatValor(dps.valores.vServPrest.vReceb)}</vReceb>`;
+  }
+  valoresXml += '</vServPrest>';
+  
+  if (dps.valores.vDescCondIncond) {
+    valoresXml += '<vDescCondIncond>';
+    if (dps.valores.vDescCondIncond.vDescIncond !== undefined) {
+      valoresXml += `<vDescIncond>${formatValor(dps.valores.vDescCondIncond.vDescIncond)}</vDescIncond>`;
+    }
+    if (dps.valores.vDescCondIncond.vDescCond !== undefined) {
+      valoresXml += `<vDescCond>${formatValor(dps.valores.vDescCondIncond.vDescCond)}</vDescCond>`;
+    }
+    valoresXml += '</vDescCondIncond>';
+  }
+  
+  valoresXml += '<trib>';
+  valoresXml += '<tribMun>';
+  valoresXml += `<tribISSQN>${dps.valores.trib.tribMun.tribISSQN}</tribISSQN>`;
+  valoresXml += `<tpRetISSQN>${dps.valores.trib.tribMun.tpRetISSQN}</tpRetISSQN>`;
+  if (dps.valores.trib.tribMun.pAliq !== undefined) {
+    valoresXml += `<pAliq>${formatValor(dps.valores.trib.tribMun.pAliq * 100)}</pAliq>`;
+  }
+  valoresXml += '</tribMun>';
+  valoresXml += '<totTrib>';
+  valoresXml += `<indTotTrib>${dps.valores.trib.totTrib.indTotTrib || 0}</indTotTrib>`;
+  valoresXml += '</totTrib>';
+  valoresXml += '</trib>';
+  valoresXml += '</valores>';
+  
+  // Substituição (opcional)
+  let substXml = '';
+  if (dps.subst) {
+    substXml = '<subst>';
+    substXml += `<chSubstda>${dps.subst.chSubstda}</chSubstda>`;
+    substXml += `<cMotivo>${dps.subst.cMotivo}</cMotivo>`;
+    if (dps.subst.xMotivo) substXml += `<xMotivo>${escapeXml(dps.subst.xMotivo)}</xMotivo>`;
+    substXml += '</subst>';
+  }
+  
+  // Monta XML completo
+  const xml = `<DPS versao="1.00" xmlns="${NFSE_NAMESPACE}">` +
+    `<infDPS Id="${idDPS}">` +
+    `<tpAmb>${dps.tpAmb}</tpAmb>` +
+    `<dhEmi>${dps.dhEmi}</dhEmi>` +
+    `<verAplic>${dps.verAplic}</verAplic>` +
+    `<serie>${dps.serie}</serie>` +
+    `<nDPS>${dps.nDPS}</nDPS>` +
+    `<dCompet>${dps.dCompet}</dCompet>` +
+    `<tpEmit>${dps.tpEmit}</tpEmit>` +
+    `<cLocEmi>${dps.cLocEmi}</cLocEmi>` +
+    substXml +
+    `<prest>${prestXml}</prest>` +
+    tomaXml +
+    servXml +
+    valoresXml +
+    `</infDPS>` +
+    `</DPS>`;
+  
+  return xml;
+}
+
+/**
+ * Escape caracteres especiais para XML
+ */
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/**
+ * Assina DPS usando XMLDSig
+ */
 async function assinarDPS(
   dps: DPSData,
   certificate: LoadedCertificate
 ): Promise<string> {
-  // TODO: Implementar assinatura XML da DPS usando xmldsig
-  // Por enquanto, retorna JSON serializado
-  // A implementação real deve:
-  // 1. Gerar XML a partir do objeto DPS
-  // 2. Assinar com RSA-SHA256
-  // 3. Retornar XML assinado
+  const xml = dpsToXml(dps);
+  const certData = toCertificateData(certificate);
   
-  console.warn('AVISO: Assinatura DPS não implementada - usando JSON');
-  return JSON.stringify(dps);
+  return signXml(xml, certData, {
+    referenceUri: `#${gerarIdDPS(dps)}`,
+    insertBeforeTag: 'infDPS',
+  });
 }
 
+/**
+ * Gera XML do pedido de registro de evento
+ */
+function eventoToXml(
+  chaveAcesso: string,
+  tipoEvento: string,
+  sequencial: number,
+  codigoMotivo: string,
+  descricaoMotivo: string
+): string {
+  const idPedido = `PED${Date.now()}`;
+  const dataEvento = new Date().toISOString();
+  
+  const xml = `<pedRegEvento versao="1.00" xmlns="${NFSE_NAMESPACE}">` +
+    `<infPedReg Id="${idPedido}">` +
+    `<tpAmb>${process.env.NFSE_NACIONAL_AMBIENTE === 'producao' ? 1 : 2}</tpAmb>` +
+    `<verAplic>1.0.0</verAplic>` +
+    `<dhEvento>${dataEvento}</dhEvento>` +
+    `<chNFSe>${chaveAcesso}</chNFSe>` +
+    `<nPedRegEvento>${sequencial}</nPedRegEvento>` +
+    `<${tipoEvento}>` +
+    `<xDesc>Cancelamento de NFS-e</xDesc>` +
+    `<cMotivo>${codigoMotivo}</cMotivo>` +
+    `<xMotivo>${escapeXml(descricaoMotivo)}</xMotivo>` +
+    `</${tipoEvento}>` +
+    `</infPedReg>` +
+    `</pedRegEvento>`;
+  
+  return xml;
+}
+
+/**
+ * Assina evento usando XMLDSig
+ */
 async function assinarEvento(
-  evento: any,
+  evento: {
+    tipoEvento: string;
+    chNFSe: string;
+    nPedRegEvento: number;
+    e101101: { xDesc: string; cMotivo: string; xMotivo: string };
+  },
   certificate: LoadedCertificate
 ): Promise<string> {
-  // TODO: Implementar assinatura XML do evento usando xmldsig
-  console.warn('AVISO: Assinatura evento não implementada - usando JSON');
-  return JSON.stringify(evento);
+  const xml = eventoToXml(
+    evento.chNFSe,
+    evento.tipoEvento,
+    evento.nPedRegEvento,
+    evento.e101101.cMotivo,
+    evento.e101101.xMotivo
+  );
+  
+  const certData = toCertificateData(certificate);
+  
+  return signXml(xml, certData, {
+    insertBeforeTag: 'infPedReg',
+  });
 }
 
 // =============================================================================

@@ -15,6 +15,8 @@ import {
   BarChart3,
   Shield,
   Settings,
+  Cpu,
+  FileSearch,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -48,6 +50,8 @@ export const menuSections: MenuSection[] = [
       { href: '/titulos', label: 'Títulos', icon: TrendingUp },
       { href: '/pagar-receber', label: 'Pagar/Receber', icon: Receipt },
       { href: '/nfse', label: 'NFS-e SP', icon: FileText },
+      { href: '/motor-fiscal', label: 'Motor Fiscal', icon: Cpu },
+      { href: '/integra-contador', label: 'Integra Contador', icon: FileSearch },
       { href: '/projetos-fundos', label: 'Projetos e Fundos', icon: Layers },
     ],
   },

@@ -876,3 +876,5 @@ CREATE INDEX idx_coa_analytical_only ON chart_of_accounts(organization_id, code)
 
 
 
+
+

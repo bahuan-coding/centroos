@@ -488,6 +488,89 @@
    PRINT STYLES
    ======================================== */
 
+/* ========================================
+   MICRO-INTERACTION TRANSITIONS
+   ======================================== */
+
+@layer utilities {
+  /* Smooth transitions for interactive elements */
+  .transition-micro {
+    transition: all var(--transition-fast);
+  }
+  
+  .transition-smooth {
+    transition: all var(--transition-base);
+  }
+  
+  /* Focus ring with animation */
+  .focus-ring-animated {
+    @apply outline-none;
+    transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  }
+  
+  .focus-ring-animated:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  
+  /* Interactive card hover */
+  .interactive-card {
+    @apply transition-all duration-200;
+  }
+  
+  .interactive-card:hover {
+    @apply shadow-lg -translate-y-0.5;
+  }
+  
+  .interactive-card:active {
+    @apply scale-[0.99] shadow-md;
+  }
+  
+  /* Button press feedback */
+  .press-effect:active {
+    transform: scale(0.97);
+  }
+  
+  /* Link hover underline animation */
+  .link-animated {
+    @apply relative;
+  }
+  
+  .link-animated::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-current;
+    transition: width var(--transition-base);
+  }
+  
+  .link-animated:hover::after {
+    @apply w-full;
+  }
+  
+  /* Input focus glow */
+  .input-glow:focus {
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15);
+  }
+  
+  /* Badge pulse for notifications */
+  .badge-pulse {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+  
+  /* Tooltip fade */
+  .tooltip-fade {
+    @apply opacity-0 invisible;
+    transition: opacity var(--transition-fast), visibility var(--transition-fast);
+  }
+  
+  .group:hover .tooltip-fade,
+  [data-state="open"] .tooltip-fade {
+    @apply opacity-100 visible;
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
 @media print {
   body {
     -webkit-print-color-adjust: exact;

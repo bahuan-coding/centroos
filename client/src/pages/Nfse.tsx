@@ -99,18 +99,28 @@ function EmptySelection({ onNewNfse }: { onNewNfse: () => void }) {
   );
 }
 
+// Helper to format date as YYYY-MM-DD in local timezone (avoids UTC conversion issues)
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function Nfse() {
   // State
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [filtroStatus, setFiltroStatus] = useState<string | undefined>(undefined);
   
-  // Date range - default to current month
+  // Date range - default to current month (but limit end date to today for API)
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  const [dataInicio, setDataInicio] = useState(firstDay.toISOString().split('T')[0]);
-  const [dataFim, setDataFim] = useState(lastDay.toISOString().split('T')[0]);
+  // API doesn't accept future dates - use today as max
+  const maxEndDate = lastDay > now ? now : lastDay;
+  const [dataInicio, setDataInicio] = useState(formatLocalDate(firstDay));
+  const [dataFim, setDataFim] = useState(formatLocalDate(maxEndDate));
   
   const [selectedNota, setSelectedNota] = useState<any>(null);
   const [showEmitirModal, setShowEmitirModal] = useState(false);
@@ -198,12 +208,16 @@ export default function Nfse() {
     const [year, month] = value.split('-').map(Number);
     const first = new Date(year, month - 1, 1);
     const last = new Date(year, month, 0);
-    setDataInicio(first.toISOString().split('T')[0]);
-    setDataFim(last.toISOString().split('T')[0]);
+    // Limit dataFim to today to avoid API errors
+    const effectiveLast = last > now ? now : last;
+    setDataInicio(formatLocalDate(first));
+    setDataFim(formatLocalDate(effectiveLast));
     setPage(1);
   };
 
-  const currentMonth = `${new Date(dataInicio).getFullYear()}-${String(new Date(dataInicio).getMonth() + 1).padStart(2, '0')}`;
+  // Parse date string manually to avoid timezone issues (new Date("YYYY-MM-DD") is UTC)
+  const [anoInicio, mesInicio] = dataInicio.split('-').map(Number);
+  const currentMonth = `${anoInicio}-${String(mesInicio).padStart(2, '0')}`;
 
   return (
     <div className="h-[calc(100vh-theme(spacing.16)-theme(spacing.8))] lg:h-[calc(100vh-theme(spacing.8))] flex flex-col">

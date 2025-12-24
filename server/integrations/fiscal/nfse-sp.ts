@@ -164,10 +164,12 @@ async function signXml(xmlContent: string, tagToSign: string): Promise<string> {
 function buildCabecalhoConsultaPeriodo(dataInicio: string, dataFim: string, pagina: number): string {
   const creds = getCredentials();
   const cnpj = cleanCnpj(creds.cnpj);
-  return `<Cabecalho Versao="1">` +
+  const ccmPadded = creds.ccm.padStart(8, '0');
+  // xmlns="" is required to reset namespace for child elements (XSD expects no namespace)
+  return `<Cabecalho xmlns="" Versao="1">` +
     `<CPFCNPJRemetente><CNPJ>${cnpj}</CNPJ></CPFCNPJRemetente>` +
     `<CPFCNPJ><CNPJ>${cnpj}</CNPJ></CPFCNPJ>` +
-    `<Inscricao>${creds.ccm}</Inscricao>` +
+    `<Inscricao>${ccmPadded}</Inscricao>` +
     `<dtInicio>${dataInicio}</dtInicio>` +
     `<dtFim>${dataFim}</dtFim>` +
     `<NumeroPagina>${pagina}</NumeroPagina>` +
@@ -181,7 +183,8 @@ function buildCabecalhoConsultaPeriodo(dataInicio: string, dataFim: string, pagi
 function buildCabecalhoConsultaNFe(): string {
   const creds = getCredentials();
   const cnpj = cleanCnpj(creds.cnpj);
-  return `<Cabecalho Versao="1">` +
+  // xmlns="" is required to reset namespace for child elements (XSD expects no namespace)
+  return `<Cabecalho xmlns="" Versao="1">` +
     `<CPFCNPJRemetente><CNPJ>${cnpj}</CNPJ></CPFCNPJRemetente>` +
     `</Cabecalho>`;
 }
@@ -191,8 +194,10 @@ function buildCabecalhoConsultaNFe(): string {
  */
 function buildCabecalhoCancelamento(): string {
   const creds = getCredentials();
-  return `<Cabecalho Versao="1">` +
+  // xmlns="" is required to reset namespace for child elements (XSD expects no namespace)
+  return `<Cabecalho xmlns="" Versao="1">` +
     `<CPFCNPJRemetente><CNPJ>${cleanCnpj(creds.cnpj)}</CNPJ></CPFCNPJRemetente>` +
+    `<transacao>true</transacao>` +
     `</Cabecalho>`;
 }
 
@@ -243,7 +248,7 @@ export async function consultarNFSePeriodo(
     return { notas: [], total: 0, sucesso: false, mensagemErro: response.error };
   }
   
-  return parseNFSeListResponse(response);
+  return await parseNFSeListResponse(response);
 }
 
 /**
@@ -268,9 +273,10 @@ export async function consultarNFSePorNumero(numeroNFe: string): Promise<NFSeCon
   const ccmPadded = creds.ccm.padStart(8, '0');
   
   // Build XML according to official XSD schema (PedidoConsultaNFe_v01.xsd)
+  // xmlns="" is required to reset namespace for child elements (XSD expects no namespace)
   const pedido = `<PedidoConsultaNFe xmlns="http://www.prefeitura.sp.gov.br/nfe">` +
     buildCabecalhoConsultaNFe() +
-    `<Detalhe>` +
+    `<Detalhe xmlns="">` +
     `<ChaveNFe>` +
     `<InscricaoPrestador>${ccmPadded}</InscricaoPrestador>` +
     `<NumeroNFe>${numeroNFe}</NumeroNFe>` +
@@ -298,7 +304,7 @@ export async function consultarNFSePorNumero(numeroNFe: string): Promise<NFSeCon
     throw new Error(response.error || 'Erro ao consultar NFS-e');
   }
   
-  const result = parseNFSeListResponse(response);
+  const result = await parseNFSeListResponse(response);
   return result.notas[0] || null;
 }
 
@@ -333,18 +339,20 @@ export async function cancelarNFSe(numeroNFe: string): Promise<{ sucesso: boolea
   const cancelString = ccmPadded + numeroPadded;
   
   // Sign with RSA-SHA1 (PKCS#1 v1.5)
-  const forge = await import('node-forge');
+  const forgeModule = await import('node-forge');
+  const forge = forgeModule.default || forgeModule;
   const md = forge.md.sha1.create();
   md.update(cancelString, 'utf8');
   const assinaturaCancelamento = forge.util.encode64(cert.privateKey.sign(md));
   
   // Build XML according to official XSD schema (PedidoCancelamentoNFe_v01.xsd)
+  // xmlns="" is required to reset namespace for child elements (XSD expects no namespace)
   const pedido = `<PedidoCancelamentoNFe xmlns="http://www.prefeitura.sp.gov.br/nfe">` +
-    `<Cabecalho Versao="1">` +
+    `<Cabecalho xmlns="" Versao="1">` +
     `<CPFCNPJRemetente><CNPJ>${cleanCnpj(creds.cnpj)}</CNPJ></CPFCNPJRemetente>` +
     `<transacao>true</transacao>` +
     `</Cabecalho>` +
-    `<Detalhe>` +
+    `<Detalhe xmlns="">` +
     `<ChaveNFe>` +
     `<InscricaoPrestador>${ccmPadded}</InscricaoPrestador>` +
     `<NumeroNFe>${numeroPadded}</NumeroNFe>` +
@@ -375,14 +383,37 @@ export async function cancelarNFSe(numeroNFe: string): Promise<{ sucesso: boolea
   
   // Parse response for success/error
   const data = response.data;
-  const retorno = data?.CancelamentoNFeResponse?.RetornoXML || data?.RetornoCancelamentoNFe;
+  const retornoXmlString = data?.CancelamentoNFeResponse?.RetornoXML;
+  
+  // RetornoXML is returned as a string that needs to be parsed
+  let retorno: any;
+  if (typeof retornoXmlString === 'string') {
+    const { parseStringPromise } = await import('xml2js');
+    const parsed = await parseStringPromise(retornoXmlString, {
+      explicitArray: false,
+      ignoreAttrs: true,
+      tagNameProcessors: [(name: string) => name.replace(/^.*:/, '')], // Remove namespace prefixes
+    });
+    retorno = parsed.RetornoCancelamentoNFe || parsed;
+  } else {
+    retorno = retornoXmlString || data?.RetornoCancelamentoNFe;
+  }
   
   if (retorno?.Cabecalho?.Sucesso === 'true') {
     return { sucesso: true, mensagem: 'NFS-e cancelada com sucesso' };
   }
   
-  const erro = retorno?.Erro?.Mensagem || 'Erro desconhecido no cancelamento';
-  return { sucesso: false, mensagem: erro };
+  // Extract error messages
+  const erros = retorno?.Erro;
+  if (erros) {
+    const errosArray = Array.isArray(erros) ? erros : [erros];
+    const mensagens = errosArray.map((e: any) => e.Descricao || e.Mensagem || e.Codigo).filter(Boolean).join('; ');
+    if (mensagens) {
+      return { sucesso: false, mensagem: mensagens };
+    }
+  }
+  
+  return { sucesso: false, mensagem: 'Erro desconhecido no cancelamento' };
 }
 
 /**
@@ -752,26 +783,44 @@ export async function validarConexaoSP(): Promise<{
 /**
  * Parse NFS-e list response from SOAP
  */
-function parseNFSeListResponse(response: SOAPResponse): NFSeListResultSP {
+async function parseNFSeListResponse(response: SOAPResponse): Promise<NFSeListResultSP> {
   try {
     const data = response.data;
     
-    // Navigate through SOAP response structure
-    const retorno = 
+    // Navigate through SOAP response structure - RetornoXML is a string that needs parsing
+    const retornoXmlString = 
       data?.ConsultaNFeEmitidasResponse?.RetornoXML ||
       data?.ConsultaNFeResponse?.RetornoXML ||
-      data?.ConsultaNFeRecebidasResponse?.RetornoXML ||
-      data?.RetornoConsulta;
+      data?.ConsultaNFeRecebidasResponse?.RetornoXML;
+    
+    if (!retornoXmlString) {
+      return { notas: [], total: 0, sucesso: false, mensagemErro: 'Resposta vazia da API' };
+    }
+    
+    // Parse the inner XML string
+    const { parseStringPromise } = await import('xml2js');
+    const parsed = await parseStringPromise(retornoXmlString, {
+      explicitArray: false,
+      ignoreAttrs: true,
+      tagNameProcessors: [(name: string) => name.replace(/^.*:/, '')], // Remove namespace prefixes
+    });
+    
+    const retorno = parsed.RetornoConsulta;
     
     if (!retorno) {
-      return { notas: [], total: 0, sucesso: false, mensagemErro: 'Resposta vazia da API' };
+      return { notas: [], total: 0, sucesso: false, mensagemErro: 'Estrutura de resposta inválida' };
     }
     
     // Check for errors
     if (retorno.Erro) {
       const erros = Array.isArray(retorno.Erro) ? retorno.Erro : [retorno.Erro];
-      const mensagens = erros.map((e: any) => e.Mensagem || e.Codigo).join('; ');
+      const mensagens = erros.map((e: any) => `${e.Codigo}: ${e.Descricao || e.Mensagem}`).join('; ');
       return { notas: [], total: 0, sucesso: false, mensagemErro: mensagens };
+    }
+    
+    // Check for success flag
+    if (retorno.Cabecalho?.Sucesso === 'false') {
+      return { notas: [], total: 0, sucesso: false, mensagemErro: 'Consulta não retornou sucesso' };
     }
     
     // Parse NFe list

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
+import { getOrgCode } from '@/lib/org';
 
 interface NfseCancelModalProps {
   open: boolean;
@@ -36,7 +37,8 @@ export function NfseCancelModal({ open, onOpenChange, numeroNFe, onSuccess }: Nf
       return;
     }
     
-    cancelMutation.mutate(numeroNFe);
+    const orgCode = getOrgCode();
+    cancelMutation.mutate({ numeroNFe, orgCode });
   };
   
   const handleClose = () => {

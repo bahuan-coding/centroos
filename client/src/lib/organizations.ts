@@ -5,6 +5,17 @@
 
 export type OrgType = 'tech_company' | 'spiritist_center' | 'generic';
 
+/**
+ * NFS-e São Paulo credentials per organization
+ * Stored as environment variables with org code prefix: NFSE_SP_{ORG_CODE}_{FIELD}
+ */
+export interface NfseSpCredentials {
+  cnpj: string;
+  ccm: string;
+  senhaWeb: string;
+  environment: 'production' | 'homologation';
+}
+
 export interface Organization {
   id: string;
   code: string;
@@ -13,6 +24,8 @@ export interface Organization {
   taxId: string;
   type: OrgType;
   isDemo: boolean;
+  /** Environment variable prefix for NFS-e credentials (e.g., PAYCUBED -> NFSE_SP_PAYCUBED_CNPJ) */
+  nfseEnvPrefix?: string;
 }
 
 /**
@@ -29,6 +42,7 @@ export const ORGANIZATIONS: Organization[] = [
     taxId: '63.552.022/0001-84',
     type: 'tech_company',
     isDemo: false,
+    nfseEnvPrefix: 'PAYCUBED', // NFSE_SP_PAYCUBED_CNPJ, NFSE_SP_PAYCUBED_CCM, etc.
   },
   {
     id: 'demo-org-00000000-0000-0000-0000-000000000002',
@@ -38,6 +52,7 @@ export const ORGANIZATIONS: Organization[] = [
     taxId: '00.000.000/0001-00',
     type: 'spiritist_center',
     isDemo: true,
+    // Demo org doesn't have NFS-e credentials
   },
 ];
 
@@ -54,6 +69,7 @@ export function getOrganizationById(id: string): Organization | undefined {
 export function getDefaultOrganization(): Organization {
   return ORGANIZATIONS.find((org) => !org.isDemo) || ORGANIZATIONS[0];
 }
+
 
 
 

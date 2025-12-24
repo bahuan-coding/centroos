@@ -66,6 +66,15 @@ export function getAvailableOrgs(): Organization[] {
 }
 
 /**
+ * Get the current organization code for API calls (multi-tenant NFS-e)
+ * Returns the nfseEnvPrefix if configured, otherwise the org code
+ */
+export function getOrgCode(): string | undefined {
+  const org = getOrg();
+  return org?.nfseEnvPrefix || org?.code;
+}
+
+/**
  * Set default organization if none selected
  */
 export function ensureOrg(): Organization {

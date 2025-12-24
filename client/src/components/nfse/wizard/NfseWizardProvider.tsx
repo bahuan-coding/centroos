@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
+import { getOrgCode } from '@/lib/org';
 
 // Types
 export type TipoTributacao = 'T' | 'F' | 'A' | 'B' | 'M' | 'N' | 'X';
@@ -348,6 +349,7 @@ export function NfseWizardProvider({ children, onSuccess }: NfseWizardProviderPr
       const cpfCnpj = form.tomador.cpfCnpj.replace(/\D/g, '');
       const cep = form.tomador.endereco.cep.replace(/\D/g, '');
       
+      const orgCode = getOrgCode();
       await emitirMutation.mutateAsync({
         serieRPS: form.serieRPS,
         numeroRPS: parseInt(form.numeroRPS),
@@ -380,6 +382,7 @@ export function NfseWizardProvider({ children, onSuccess }: NfseWizardProviderPr
         valorINSS: form.valorINSS ? parseFloat(form.valorINSS) : undefined,
         valorIR: form.valorIR ? parseFloat(form.valorIR) : undefined,
         valorCSLL: form.valorCSLL ? parseFloat(form.valorCSLL) : undefined,
+        orgCode,
       });
       
       return true;

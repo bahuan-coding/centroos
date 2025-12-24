@@ -20,6 +20,7 @@ import { NfseList, NfseDetail, NfseWizard, NfseCancelModal } from '@/components/
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
 import { QueryError } from '@/components/ui/query-error';
+import { getOrgCode } from '@/lib/org';
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -127,11 +128,13 @@ export default function Nfse() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showMobileDetail, setShowMobileDetail] = useState(false);
 
-  // Query
+  // Query - passa orgCode para multi-tenant
+  const orgCode = getOrgCode();
   const { data, isLoading, isError, error, refetch, isRefetching } = trpc.nfse.spConsultarPeriodo.useQuery({
     dataInicio,
     dataFim,
     pagina: page,
+    orgCode,
   });
 
   // Stats derived from data

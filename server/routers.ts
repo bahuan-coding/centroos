@@ -8652,9 +8652,13 @@ const nfseRouter = router({
   // ==================== SÃO PAULO (NOTA FISCAL PAULISTANA) ====================
   
   // Validar conexão com API de São Paulo
-  spValidar: protectedProcedure.query(async () => {
-    return validarConexaoSP();
-  }),
+  spValidar: protectedProcedure
+    .input(z.object({
+      orgCode: z.string().optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      return validarConexaoSP(input?.orgCode);
+    }),
 
   // Consultar NFS-e por período (São Paulo)
   spConsultarPeriodo: protectedProcedure
@@ -8662,23 +8666,30 @@ const nfseRouter = router({
       dataInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       dataFim: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       pagina: z.number().optional().default(1),
+      orgCode: z.string().optional(), // Multi-tenant: código da organização
     }))
     .query(async ({ input }) => {
-      return consultarNFSePeriodoSP(input.dataInicio, input.dataFim, input.pagina);
+      return consultarNFSePeriodoSP(input.dataInicio, input.dataFim, input.pagina, input.orgCode);
     }),
 
   // Consultar NFS-e por número (São Paulo)
   spConsultarNota: protectedProcedure
-    .input(z.string().min(1))
+    .input(z.object({
+      numeroNFe: z.string().min(1),
+      orgCode: z.string().optional(),
+    }))
     .query(async ({ input }) => {
-      return consultarNFSePorNumeroSP(input);
+      return consultarNFSePorNumeroSP(input.numeroNFe, input.orgCode);
     }),
 
   // Cancelar NFS-e (São Paulo)
   spCancelar: protectedProcedure
-    .input(z.string().min(1))
+    .input(z.object({
+      numeroNFe: z.string().min(1),
+      orgCode: z.string().optional(),
+    }))
     .mutation(async ({ input }) => {
-      return cancelarNFSeSP(input);
+      return cancelarNFSeSP(input.numeroNFe, input.orgCode);
     }),
 
   // Emitir RPS (São Paulo) - Converte em NFS-e
@@ -8716,6 +8727,7 @@ const nfseRouter = router({
       valorINSS: z.number().min(0).optional(),
       valorIR: z.number().min(0).optional(),
       valorCSLL: z.number().min(0).optional(),
+      orgCode: z.string().optional(), // Multi-tenant: código da organização
     }))
     .mutation(async ({ input }) => {
       const params: EmissaoRPSParams = {
@@ -8743,7 +8755,7 @@ const nfseRouter = router({
         valorIR: input.valorIR,
         valorCSLL: input.valorCSLL,
       };
-      return emitirRPSSP(params);
+      return emitirRPSSP(params, input.orgCode);
     }),
 
   // Importar NFS-e de São Paulo para o banco de dados

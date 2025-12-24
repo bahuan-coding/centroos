@@ -30,11 +30,46 @@ const getEndpoint = () => {
   return useLegacy ? NFSE_SP_ENDPOINTS.legacy : NFSE_SP_ENDPOINTS.production;
 };
 
-const getCredentials = () => ({
-  cnpj: process.env.NFSE_SP_CNPJ || '',
-  ccm: process.env.NFSE_SP_CCM || '',
-  senhaWeb: process.env.NFSE_SP_SENHA_WEB || '',
-});
+/**
+ * Multi-tenant credentials lookup
+ * 
+ * For organization with code "PAYCUBED", looks for:
+ * - NFSE_SP_PAYCUBED_CNPJ
+ * - NFSE_SP_PAYCUBED_CCM
+ * - NFSE_SP_PAYCUBED_SENHA_WEB
+ * 
+ * Falls back to legacy single-tenant variables for backwards compatibility:
+ * - NFSE_SP_CNPJ
+ * - NFSE_SP_CCM
+ * - NFSE_SP_SENHA_WEB
+ */
+const getCredentials = (orgCode?: string) => {
+  // If orgCode provided, try org-specific env vars first
+  if (orgCode) {
+    const prefix = `NFSE_SP_${orgCode.toUpperCase()}_`;
+    const orgCnpj = process.env[`${prefix}CNPJ`];
+    const orgCcm = process.env[`${prefix}CCM`];
+    const orgSenhaWeb = process.env[`${prefix}SENHA_WEB`];
+    
+    // Only use org-specific if at least CNPJ is configured
+    if (orgCnpj) {
+      return {
+        cnpj: orgCnpj,
+        ccm: orgCcm || '',
+        senhaWeb: orgSenhaWeb || '',
+        orgCode,
+      };
+    }
+  }
+  
+  // Fallback to legacy single-tenant env vars
+  return {
+    cnpj: process.env.NFSE_SP_CNPJ || '',
+    ccm: process.env.NFSE_SP_CCM || '',
+    senhaWeb: process.env.NFSE_SP_SENHA_WEB || '',
+    orgCode: undefined,
+  };
+};
 
 // Types
 export interface NFSeConsultaSP {
@@ -161,8 +196,8 @@ async function signXml(xmlContent: string, tagToSign: string): Promise<string> {
 /**
  * Build Cabecalho for PedidoConsultaNFePeriodo (based on official XSD schema)
  */
-function buildCabecalhoConsultaPeriodo(dataInicio: string, dataFim: string, pagina: number): string {
-  const creds = getCredentials();
+function buildCabecalhoConsultaPeriodo(dataInicio: string, dataFim: string, pagina: number, orgCode?: string): string {
+  const creds = getCredentials(orgCode);
   const cnpj = cleanCnpj(creds.cnpj);
   const ccmPadded = creds.ccm.padStart(8, '0');
   // xmlns="" is required to reset namespace for child elements (XSD expects no namespace)
@@ -180,8 +215,8 @@ function buildCabecalhoConsultaPeriodo(dataInicio: string, dataFim: string, pagi
  * Build Cabecalho for PedidoConsultaNFe (single invoice query)
  * Per XSD: Only CPFCNPJRemetente is in Cabecalho. ChaveNFe goes in Detalhe.
  */
-function buildCabecalhoConsultaNFe(): string {
-  const creds = getCredentials();
+function buildCabecalhoConsultaNFe(orgCode?: string): string {
+  const creds = getCredentials(orgCode);
   const cnpj = cleanCnpj(creds.cnpj);
   // xmlns="" is required to reset namespace for child elements (XSD expects no namespace)
   return `<Cabecalho xmlns="" Versao="1">` +
@@ -192,8 +227,8 @@ function buildCabecalhoConsultaNFe(): string {
 /**
  * Build Cabecalho for PedidoCancelamentoNFe
  */
-function buildCabecalhoCancelamento(): string {
-  const creds = getCredentials();
+function buildCabecalhoCancelamento(orgCode?: string): string {
+  const creds = getCredentials(orgCode);
   // xmlns="" is required to reset namespace for child elements (XSD expects no namespace)
   return `<Cabecalho xmlns="" Versao="1">` +
     `<CPFCNPJRemetente><CNPJ>${cleanCnpj(creds.cnpj)}</CNPJ></CPFCNPJRemetente>` +
@@ -204,13 +239,19 @@ function buildCabecalhoCancelamento(): string {
 /**
  * Consultar NFS-e por período
  * Structure based on official XSD: PedidoConsultaNFePeriodo_v01.xsd
+ * 
+ * @param dataInicio - Data inicial do período
+ * @param dataFim - Data final do período
+ * @param pagina - Número da página (default: 1)
+ * @param orgCode - Código da organização para credenciais multi-tenant
  */
 export async function consultarNFSePeriodo(
   dataInicio: string | Date,
   dataFim: string | Date,
-  pagina: number = 1
+  pagina: number = 1,
+  orgCode?: string
 ): Promise<NFSeListResultSP> {
-  const creds = getCredentials();
+  const creds = getCredentials(orgCode);
   
   if (!creds.cnpj) {
     return { notas: [], total: 0, sucesso: false, mensagemErro: 'CNPJ não configurado (NFSE_SP_CNPJ)' };
@@ -224,7 +265,7 @@ export async function consultarNFSePeriodo(
   const dataFimStr = formatDateForApi(dataFim);
   
   // Build XML according to official XSD schema (PedidoConsultaNFePeriodo_v01.xsd)
-  const pedido = `<PedidoConsultaNFePeriodo xmlns="http://www.prefeitura.sp.gov.br/nfe">${buildCabecalhoConsultaPeriodo(dataInicioStr, dataFimStr, pagina)}</PedidoConsultaNFePeriodo>`;
+  const pedido = `<PedidoConsultaNFePeriodo xmlns="http://www.prefeitura.sp.gov.br/nfe">${buildCabecalhoConsultaPeriodo(dataInicioStr, dataFimStr, pagina, orgCode)}</PedidoConsultaNFePeriodo>`;
   
   // Sign the request with proper XMLDSig
   const pedidoAssinado = await signXml(pedido, 'PedidoConsultaNFePeriodo');
@@ -257,9 +298,12 @@ export async function consultarNFSePeriodo(
  * 
  * Per XSD: Cabecalho only contains CPFCNPJRemetente.
  * ChaveNFe (with InscricaoPrestador + NumeroNFe) goes inside Detalhe.
+ * 
+ * @param numeroNFe - Número da NFS-e
+ * @param orgCode - Código da organização para credenciais multi-tenant
  */
-export async function consultarNFSePorNumero(numeroNFe: string): Promise<NFSeConsultaSP | null> {
-  const creds = getCredentials();
+export async function consultarNFSePorNumero(numeroNFe: string, orgCode?: string): Promise<NFSeConsultaSP | null> {
+  const creds = getCredentials(orgCode);
   
   if (!creds.cnpj) {
     throw new Error('CNPJ não configurado (NFSE_SP_CNPJ)');
@@ -275,7 +319,7 @@ export async function consultarNFSePorNumero(numeroNFe: string): Promise<NFSeCon
   // Build XML according to official XSD schema (PedidoConsultaNFe_v01.xsd)
   // xmlns="" is required to reset namespace for child elements (XSD expects no namespace)
   const pedido = `<PedidoConsultaNFe xmlns="http://www.prefeitura.sp.gov.br/nfe">` +
-    buildCabecalhoConsultaNFe() +
+    buildCabecalhoConsultaNFe(orgCode) +
     `<Detalhe xmlns="">` +
     `<ChaveNFe>` +
     `<InscricaoPrestador>${ccmPadded}</InscricaoPrestador>` +
@@ -316,9 +360,12 @@ export async function consultarNFSePorNumero(numeroNFe: string): Promise<NFSeCon
  * - String of 20 ASCII chars signed with RSA-SHA1
  * - CCM (8 chars, left-padded with zeros)
  * - NumeroNFe (12 chars, left-padded with zeros)
+ * 
+ * @param numeroNFe - Número da NFS-e a cancelar
+ * @param orgCode - Código da organização para credenciais multi-tenant
  */
-export async function cancelarNFSe(numeroNFe: string): Promise<{ sucesso: boolean; mensagem: string }> {
-  const creds = getCredentials();
+export async function cancelarNFSe(numeroNFe: string, orgCode?: string): Promise<{ sucesso: boolean; mensagem: string }> {
+  const creds = getCredentials(orgCode);
   
   if (!creds.cnpj || !creds.ccm) {
     return { sucesso: false, mensagem: 'CNPJ ou CCM não configurado' };
@@ -423,10 +470,11 @@ export async function cancelarNFSe(numeroNFe: string): Promise<{ sucesso: boolea
  * Structure based on official XSD: PedidoEnvioRPS_v01.xsd
  * 
  * @param params - Dados do RPS a ser emitido
+ * @param orgCode - Código da organização para credenciais multi-tenant
  * @returns Resultado da emissão com número da NFS-e gerada
  */
-export async function emitirRPS(params: EmissaoRPSParams): Promise<EmissaoRPSResult> {
-  const creds = getCredentials();
+export async function emitirRPS(params: EmissaoRPSParams, orgCode?: string): Promise<EmissaoRPSResult> {
+  const creds = getCredentials(orgCode);
   
   if (!creds.cnpj) {
     return { sucesso: false, mensagem: 'CNPJ não configurado (NFSE_SP_CNPJ)' };
@@ -713,20 +761,24 @@ function parseEmissaoRPSResponse(
 
 /**
  * Validar conexão com a API
+ * 
+ * @param orgCode - Código da organização para credenciais multi-tenant
  */
-export async function validarConexaoSP(): Promise<{
+export async function validarConexaoSP(orgCode?: string): Promise<{
   sucesso: boolean;
   mensagem: string;
   ambiente: string;
 }> {
-  const creds = getCredentials();
+  const creds = getCredentials(orgCode);
   const useLegacy = process.env.NFSE_SP_USE_LEGACY_ENDPOINT === 'true';
   const ambiente = useLegacy ? 'legacy' : 'production';
+  
+  const envPrefix = orgCode ? `NFSE_SP_${orgCode}_` : 'NFSE_SP_';
   
   if (!creds.cnpj) {
     return {
       sucesso: false,
-      mensagem: 'CNPJ não configurado. Defina NFSE_SP_CNPJ no .env',
+      mensagem: `CNPJ não configurado. Defina ${envPrefix}CNPJ no ambiente`,
       ambiente,
     };
   }
@@ -734,7 +786,7 @@ export async function validarConexaoSP(): Promise<{
   if (!creds.senhaWeb) {
     return {
       sucesso: false,
-      mensagem: 'Senha Web não configurada. Defina NFSE_SP_SENHA_WEB no .env',
+      mensagem: `Senha Web não configurada. Defina ${envPrefix}SENHA_WEB no ambiente`,
       ambiente,
     };
   }

@@ -50,11 +50,16 @@ O objetivo é mapear todas as APIs e serviços oficiais que permitem automação
 
 ## Resumo das Integrações por Prioridade
 
-### P0 - Críticas (MVP)
+### CONCLUÍDAS ✅
+
+| Integração | Órgão | Status | Observação |
+|------------|-------|--------|------------|
+| **NFS-e Paulistana (SP)** | Prefeitura SP | ✅ Produção | Emissão, consulta, cancelamento funcionando |
+
+### P0 - Próximas
 
 | Integração | Órgão | Tipo | Aplicabilidade |
 |------------|-------|------|----------------|
-| **NFS-e Nacional** | RFB/Prefeituras | Oficial | Prestação de serviços de TI |
 | **Consulta CNPJ** | Serpro | Comercial | Validação de clientes/fornecedores |
 
 ### P1 - Importantes
@@ -63,7 +68,12 @@ O objetivo é mapear todas as APIs e serviços oficiais que permitem automação
 |------------|-------|------|----------------|
 | **NF-e (SEFAZ)** | Portal NF-e | Oficial | Venda de produtos (se aplicável) |
 | **Consulta CPF** | Serpro | Comercial | Validação de pessoas físicas |
-| **NFS-e Paulistana** | Prefeitura SP | Oficial | Operações em São Paulo |
+
+### ADIADAS 🔄
+
+| Integração | Órgão | Motivo | Backend |
+|------------|-------|--------|---------|
+| **NFS-e Nacional** | RFB/Prefeituras | SP não aderiu ao sistema nacional | ✅ Pronto (server/integrations/fiscal/nfse-nacional.ts) |
 
 ### P2 - Expansão
 
@@ -170,9 +180,9 @@ server/
 
 | Integração | Status | Especificação |
 |------------|--------|---------------|
-| **NFS-e Nacional** | 📋 Especificada | [SPEC-NFSE-NACIONAL.md](SPEC-NFSE-NACIONAL.md) |
-| Consulta CNPJ (Serpro) | ⏳ Aguardando | - |
-| NFS-e Paulistana | ⏳ Aguardando | - |
+| **NFS-e Paulistana (SP)** | ✅ Produção | [../nfse-sp/](../nfse-sp/) |
+| **NFS-e Nacional** | 🔄 Adiada | [SPEC-NFSE-NACIONAL.md](SPEC-NFSE-NACIONAL.md) - Backend pronto |
+| Consulta CNPJ (Serpro) | ⏳ Próximo | - |
 | NF-e SEFAZ | ⏳ Aguardando | - |
 
 ---

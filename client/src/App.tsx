@@ -21,7 +21,6 @@ import Patrimonio from './pages/Patrimonio';
 import ModuloE from './pages/ModuloE';
 import Governanca from './pages/Governanca';
 import Nfse from './pages/Nfse';
-import NfseNacional from './pages/NfseNacional';
 import Login from './pages/Login';
 import OrgSelect from './pages/OrgSelect';
 import NotFound from './pages/NotFound';
@@ -86,7 +85,6 @@ export default function App() {
                 <Route path="/patrimonio" component={() => <ProtectedRoute component={Patrimonio} />} />
                 <Route path="/projetos-fundos" component={() => <ProtectedRoute component={ModuloE} />} />
                 <Route path="/nfse" component={() => <ProtectedRoute component={Nfse} />} />
-                <Route path="/nfse-nacional" component={() => <ProtectedRoute component={NfseNacional} />} />
                 <Route path="/:rest*" component={NotFound} />
               </Switch>
             </DashboardLayout>

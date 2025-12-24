@@ -6,6 +6,29 @@ Este documento descreve o roadmap de implementação das integrações fiscais p
 
 ---
 
+## Status Atual (Dezembro 2024)
+
+| Onda | Status | Observações |
+|------|--------|-------------|
+| **Onda 0 - Foundation** | ✅ Parcial | Estrutura criada, certificados funcionando |
+| **Onda 1 - MVP** | ✅ Parcial | NFS-e SP em produção, Serpro pendente |
+| **Onda 2 - Expansão** | ⏳ Pendente | - |
+| **Onda 3 - Avançado** | ⏳ Futuro | - |
+
+### Concluído
+- ✅ NFS-e Paulistana (SP) - Emissão, consulta, cancelamento em produção
+- ✅ Gestão de certificados ICP-Brasil (upload, validação, criptografia)
+- ✅ XMLDSig para assinatura digital
+- ✅ Multi-tenant (credenciais por organização)
+
+### Em Andamento / Próximo
+- ⏳ Consulta CNPJ via Serpro (requer contrato)
+
+### Adiado
+- 🔄 NFS-e Nacional - Backend pronto, mas SP não aderiu ao sistema nacional
+
+---
+
 ## Timeline
 
 ```

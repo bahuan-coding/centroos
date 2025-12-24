@@ -15,7 +15,6 @@ import {
   BarChart3,
   Shield,
   Settings,
-  Globe,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -49,7 +48,6 @@ export const menuSections: MenuSection[] = [
       { href: '/titulos', label: 'Títulos', icon: TrendingUp },
       { href: '/pagar-receber', label: 'Pagar/Receber', icon: Receipt },
       { href: '/nfse', label: 'NFS-e SP', icon: FileText },
-      { href: '/nfse-nacional', label: 'NFS-e Nacional', icon: Globe },
       { href: '/projetos-fundos', label: 'Projetos e Fundos', icon: Layers },
     ],
   },

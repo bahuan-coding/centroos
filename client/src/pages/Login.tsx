@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { clearOrgOnLogout } from '@/lib/org';
+import { hasOrg } from '@/lib/org';
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -25,12 +25,15 @@ export default function Login() {
         localStorage.setItem('user_email', email);
         localStorage.setItem('user_role', 'admin'); // Mock role
         
-        // Clear previous org selection to force user to choose again
-        clearOrgOnLogout();
-        
         toast.success('Login realizado com sucesso!');
-        // Redirect to org selection instead of dashboard
-        setLocation('/org-select');
+        
+        // Se já tem org selecionada, vai direto pro dashboard
+        // Senão, vai para seleção de org
+        if (hasOrg()) {
+          setLocation('/');
+        } else {
+          setLocation('/org-select');
+        }
       } else {
         toast.error('Preencha email e senha');
       }

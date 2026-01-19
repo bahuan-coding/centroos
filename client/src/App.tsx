@@ -1,6 +1,6 @@
 import { Route, Switch, useLocation } from 'wouter';
 import { Toaster } from 'sonner';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { DashboardLayout } from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Pessoas from './pages/Pessoas';
@@ -28,38 +28,24 @@ import NotFound from './pages/NotFound';
 import { isAuthenticated } from './lib/auth';
 import { hasOrg } from './lib/org';
 
-function OrgGuard({ children }: { children: React.ReactNode }) {
-  const [, setLocation] = useLocation();
-  const [checked, setChecked] = useState(false);
-  const [orgSelected, setOrgSelected] = useState(false);
-
-  useEffect(() => {
-    const hasOrgNow = hasOrg();
-    setOrgSelected(hasOrgNow);
-    setChecked(true);
-    
-    if (!hasOrgNow) {
-      setLocation('/org-select');
-    }
-  }, [setLocation]);
-
-  // Aguarda a verificação inicial
-  if (!checked) return null;
-  if (!orgSelected) return null;
-  
-  return <>{children}</>;
-}
-
+/**
+ * Verifica autenticação E organização selecionada
+ * Ordem: 1) Auth 2) Org
+ */
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const [location, setLocation] = useLocation();
+  const authenticated = isAuthenticated();
+  const orgSelected = hasOrg();
   
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (!authenticated) {
       setLocation('/login');
+    } else if (!orgSelected) {
+      setLocation('/org-select');
     }
-  }, [location, setLocation]);
+  }, [authenticated, orgSelected, location, setLocation]);
 
-  if (!isAuthenticated()) {
+  if (!authenticated || !orgSelected) {
     return null;
   }
 
@@ -73,33 +59,31 @@ export default function App() {
         <Route path="/login" component={Login} />
         <Route path="/org-select" component={OrgSelect} />
         <Route path="*">
-          <OrgGuard>
-            <DashboardLayout>
-              <Switch>
-                <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-                <Route path="/pessoas" component={() => <ProtectedRoute component={Pessoas} />} />
-                <Route path="/contas" component={() => <ProtectedRoute component={ContasFinanceiras} />} />
-                <Route path="/extratos" component={() => <ProtectedRoute component={Extratos} />} />
-                <Route path="/titulos" component={() => <ProtectedRoute component={Titulos} />} />
-                <Route path="/contabilidade" component={() => <ProtectedRoute component={Contabilidade} />} />
-                <Route path="/accounts" component={() => <ProtectedRoute component={Accounts} />} />
-                <Route path="/entries" component={() => <ProtectedRoute component={Entries} />} />
-                <Route path="/periods" component={() => <ProtectedRoute component={Periods} />} />
-                <Route path="/conciliacao" component={() => <ProtectedRoute component={Conciliacao} />} />
-                <Route path="/import" component={() => <ProtectedRoute component={Import} />} />
-                <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />
-                <Route path="/audit" component={() => <ProtectedRoute component={Audit} />} />
-                <Route path="/governanca" component={() => <ProtectedRoute component={Governanca} />} />
-                <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
-                <Route path="/patrimonio" component={() => <ProtectedRoute component={Patrimonio} />} />
-                <Route path="/projetos-fundos" component={() => <ProtectedRoute component={ModuloE} />} />
-                <Route path="/nfse" component={() => <ProtectedRoute component={Nfse} />} />
-                <Route path="/motor-fiscal" component={() => <ProtectedRoute component={MotorFiscal} />} />
-                <Route path="/integra-contador" component={() => <ProtectedRoute component={IntegraContador} />} />
-                <Route path="/:rest*" component={NotFound} />
-              </Switch>
-            </DashboardLayout>
-          </OrgGuard>
+          <DashboardLayout>
+            <Switch>
+              <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
+              <Route path="/pessoas" component={() => <ProtectedRoute component={Pessoas} />} />
+              <Route path="/contas" component={() => <ProtectedRoute component={ContasFinanceiras} />} />
+              <Route path="/extratos" component={() => <ProtectedRoute component={Extratos} />} />
+              <Route path="/titulos" component={() => <ProtectedRoute component={Titulos} />} />
+              <Route path="/contabilidade" component={() => <ProtectedRoute component={Contabilidade} />} />
+              <Route path="/accounts" component={() => <ProtectedRoute component={Accounts} />} />
+              <Route path="/entries" component={() => <ProtectedRoute component={Entries} />} />
+              <Route path="/periods" component={() => <ProtectedRoute component={Periods} />} />
+              <Route path="/conciliacao" component={() => <ProtectedRoute component={Conciliacao} />} />
+              <Route path="/import" component={() => <ProtectedRoute component={Import} />} />
+              <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />
+              <Route path="/audit" component={() => <ProtectedRoute component={Audit} />} />
+              <Route path="/governanca" component={() => <ProtectedRoute component={Governanca} />} />
+              <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
+              <Route path="/patrimonio" component={() => <ProtectedRoute component={Patrimonio} />} />
+              <Route path="/projetos-fundos" component={() => <ProtectedRoute component={ModuloE} />} />
+              <Route path="/nfse" component={() => <ProtectedRoute component={Nfse} />} />
+              <Route path="/motor-fiscal" component={() => <ProtectedRoute component={MotorFiscal} />} />
+              <Route path="/integra-contador" component={() => <ProtectedRoute component={IntegraContador} />} />
+              <Route path="/:rest*" component={NotFound} />
+            </Switch>
+          </DashboardLayout>
         </Route>
       </Switch>
       <Toaster position="top-right" richColors />

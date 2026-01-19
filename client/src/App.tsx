@@ -1,6 +1,6 @@
 import { Route, Switch, useLocation } from 'wouter';
 import { Toaster } from 'sonner';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { DashboardLayout } from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Pessoas from './pages/Pessoas';
@@ -30,14 +30,23 @@ import { hasOrg } from './lib/org';
 
 function OrgGuard({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
+  const [checked, setChecked] = useState(false);
+  const [orgSelected, setOrgSelected] = useState(false);
 
   useEffect(() => {
-    if (!hasOrg()) {
+    const hasOrgNow = hasOrg();
+    setOrgSelected(hasOrgNow);
+    setChecked(true);
+    
+    if (!hasOrgNow) {
       setLocation('/org-select');
     }
   }, [setLocation]);
 
-  if (!hasOrg()) return null;
+  // Aguarda a verificação inicial
+  if (!checked) return null;
+  if (!orgSelected) return null;
+  
   return <>{children}</>;
 }
 

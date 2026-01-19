@@ -120,6 +120,69 @@ Atualizado em: 2026-01-19
 
 ---
 
+## Decisões Técnicas (ADRs)
+
+Decisões de arquitetura documentadas para referência futura.
+
+### ADR-001: RascunhoBanner Duplicado
+
+- **Status**: Aceito como dívida técnica de baixo risco
+- **Data**: 2026-01-19
+- **Contexto**: Existem 7 componentes `RascunhoBanner` quase idênticos (~100 linhas cada) em diferentes domínios (titulos, patrimonio, planoContas, periodos, modulo-e). Um componente genérico `DraftBanner` existe em `ui/wizard/` mas não é utilizado.
+- **Decisão**: Manter os componentes separados por domínio.
+- **Justificativa**:
+  1. Cada RascunhoBanner usa um context/hook diferente (useTituloWizard, usePatrimonioWizard, etc.)
+  2. Campos exibidos variam por domínio (valorLiquido vs valorAquisicao vs codigo/nome)
+  3. Consolidação requer abstração de tipos genéricos que aumenta complexidade
+  4. Impacto em disponibilidade: ZERO (é apenas UI)
+  5. Custo de manutenção: baixo (componentes simples e estáveis)
+- **Consequências**: ~600 linhas de código duplicado, mas isolado e fácil de manter
+
+### ADR-002: Schema Legacy Mantido
+
+- **Status**: Em migração gradual
+- **Data**: 2026-01-19
+- **Contexto**: O arquivo `drizzle/schema-legacy.ts` contém tabelas do sistema v1 (accounts, periods, entries, bankImports, classificationRules). Estas tabelas ainda são usadas ativamente por:
+  - `server/routers.ts` (~100 referências)
+  - `server/services/reports.ts` (~50 referências)
+  - `server/services/classification.ts` (~10 referências)
+- **Decisão**: Manter schema-legacy até migração completa das queries.
+- **Justificativa**:
+  1. Funcionalidades de relatórios e classificação dependem das tabelas legadas
+  2. Migração requer refatoração de routers.ts (9000+ linhas)
+  3. Schema legacy está bem documentado com plano de migração no header
+- **Regras**:
+  1. NÃO adicionar novas tabelas no schema-legacy
+  2. Novas features DEVEM usar schema.ts
+  3. Migrar um router por vez para schema novo
+- **Plano de Migração**:
+  - [ ] Migrar accountsRouter para planoContas
+  - [ ] Migrar periodsRouter para periodoContabil
+  - [ ] Migrar entriesRouter para lancamentoContabil
+  - [ ] Migrar bankImportsRouter para extratoBancario
+  - [ ] Remover schema-legacy.ts
+
+### ADR-003: Autosave Local em Wizards
+
+- **Status**: Implementado
+- **Data**: 2026-01-19
+- **Contexto**: Formulários multi-step (wizards) podem ter dados complexos que o usuário não quer perder.
+- **Decisão**: Cada wizard implementa autosave em localStorage.
+- **Implementação**:
+  - Debounce de 2 segundos após última alteração
+  - Máximo 10 rascunhos por domínio
+  - Expiração de 24h para sugestão de retomada
+  - Chave única por domínio: `centroos:{domain}-drafts`
+- **Justificativa**:
+  1. Máxima disponibilidade (funciona offline)
+  2. Não depende de conexão com servidor
+  3. Resiliente a crashes de browser/sistema
+- **Trade-offs**:
+  - Rascunhos são locais ao dispositivo/browser
+  - Não sincroniza entre dispositivos
+
+---
+
 ## Estatísticas
 
 - Total de TODOs: 14 (de 22 linhas, excluindo comentários de estrutura)

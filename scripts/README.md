@@ -14,7 +14,6 @@ scripts/
 ├── canonical/      # Funções de normalização canônica
 ├── fiscal/         # Scripts relacionados ao módulo fiscal
 ├── tests/          # Scripts de teste de integrações
-├── deprecated/     # Scripts one-off já executados (manter para referência)
 └── run-pipeline.ts # Executor principal do pipeline
 ```
 
@@ -32,7 +31,6 @@ Scripts para popular e migrar dados.
 
 - `index.ts` - Orquestrador de seed
 - `seed-accounts.ts` - Seed de plano de contas
-- `seed-migration.ts` - Migração de dados legados
 - `seed-complete.ts` - Seed completo do sistema
 
 ### pipeline/
@@ -41,10 +39,6 @@ Pipeline de processamento de dados brutos.
 - `orchestrator.ts` - Orquestrador do pipeline
 - `parsers/` - Parsers para diferentes fontes
 - `normalizers/` - Normalizadores de dados
-
-### deprecated/
-Scripts one-off que já foram executados. Mantidos para referência histórica.
-**NÃO EXECUTAR** sem verificar se ainda são necessários.
 
 ## Executando Scripts
 
@@ -59,7 +53,6 @@ npm run audit
 
 ## Convenções
 
-1. Scripts de uso único devem ir para `deprecated/` após execução
-2. Novos scripts de auditoria devem ir em `audit/`
-3. Novos scripts de seed/migração devem ir em `seed/`
-4. Scripts de teste de integrações devem ir em `tests/`
+1. Novos scripts de auditoria devem ir em `audit/`
+2. Novos scripts de seed/migração devem ir em `seed/`
+3. Scripts de teste de integrações devem ir em `tests/`

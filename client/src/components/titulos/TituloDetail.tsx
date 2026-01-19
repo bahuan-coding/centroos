@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -63,15 +63,6 @@ const formaPagamentoLabels: Record<string, { label: string; icon: string }> = {
   credito: { label: 'Cartão Crédito', icon: '💳' },
   cheque: { label: 'Cheque', icon: '📝' },
 };
-
-function formatCurrency(value: number | string): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value));
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('pt-BR');
-}
 
 function formatDateTime(dateStr: string): string {
   if (!dateStr) return '-';

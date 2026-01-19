@@ -6,6 +6,11 @@ dist/
 .DS_Store
 drizzle/migrations/
 
+# Dados brutos de importacao (sensiveis/temporarios)
+rawdata/
+
+# Outputs de scripts de auditoria
+audit-*.csv
 
 # Local Netlify folder
 .netlify

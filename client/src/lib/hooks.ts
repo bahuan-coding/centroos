@@ -1,21 +1,9 @@
-import { useState, useEffect } from 'react';
-
-export function useIsMobile(breakpoint = 1024) {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    
-    setIsMobile(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [breakpoint]);
-
-  return isMobile;
-}
+/**
+ * @deprecated Use import from '@/lib/hooks' instead
+ * Este arquivo mantido para compatibilidade. Novos imports devem usar:
+ * import { useIsMobile } from '@/lib/hooks';
+ */
+export * from './hooks/index';
 
 
 

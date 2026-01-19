@@ -7,7 +7,6 @@ import Pessoas from './pages/Pessoas';
 import ContasFinanceiras from './pages/ContasFinanceiras';
 import Extratos from './pages/Extratos';
 import Titulos from './pages/Titulos';
-import TitulosCrud from './pages/TitulosCrud';
 import Accounts from './pages/Accounts';
 import Entries from './pages/Entries';
 import Periods from './pages/Periods';
@@ -73,7 +72,6 @@ export default function App() {
                 <Route path="/contas" component={() => <ProtectedRoute component={ContasFinanceiras} />} />
                 <Route path="/extratos" component={() => <ProtectedRoute component={Extratos} />} />
                 <Route path="/titulos" component={() => <ProtectedRoute component={Titulos} />} />
-                <Route path="/pagar-receber" component={() => <ProtectedRoute component={TitulosCrud} />} />
                 <Route path="/contabilidade" component={() => <ProtectedRoute component={Contabilidade} />} />
                 <Route path="/accounts" component={() => <ProtectedRoute component={Accounts} />} />
                 <Route path="/entries" component={() => <ProtectedRoute component={Entries} />} />

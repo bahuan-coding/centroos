@@ -1,6 +1,31 @@
 /**
- * Legacy Schema - Tabelas mantidas para compatibilidade com o código existente
- * Durante a migração, estas tabelas serão gradualmente substituídas pelas novas
+ * ============================================================================
+ * SCHEMA LEGACY - DEPRECATED
+ * ============================================================================
+ * 
+ * ATENÇÃO: Este arquivo contém tabelas do sistema antigo (v1).
+ * 
+ * STATUS: Em processo de migração para o novo schema (schema.ts)
+ * 
+ * REGRAS:
+ * 1. NÃO adicione novas tabelas aqui - use schema.ts
+ * 2. NÃO modifique estas tabelas - elas serão removidas após migração
+ * 3. Para novas funcionalidades, use SEMPRE as tabelas do schema.ts
+ * 
+ * PLANO DE MIGRAÇÃO:
+ * - users -> usuario (schema.ts)
+ * - accounts -> planoContas (schema.ts)
+ * - periods -> periodoContabil (schema.ts)
+ * - entries -> lancamentoContabil + lancamentoLinha (schema.ts)
+ * - bankImports -> extratoBancario (schema.ts)
+ * - classificationRules -> mantido temporariamente
+ * - auditLog -> eventoAuditoria (schema.ts)
+ * 
+ * QUANDO REMOVER:
+ * Após confirmar que todas as queries foram migradas para as novas tabelas.
+ * Verificar: routers.ts, todos os arquivos em server/ que importam daqui.
+ * 
+ * ============================================================================
  */
 
 import {

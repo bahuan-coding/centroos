@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency, formatCurrencyCompact, formatPeriod } from '@/lib/utils';
 import { Link } from 'wouter';
 import { Doughnut } from 'react-chartjs-2';
 
@@ -19,20 +19,9 @@ interface PeriodDetailProps {
   onUpdated?: () => void;
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-}
-
-function formatCompact(value: number): string {
-  if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
-  if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}K`;
-  return formatCurrency(value);
-}
-
-function formatPeriodName(month: number, year: number): string {
-  const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-  return `${meses[month - 1]} ${year}`;
-}
+// Aliases para compatibilidade
+const formatCompact = formatCurrencyCompact;
+const formatPeriodName = formatPeriod;
 
 const naturezaLabels: Record<string, string> = {
   contribuicao: 'Contribuições',

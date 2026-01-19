@@ -3,7 +3,6 @@ import {
   Building2,
   ArrowLeftRight,
   Upload,
-  TrendingUp,
   Receipt,
   Layers,
   FileText,
@@ -47,8 +46,7 @@ export const menuSections: MenuSection[] = [
     id: 'financeiro',
     label: 'Financeiro',
     items: [
-      { href: '/titulos', label: 'Títulos', icon: TrendingUp },
-      { href: '/pagar-receber', label: 'Pagar/Receber', icon: Receipt },
+      { href: '/titulos', label: 'Pagar/Receber', icon: Receipt },
       { href: '/nfse', label: 'NFS-e SP', icon: FileText },
       { href: '/motor-fiscal', label: 'Motor Fiscal', icon: Cpu },
       { href: '/integra-contador', label: 'Integra Contador', icon: FileSearch },

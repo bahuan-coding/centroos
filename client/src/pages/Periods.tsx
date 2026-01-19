@@ -8,29 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '@/components/ui/page-header';
-import { PeriodDetail } from '@/components/periods';
-import { PeriodoWizard } from '@/components/periodos/PeriodoWizard';
-import { cn } from '@/lib/utils';
+import { PeriodDetail, PeriodoWizard } from '@/components/periodos';
+import { cn, formatCurrency, formatCurrencyCompact, formatPeriodShort, formatPeriod } from '@/lib/utils';
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-}
-
-function formatCompact(value: number): string {
-  if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
-  if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}K`;
-  return formatCurrency(value);
-}
-
-function formatPeriodShort(month: number, year: number): string {
-  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  return `${meses[month - 1]}/${String(year).slice(2)}`;
-}
-
-function formatPeriodName(month: number, year: number): string {
-  const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-  return `${meses[month - 1]} ${year}`;
-}
+// Alias para manter compatibilidade
+const formatCompact = formatCurrencyCompact;
+const formatPeriodName = formatPeriod;
 
 // Quick Stats com filtros clicáveis
 function QuickStats({ totals, filtroStatus, setFiltroStatus }: {

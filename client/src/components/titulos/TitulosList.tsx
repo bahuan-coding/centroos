@@ -1,6 +1,6 @@
 import { ArrowUpRight, ArrowDownRight, ChevronRight, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency, formatDateShort } from '@/lib/utils';
 
 // ============================================================================
 // TYPES
@@ -26,10 +26,6 @@ interface TitulosListProps {
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-function formatCurrency(value: number | string): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value));
-}
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return '-';

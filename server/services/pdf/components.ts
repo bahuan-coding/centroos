@@ -804,14 +804,9 @@ export function drawMiniReconciliation(doc: jsPDF, data: ReconciliationData, sta
   // Linha separadora
   doc.setDrawColor(...PDF_COLORS.border);
   doc.setLineWidth(0.3);
-  doc.line(margin.left + 5, itemY - 4, margin.left + boxWidth - 5, itemY - 4);
-
-  // = Saldo Final
+  doc.line(margin.left + 5, itemY - 4, margin.left + boxWidth - 5, itemY - 4);  // = Saldo Final
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...(data.saldoFinal >= 0 ? PDF_COLORS.success : PDF_COLORS.danger));
   doc.text('= Saldo Final', margin.left + 8, itemY);
-  doc.text(formatCurrency(data.saldoFinal), valueX, itemY, { align: 'right' });
-
-  return y + boxHeight + spacing.md;
+  doc.text(formatCurrency(data.saldoFinal), valueX, itemY, { align: 'right' });  return y + boxHeight + spacing.md;
 }
-

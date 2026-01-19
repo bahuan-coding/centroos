@@ -780,3 +780,4 @@ export function gerarEnvelopeConsultaChave(chNFe: string, tpAmb: TAmbiente): str
 }
 
 
+

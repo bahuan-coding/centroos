@@ -161,9 +161,7 @@ export const rbacAdminProcedure = protectedProcedure.use(async ({ ctx, next }) =
   // Fallback legado
   if (ctx.user.role === 'admin') {
     return next({ ctx });
-  }
-
-  // Verificar se tem papel 'admin' no novo sistema
+  }  // Verificar se tem papel 'admin' no novo sistema
   const hasAdminRole = await checkUserPermission(ctx.user.email, 'sistema.usuario.gerenciar');
   if (!hasAdminRole) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Acesso restrito a administradores' });
@@ -179,12 +177,8 @@ export const auditorProcedure = protectedProcedure.use(async ({ ctx, next }) => 
   // Fallback: admin e accountant legados têm acesso
   if (['admin', 'accountant'].includes(ctx.user.role)) {
     return next({ ctx });
-  }
-
-  const hasPermission = await checkUserPermission(ctx.user.email, 'sistema.auditoria.visualizar');
+  }  const hasPermission = await checkUserPermission(ctx.user.email, 'sistema.auditoria.visualizar');
   if (!hasPermission) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Acesso restrito a auditores' });
-  }
-
-  return next({ ctx });
+  }  return next({ ctx });
 });

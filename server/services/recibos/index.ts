@@ -7,3 +7,4 @@ export * from './types';
 export { gerarReciboDoacao, gerarNumeroRecibo } from './recibo-doacao-generator';
 
 
+

@@ -66,3 +66,4 @@ export function TableSkeleton({ columns = 4, rows = 5 }: { columns?: number; row
   );
 }
 
+

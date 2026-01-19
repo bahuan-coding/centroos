@@ -24,7 +24,7 @@ export interface Organization {
   taxId: string;
   type: OrgType;
   isDemo: boolean;
-  /** Environment variable prefix for NFS-e credentials (e.g., PAYCUBED -> NFSE_SP_PAYCUBED_CNPJ) */
+  /** Environment variable prefix for NFS-e credentials (e.g., PAYCUBED -> PAYCUBED_CNPJ) */
   nfseEnvPrefix?: string;
 }
 
@@ -42,7 +42,7 @@ export const ORGANIZATIONS: Organization[] = [
     taxId: '63.552.022/0001-84',
     type: 'tech_company',
     isDemo: false,
-    nfseEnvPrefix: 'PAYCUBED', // NFSE_SP_PAYCUBED_CNPJ, NFSE_SP_PAYCUBED_CCM, etc.
+    nfseEnvPrefix: 'PAYCUBED', // PAYCUBED_CNPJ, NFSE_SP_PAYCUBED_CCM, etc.
   },
   {
     id: 'demo-org-00000000-0000-0000-0000-000000000002',

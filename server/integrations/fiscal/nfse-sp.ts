@@ -34,7 +34,7 @@ const getEndpoint = () => {
  * Multi-tenant credentials lookup
  * 
  * For organization with code "PAYCUBED", looks for:
- * - PAYCUBED_CNPJ (global) or NFSE_SP_PAYCUBED_CNPJ
+ * - PAYCUBED_CNPJ
  * - NFSE_SP_PAYCUBED_CCM
  * - NFSE_SP_PAYCUBED_SENHA_WEB
  * 

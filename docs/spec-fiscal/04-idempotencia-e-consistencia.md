@@ -498,3 +498,4 @@ const obterProximoNumeroNF = async (orgId: string, serie: number): Promise<numbe
 
 
 
+

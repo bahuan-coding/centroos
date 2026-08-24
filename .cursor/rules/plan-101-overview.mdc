@@ -1,0 +1,38 @@
+---
+description: Ensures every plan ends with a plain-language 101 overview section
+alwaysApply: true
+---
+
+# Plan 101 Overview
+
+After ANY plan (Plan mode) is drafted, ALWAYS include a final section titled:
+
+## 📚 101 Overview
+
+This section MUST contain:
+
+1. **What are we solving?**
+   - Explain the problem in plain language, as if the reader had never seen the codebase
+   - Use real-world analogies when possible
+
+2. **Why this solution?**
+   - Justify the chosen approach
+   - Briefly compare with alternatives (if any)
+   - Explain trade-offs in simple terms
+
+3. **What does each step do?**
+   - Translate technical terms into accessible language
+   - Example: "REST API" → "a standardized way for systems to talk over the internet"
+   - When mentioning a pattern/concept, add a one-sentence explanation
+
+4. **Key concepts involved**
+   - List 2-3 concepts this work puts into practice
+   - Connect them to software engineering fundamentals when possible
+
+## Language rules
+
+- Avoid unexplained jargon
+- Use concrete examples
+- Spell out acronyms on first use
+- Prefer "this does X" over "this implements pattern Y"
+- Be clear and welcoming, never condescending
